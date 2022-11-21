@@ -19,17 +19,16 @@
 					  errno,			\
 					  strerror(errno));}
 
-int* na;
-int* po;
+pid_t* na;
+pid_t* po;
 
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
     int numNavi = SO_NAVI, numPorti = SO_PORTI, i, temp;
     double lato = SO_LATO;
-    char* nave[]= {"","35","15.3","3.5"};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
-    char* porto[] = {"ciao", "12", "25"};
-    char* env[] = {"ajfjdslv","fsknd","fslnfdl"};
+    char* nave[]= {"","35","15.3","3.5",NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
+    char* porto[] = {"ciao", "12", "25",NULL};
     
     na = calloc(numNavi,sizeof(*na));
     po = calloc(numPorti, sizeof(*po));
@@ -39,25 +38,31 @@ int main(){
         po[i] = fork();
         if(po[i] == -1){
             TEST_ERROR;
+            exit(1);
         }
         if(po[i] == 0){
             /* CHILD */
-            execve("prova-porto", porto, env);
+            execvp("./prova-porto", porto);
+            TEST_ERROR;
+            exit(1);
         }
         else{
             /* PARENT */
         }
     }
-
+    sleep(1);
     /* CREAZIONE DELLE NAVI */
     for(i=0;i<SO_NAVI;i++){
         na[i] = fork();
         if(na[i] == -1){
             TEST_ERROR;
+            exit(1);
         }
         if(na[i] == 0){
             /* CHILD */
-            execve("prova-nave", nave, env);
+            execvp("./prova-nave", nave);
+            TEST_ERROR;
+            exit(1);
         }
         else{
             /* PARENT */
