@@ -29,7 +29,7 @@ int main(){
     int numNavi = SO_NAVI, numPorti = SO_PORTI, i, temp;
     double lato = SO_LATO;
     char* nave[]= {"","35","15.3","3.5"};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
-    char* porto[3];
+    char* porto[] = {"ciao", "12", "25"};
     char* env[] = {"ajfjdslv","fsknd","fslnfdl"};
     
     na = calloc(numNavi,sizeof(*na));
@@ -43,7 +43,6 @@ int main(){
         }
         if(po[i] == 0){
             /* CHILD */
-            porto[i] = {'c', ASCISSA_PORTO, ASCISSA_PORTO}
             execve("prova-porto", porto, env);
         }
         else{
