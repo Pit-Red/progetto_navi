@@ -10,7 +10,6 @@
 #define SO_NAVI     8
 #define SO_PORTI    10
 #define SO_LATO     50
-#define ASCISSA_PORTO rand()%SO_LATO
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
 					  "%s:%d: PID=%5d: Error %d (%s)\n", \
