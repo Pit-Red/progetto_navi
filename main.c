@@ -6,8 +6,9 @@
 #include <string.h>
 #include <signal.h>
 #include <time.h>
+#include <sys/wait.h>
 
-
+/* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
 					  "%s:%d: PID=%5d: Error %d (%s)\n", \
 					  __FILE__,			\
@@ -15,20 +16,21 @@
 					  getpid(),			\
 					  errno,			\
 					  strerror(errno));}
+/*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 
 pid_t* na;
 pid_t* po;
 
-
 int main(){
+    /* DICHIARAZIONE DELLE VARIABILI */
+    int SO_NAVI, SO_PORTI, i;
+    double SO_LATO;
+    char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
+    char* porto[] = {"ciao", "12", "25","34",NULL};
+    int status;
 
-    /*richiesta di dati all'utente*/
-    int SO_LATO,SO_NAVI,SO_PORTI;
-    int i;int temp;
-    char* nave[]= {"","35","15.3","3.5",NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
-    char* porto[] = {"ciao", "12", "25",NULL};
     printf("inserisci la grandezza della mappa:");
-    scanf("%d",&SO_LATO);
+    scanf("%le",&SO_LATO);
     do{
         printf("inserisci il numero di navi:");
         scanf("%d",&SO_NAVI);
@@ -38,8 +40,7 @@ int main(){
         scanf("%d",&SO_PORTI);
     }while(SO_PORTI<4);
 
-    /* DICHIARAZIONE DELLE VARIABILI */
-    
+    /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI,sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
 
@@ -52,14 +53,15 @@ int main(){
         }
         if(po[i] == 0){
             /* CHILD */
-            execvp("./prova-porto", porto);
+            execvp("./porto", porto);
             TEST_ERROR;
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         else{
             /* PARENT */
         }
     }
+
     /* CREAZIONE DELLE NAVI */
     for(i=0;i<SO_NAVI;i++){
         na[i] = fork();
@@ -69,14 +71,19 @@ int main(){
         }
         if(na[i] == 0){
             /* CHILD */
-            execvp("./prova-nave", nave);
+            execvp("./nave", nave);
             TEST_ERROR;
-            exit(1);
+            exit(EXIT_FAILURE);
         }
         else{
             /* PARENT */
         }
     }
-    
+    sleep(1);
+    /*UCCISIONE DI TUTTI I PROCESSI FIGLI*/
 
+    for(i=0;i<SO_PORTI;i++){
+        kill(po[i], SIGINT);
+    }
+    exit(EXIT_SUCCESS);
 }
