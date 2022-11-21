@@ -1,5 +1,11 @@
-prova-main: prova-main.c
-	gcc -std=c89 -pedantic prova-main.c -o prova-main
+
+FLAGS=-Wall -Werror -std=c89 -pedantic -D_GNU_SOURCE
+
+main: main.c
+	gcc $(FLAGS) main.c -o main
 	
-prova-nave: prova-nave.c
-	gcc -std=c89 prova-nave.c -o prova-nave
+nave: nave.c
+	gcc $(FLAGS) nave.c -o nave
+
+porto: porto.c
+	gcc $(FLAGS) porto.c -o porto
