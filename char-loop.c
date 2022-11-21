@@ -28,5 +28,3 @@ int main(int argc, char** argv){
             c=33;
     }
 }
-
-/*dio merda*/
