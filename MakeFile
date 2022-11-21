@@ -1,0 +1,5 @@
+prova-main: prova-main.c
+	gcc -std=c89 -pedantic prova-main.c -o prova-main
+	
+prova-nave: prova-nave.c
+	gcc -std=c89 prova-nave.c -o prova-nave
