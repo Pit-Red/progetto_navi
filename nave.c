@@ -8,7 +8,7 @@
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
-    printf("E' stata uccisa la nave");
+    printf("E' stata uccisa la nave\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -21,7 +21,8 @@ int main(int argc, char** argv){
     sa.sa_handler = handle_signal;
     sigaction(SIGINT,&sa,NULL);
     srand(time(NULL));
-
+    
+    printf("E' stata creata la nave.\n");
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}

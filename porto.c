@@ -3,10 +3,6 @@
 #include <signal.h>
 #include <string.h>
 
-struct porto{
-        int velocita;
-        int tempo;
-    };
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){

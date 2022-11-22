@@ -20,14 +20,35 @@
 
 pid_t* na;
 pid_t* po;
+int SO_NAVI, SO_PORTI;
+
+/*HANDLER PER IL SEGNALE DI FINE PROGRAMMA (ALARM)*/
+void handle_alarm(int signum){
+    int i,status;
+    printf("\n\n\n\n");
+    for(i=0;i<SO_NAVI;i++){
+        kill(na[i], SIGINT);
+        wait(&status);
+    }
+    for(i=0;i<SO_PORTI;i++){
+        kill(po[i], SIGINT);
+        wait(&status);
+    }
+}
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
-    int SO_NAVI, SO_PORTI, i;
+    int i,c;
     double SO_LATO;
     char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
-    char* porto[] = {"ciao", "12", "25","34",NULL};
+    char* porto[] = {"", "12", "25","34",NULL};
     int status;
+    FILE* my_f;
+    struct sigaction sa;
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = handle_alarm;
+    sigaction(SIGALRM, &sa, NULL);
+
 
     printf("inserisci la grandezza della mappa:");
     scanf("%le",&SO_LATO);
@@ -40,10 +61,11 @@ int main(){
         scanf("%d",&SO_PORTI);
     }while(SO_PORTI<4);
 
-    /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
+    /*ALLOCAZ   IONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI,sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
 
+    alarm(4);
     /*CREAZIONE DEI PORTI*/
     for(i=0;i<SO_PORTI;i++){
         po[i] = fork();
@@ -79,11 +101,11 @@ int main(){
             /* PARENT */
         }
     }
-    sleep(1);
-    /*UCCISIONE DI TUTTI I PROCESSI FIGLI*/
-
-    for(i=0;i<SO_PORTI;i++){
-        kill(po[i], SIGINT);
-    }
+    /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
+    pause();
+    
+    
+    printf("\n\nFine del programma\n");
+    
     exit(EXIT_SUCCESS);
 }
