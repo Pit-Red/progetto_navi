@@ -10,6 +10,9 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+/*MACRO PER NON METTERE INPUT*/
+#define NO_INPUT
+
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -62,16 +65,28 @@ int main(){
     TEST_ERROR;
 
     srand(time(NULL));
+	
+#ifndef NO_INPUT
     printf("inserisci la grandezza della mappa:");
-    scanf("%le",&SO_LATO);
-    do{
+    scanf("%le", &SO_LATO);
+    do {
         printf("inserisci il numero di navi:");
-        scanf("%d",&SO_NAVI);
-    }while(SO_NAVI<1);
-    do{
+        scanf("%d", &SO_NAVI);
+    } while (SO_NAVI < 1);
+    do {
         printf("inserisci il numero di porti:");
-        scanf("%d",&SO_PORTI);
-    }while(SO_PORTI<4);
+        scanf("%d", &SO_PORTI);
+    } while (SO_PORTI < 4);
+#endif
+
+#ifdef NO_INPUT
+    SO_LATO = 10;   //(n > 0) !di tipo double!
+    SO_NAVI = 3;    //(n >= 1)
+    SO_PORTI = 5;   //(n >= 4)
+    printf("\nSO_LATO = %f",SO_LATO);
+    printf("\nSO_NAVI = %d",SO_NAVI);
+    printf("\nSO_PORTI = %d\n\n",SO_PORTI);
+#endif
 
     /*ALLOCAZ   IONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI,sizeof(*na));
