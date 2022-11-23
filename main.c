@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/wait.h>
-//MACRO PER NON METTERE INPUT
+/*MACRO PER NON METTERE INPUT*/
 #define NO_INPUT
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
