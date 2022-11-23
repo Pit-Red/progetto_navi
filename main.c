@@ -10,17 +10,6 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-typedef struct{
-    pid_t pid;
-    double x;
-    double y;
-}sporto;
-
-struct my_msg_q{
-	long mtype;
-	int quantita;
-	int tipo;
-}
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -36,21 +25,22 @@ pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI;
 
+typedef struct{
+    pid_t pid;
+    double x;
+    double y;
+}sporto;
+
+struct my_msg_q{
+	long mtype;
+	int quantita;
+	int tipo;
+};
+
+void handle_alarm(int signal);
 
 
 /*HANDLER PER IL SEGNALE DI FINE PROGRAMMA (ALARM)*/
-void handle_alarm(int signum){
-    int i,status;
-    printf("\n\n\n\n");
-    for(i=0;i<SO_NAVI;i++){
-        kill(na[i], SIGINT);
-        wait(&status);
-    }
-    for(i=0;i<SO_PORTI;i++){
-        kill(po[i], SIGINT);
-        wait(&status);
-    }
-}
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
@@ -162,4 +152,17 @@ int main(){
     printf("\n\nFine del programma\n");
     
     exit(EXIT_SUCCESS);
+}
+
+void handle_alarm(int signum){
+    int i,status;
+    printf("\n\n\n\n");
+    for(i=0;i<SO_NAVI;i++){
+        kill(na[i], SIGINT);
+        wait(&status);
+    }
+    for(i=0;i<SO_PORTI;i++){
+        kill(po[i], SIGINT);
+        wait(&status);
+    }
 }
