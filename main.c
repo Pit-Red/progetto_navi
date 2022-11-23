@@ -10,7 +10,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-/*MACRO PER NON METTERE INPUT*/
+/*MACRO PER NON METTERE INPUT ciao*/
 #define NO_INPUT
 
 
