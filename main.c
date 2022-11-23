@@ -7,15 +7,17 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/wait.h>
+//MACRO PER NON METTERE INPUT
+#define NO_INPUT
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
-#define TEST_ERROR    if (errno) {fprintf(stderr,			\
-					  "%s:%d: PID=%5d: Error %d (%s)\n", \
-					  __FILE__,			\
-					  __LINE__,			\
-					  getpid(),			\
-					  errno,			\
-					  strerror(errno));}
+#define TEST_ERROR    if (errno) {fprintf(stderr,           \
+                      "%s:%d: PID=%5d: Error %d (%s)\n", \
+                      __FILE__,         \
+                      __LINE__,         \
+                      getpid(),         \
+                      errno,            \
+                      strerror(errno));}
 /*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 
 pid_t* na;
@@ -23,25 +25,25 @@ pid_t* po;
 int SO_NAVI, SO_PORTI;
 
 /*HANDLER PER IL SEGNALE DI FINE PROGRAMMA (ALARM)*/
-void handle_alarm(int signum){
-    int i,status;
+void handle_alarm(int signum) {
+    int i, status;
     printf("\n\n\n\n");
-    for(i=0;i<SO_NAVI;i++){
+    for (i = 0; i < SO_NAVI; i++) {
         kill(na[i], SIGINT);
         wait(&status);
     }
-    for(i=0;i<SO_PORTI;i++){
+    for (i = 0; i < SO_PORTI; i++) {
         kill(po[i], SIGINT);
         wait(&status);
     }
 }
 
-int main(){
+int main(int argc, char** argv) {
     /* DICHIARAZIONE DELLE VARIABILI */
-    int i,c;
+    int i, c;
     double SO_LATO;
-    char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
-    char* porto[] = {"", "12", "25","34",NULL};
+    char* nave[] = {"", "35", "15.3", "3.5", NULL}; /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
+    char* porto[] = {"", "12", "25", "34", NULL};
     int status;
     FILE* my_f;
     struct sigaction sa;
@@ -49,63 +51,73 @@ int main(){
     sa.sa_handler = handle_alarm;
     sigaction(SIGALRM, &sa, NULL);
 
-
+#ifndef NO_INPUT
     printf("inserisci la grandezza della mappa:");
-    scanf("%le",&SO_LATO);
-    do{
+    scanf("%le", &SO_LATO);
+    do {
         printf("inserisci il numero di navi:");
-        scanf("%d",&SO_NAVI);
-    }while(SO_NAVI<1);
-    do{
+        scanf("%d", &SO_NAVI);
+    } while (SO_NAVI < 1);
+    do {
         printf("inserisci il numero di porti:");
-        scanf("%d",&SO_PORTI);
-    }while(SO_PORTI<4);
+        scanf("%d", &SO_PORTI);
+    } while (SO_PORTI < 4);
+#endif
 
-    /*ALLOCAZ   IONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
-    na = calloc(SO_NAVI,sizeof(*na));
+#ifdef NO_INPUT
+    SO_LATO = 10;   //(n > 0) !di tipo double!
+    SO_NAVI = 3;    //(n >= 1)
+    SO_PORTI = 5;   //(n >= 4)
+    printf("\nSO_LATO = %f",SO_LATO);
+    printf("\nSO_NAVI = %d",SO_NAVI);
+    printf("\nSO_PORTI = %d\n\n",SO_PORTI);
+#endif
+
+    /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
+    na = calloc(SO_NAVI, sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
 
     alarm(4);
     /*CREAZIONE DEI PORTI*/
-    for(i=0;i<SO_PORTI;i++){
+    for (i = 0; i < SO_PORTI; i++) {
         po[i] = fork();
-        if(po[i] == -1){
+        if (po[i] == -1) {
             TEST_ERROR;
             exit(1);
         }
-        if(po[i] == 0){
+        if (po[i] == 0) {
             /* CHILD */
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
         }
-        else{
+        else {
             /* PARENT */
         }
     }
 
     /* CREAZIONE DELLE NAVI */
-    for(i=0;i<SO_NAVI;i++){
+    for (i = 0; i < SO_NAVI; i++) {
         na[i] = fork();
-        if(na[i] == -1){
+        if (na[i] == -1) {
             TEST_ERROR;
             exit(1);
         }
-        if(na[i] == 0){
+        if (na[i] == 0) {
             /* CHILD */
             execvp("./nave", nave);
             TEST_ERROR;
             exit(EXIT_FAILURE);
         }
-        else{
+        else {
             /* PARENT */
         }
     }
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
-    
-    
+
+
     printf("\n\nFine del programma\n");
-    
+
     exit(EXIT_SUCCESS);
 }
