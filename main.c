@@ -7,12 +7,20 @@
 #include <signal.h>
 #include <time.h>
 #include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
 
 typedef struct{
     pid_t pid;
     double x;
     double y;
 }sporto;
+
+struct my_msg_q{
+	long mtype;
+	int quantita;
+	int tipo;
+}
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -48,7 +56,7 @@ int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
     struct timespec now;
     sporto* arrayporti;
-    int i,c;
+    int i,c, q_id;
     double SO_LATO;
     char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     char* porto[] = {"", "12", "25","34",NULL};
@@ -59,6 +67,9 @@ int main(){
     sa.sa_handler = handle_alarm;
     sigaction(SIGALRM, &sa, NULL);
 
+    /*CREO LA CODA DI MESSAGGI*/
+    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    TEST_ERROR;
 
     srand(time(NULL));
     printf("inserisci la grandezza della mappa:");
@@ -142,7 +153,11 @@ int main(){
     }
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
-    
+	
+    /*DEALLOCAZIONE DELLA CODA*/
+    while(msgctl(q_id, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
     
     printf("\n\nFine del programma\n");
     
