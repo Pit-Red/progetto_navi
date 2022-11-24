@@ -48,9 +48,10 @@ void handle_alarm(int signal);
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
-    short portiuguali;
+    short uguali;
     struct timespec now;
-    sinfo* arrayporti, *arraynavi;
+    sinfo* arrayporti;
+    sinfo* arraynavi;
     int i,j,c, q_id;
     double SO_LATO;
     char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
@@ -132,13 +133,13 @@ int main(){
                     arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX*100))/100;
                     clock_gettime(CLOCK_REALTIME ,&now);
                     arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX*100))/100;
-                    portiuguali = 0;
+                    uguali = 0;
                     for(j=0;j<i;j++){
                         if(arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y){
-                            portiuguali = 1;
+                            uguali = 1;
                         }
                     }
-                }while(portiuguali);
+                }while(uguali);
             }
             printf("creazione porto %d con cordinate x=%.2f, y=%.2f\n\n", arrayporti[i].pid, arrayporti[i].x,arrayporti[i].y);
             execvp("./porto", porto);
@@ -150,6 +151,8 @@ int main(){
         }
     }
 
+
+    arraynavi = calloc(SO_NAVI,sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for(i=0;i<SO_NAVI;i++){
         na[i] = fork();
@@ -159,6 +162,21 @@ int main(){
         }
         if(na[i] == 0){
             /* CHILD */
+            arraynavi[i].pid = getpid();
+            do{
+                    int RANDMAX = (int)SO_LATO;
+                    clock_gettime(CLOCK_REALTIME ,&now);
+                    arraynavi[i].x = (double)(now.tv_nsec % (RANDMAX*100))/100;
+                    clock_gettime(CLOCK_REALTIME ,&now);
+                    arraynavi[i].y = (double)(now.tv_nsec % (RANDMAX*100))/100;
+                    uguali = 0;
+                    for(j=0;j<i;j++){
+                        if(arraynavi[i].x == arraynavi[j].x && arraynavi[i].y == arraynavi[j].y){
+                            uguali = 1;
+                        }
+                    }
+            }while(uguali);
+            printf("creazione nave %d con cordinate x=%.2f, y=%.2f\n\n", arraynavi[i].pid, arraynavi[i].x,arraynavi[i].y);
             execvp("./nave", nave);
             TEST_ERROR;
             exit(EXIT_FAILURE);
