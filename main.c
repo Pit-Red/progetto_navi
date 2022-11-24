@@ -11,7 +11,7 @@
 #include <sys/msg.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPUt
+#define NO_INPU
 
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
@@ -26,7 +26,7 @@
 /*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 pid_t* na;
 pid_t* po;
-int SO_NAVI, SO_PORTI;
+int SO_NAVI, SO_PORTI, q_id;
 
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 typedef struct{
@@ -42,6 +42,8 @@ struct my_msg_q{
 };
 
 void handle_alarm(int signal);
+/*HANDLER PER IL SEGNALE MANUALE DI TERMINAZIONE*/
+void close_all(int signum);
 
 
 /*HANDLER PER IL SEGNALE DI FINE PROGRAMMA (ALARM)*/
@@ -52,13 +54,17 @@ int main(){
     struct timespec now;
     sinfo* arrayporti;
     sinfo* arraynavi;
-    int i,j,c, q_id;
+    int i,j,c;
     double SO_LATO;
     char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     char* porto[] = {"", "12", "25","34",NULL};
     int status;
     FILE* my_f;
+    struct sigaction ca;
     struct sigaction sa;
+    bzero(&ca,sizeof(ca));
+    ca.sa_handler = close_all;
+    sigaction(SIGINT, &ca, NULL);
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_alarm;
     sigaction(SIGALRM, &sa, NULL);
@@ -150,7 +156,7 @@ int main(){
             /* PARENT */
         }
     }
-
+    
 
     arraynavi = calloc(SO_NAVI,sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
@@ -215,3 +221,11 @@ void handle_alarm(int signum){
         wait(&status);
     }
 }
+ void close_all(int signum){
+    /*DEALLOCAZIONE DELLA CODA*/
+    while(msgctl(q_id, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    printf("\n\nFine del programma\n");
+    exit(0);
+ }
