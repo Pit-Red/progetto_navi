@@ -28,11 +28,12 @@ pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI;
 
+/*STRUCT PER DEFINIRE LE COORDINATE DELLE NAVI E DEI PORTI CON I RELATIVI PID*/
 typedef struct{
     pid_t pid;
     double x;
     double y;
-}sporto;
+}sinfo;
 
 struct my_msg_q{
 	long mtype;
