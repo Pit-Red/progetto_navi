@@ -12,7 +12,9 @@
 
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPU
-
+/*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
+#define SO_VELOCITA "20"
+#define SO_CAPACITY "100"
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -56,7 +58,7 @@ int main(){
     sinfo* arraynavi;
     int i,j,c;
     double SO_LATO;
-    char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
+    char* nave[]= {"",SO_CAPACITY,SO_VELOCITA, NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     char* porto[] = {"", "12", "25","34",NULL};
     int status;
     FILE* my_f;
