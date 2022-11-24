@@ -10,7 +10,7 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-/*MACRO PER NON METTERE INPUT ciao*/
+/*MACRO PER NON METTERE INPUT*/
 #define NO_INPUT
 
 
@@ -22,8 +22,8 @@
 					  getpid(),			\
 					  errno,			\
 					  strerror(errno));}
-/*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 
+/*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI;
@@ -80,9 +80,9 @@ int main(){
 #endif
 
 #ifdef NO_INPUT
-    SO_LATO = 10;   //(n > 0) !di tipo double!
-    SO_NAVI = 3;    //(n >= 1)
-    SO_PORTI = 5;   //(n >= 4)
+    SO_LATO = 10;   /*(n > 0) !di tipo double!*/
+    SO_NAVI = 3;    /*(n >= 1)*/
+    SO_PORTI = 5;   /*(n >= 4)*/
     printf("\nSO_LATO = %f",SO_LATO);
     printf("\nSO_NAVI = %d",SO_NAVI);
     printf("\nSO_PORTI = %d\n\n",SO_PORTI);
@@ -114,8 +114,8 @@ int main(){
                     arrayporti[i].y = 0;
                     break;
                 case 2:
-                    arrayporti[i].x = SO_LATO;
-                    arrayporti[i].y = 0;
+                    arrayporti[i].x = 0;
+                    arrayporti[i].y = SO_LATO;
                     break;
                 case 3:
                     arrayporti[i].x = SO_LATO;
