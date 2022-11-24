@@ -28,7 +28,7 @@ pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI;
 
-/*STRUCT PER DEFINIRE LE COORDINATE DELLE NAVI E DEI PORTI CON I RELATIVI PID*/
+/*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 typedef struct{
     pid_t pid;
     double x;
@@ -49,7 +49,7 @@ void handle_alarm(int signal);
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
     struct timespec now;
-    sporto* arrayporti;
+    sinfo* arrayporti, arraynavi;
     int i,c, q_id;
     double SO_LATO;
     char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
