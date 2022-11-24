@@ -49,8 +49,8 @@ void handle_alarm(int signal);
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
     struct timespec now;
-    sinfo* arrayporti, arraynavi;
-    int i,c, q_id;
+    sinfo* arrayporti, *arraynavi;
+    int i,j,c, q_id;
     double SO_LATO;
     char* nave[]= {"","35","15.3","3.5", NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     char* porto[] = {"", "12", "25","34",NULL};
@@ -82,9 +82,9 @@ int main(){
 
 #ifdef NO_INPUT
     SO_LATO = 10;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 3;    /*(n >= 1)*/
+    SO_NAVI = 5;    /*(n >= 1)*/
     SO_PORTI = 5;   /*(n >= 4)*/
-    printf("\nSO_LATO = %f",SO_LATO);
+    printf("\nSO_LATO = %.2f",SO_LATO);
     printf("\nSO_NAVI = %d",SO_NAVI);
     printf("\nSO_PORTI = %d\n\n",SO_PORTI);
 #endif
@@ -124,11 +124,20 @@ int main(){
                     break;
             }
             if(i>3){
-                int RANDMAX = (int)SO_LATO;
-                clock_gettime(CLOCK_REALTIME ,&now);
-                arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX*100))/100;
-                clock_gettime(CLOCK_REALTIME ,&now);
-                arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX*100))/100;
+                j=0;
+                do{
+                    int RANDMAX = (int)SO_LATO;
+                    clock_gettime(CLOCK_REALTIME ,&now);
+                    arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX*100))/100;
+                    clock_gettime(CLOCK_REALTIME ,&now);
+                    arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX*100))/100;
+                    for(j=0;j<(SO_PORTI-i);j++){
+                        if(arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y){
+                            printf("Due porti hanno le stesse coordinate!!!");
+                            break;
+                        }
+                    }
+                }while(arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y);
             }
             printf("creazione porto %d con cordinate x=%.2f, y=%.2f\n\n", arrayporti[i].pid, arrayporti[i].x,arrayporti[i].y);
             execvp("./porto", porto);
@@ -164,7 +173,10 @@ int main(){
     while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
-    
+ /*   while(msgctl(8, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+*/
     printf("\n\nFine del programma\n");
     
     exit(EXIT_SUCCESS);
