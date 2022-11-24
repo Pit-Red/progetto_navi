@@ -11,7 +11,7 @@
 #include <sys/msg.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPUT
+#define NO_INPUt
 
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
@@ -48,6 +48,7 @@ void handle_alarm(int signal);
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
+    short portiuguali;
     struct timespec now;
     sinfo* arrayporti, *arraynavi;
     int i,j,c, q_id;
@@ -83,7 +84,7 @@ int main(){
 #ifdef NO_INPUT
     SO_LATO = 10;   /*(n > 0) !di tipo double!*/
     SO_NAVI = 5;    /*(n >= 1)*/
-    SO_PORTI = 5;   /*(n >= 4)*/
+    SO_PORTI = 20;   /*(n >= 4)*/
     printf("\nSO_LATO = %.2f",SO_LATO);
     printf("\nSO_NAVI = %d",SO_NAVI);
     printf("\nSO_PORTI = %d\n\n",SO_PORTI);
@@ -131,13 +132,13 @@ int main(){
                     arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX*100))/100;
                     clock_gettime(CLOCK_REALTIME ,&now);
                     arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX*100))/100;
-                    for(j=0;j<(SO_PORTI-i);j++){
+                    portiuguali = 0;
+                    for(j=0;j<i;j++){
                         if(arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y){
-                            printf("Due porti hanno le stesse coordinate!!!");
-                            break;
+                            portiuguali = 1;
                         }
                     }
-                }while(arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y);
+                }while(portiuguali);
             }
             printf("creazione porto %d con cordinate x=%.2f, y=%.2f\n\n", arrayporti[i].pid, arrayporti[i].x,arrayporti[i].y);
             execvp("./porto", porto);
@@ -172,11 +173,13 @@ int main(){
     /*DEALLOCAZIONE DELLA CODA*/
     while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
-    }
- /*   while(msgctl(8, IPC_RMID, NULL)){
+    }/*
+    while(msgctl(1, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
-*/
+    while(msgctl(8, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }*/
     printf("\n\nFine del programma\n");
     
     exit(EXIT_SUCCESS);
