@@ -3,8 +3,11 @@
 #include <signal.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
+#include <errno.h>
 
-#define SO_CAPACITY rand()%massimo + 50
+int capacita, velocita;
+double ord,asc;
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
@@ -14,17 +17,35 @@ void handle_signal(int signum){
 
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
-    int velocita = atoi(argv[1]);
     struct sigaction sa;
-    double ordinata = atof(argv[2]), ascissa = atof(argv[3]), distanza;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT,&sa,NULL);
     srand(time(NULL));
+    capacita = atoi(argv[1]);
+    velocita = atoi(argv[2]);
+    pow(capacita, 2);
+    ord = atoi(argv[3]);
+     asc = atoi(argv[4]);
     
     printf("E' stata creata la nave.\n");
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
     exit(0);
+}
+
+/*LA SEGUENTE FUNZIONE SERVE PER FAR SPOSTARE LA NAVE IN UN ALTRO PORTO.
+    È STATA FATTA IN MODO CHE, DOPO UNA SOLA NANOSLEEP, LA NAVE ARRIVI A DESTINAZIONE.*/
+void navigazione(double x, double y){
+    double dist;
+    double tempo;
+    struct timespec my_time;
+    dist = sqrt(pow((y-ord),2)+pow((x-asc),2));
+    tempo = dist/velocita;
+    my_time.tv_sec = (int)tempo;
+    my_time.tv_nsec = tempo-(int)tempo;
+    nanosleep(&my_time, NULL);
+    ord = y;
+    asc = x;
 }
