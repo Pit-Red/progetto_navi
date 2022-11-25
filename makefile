@@ -15,3 +15,14 @@ porto: porto.c
 
 clean:
 	rm -f *.o main nave porto
+	
+download:
+	rm -f *
+	git init
+	git pull https://github.com/Pit-Red/progetto_navi.git
+
+upload:
+	git add .
+	git commit -m "commit from make"
+	git push https://github.com/Pit-Red/progetto_navi.git
+	echo ciao
