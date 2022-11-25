@@ -24,6 +24,7 @@ download:
 	git init
 	git pull https://github.com/Pit-Red/progetto_navi.git
 
+#attualmente l'upload non funge sorry
 upload:
 	git add .
 	git commit -m "commit from make"
