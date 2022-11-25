@@ -27,6 +27,8 @@ int sem_id;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
+    semctl(sem_id,1,IPC_RMID);
+    TEST_ERROR;
     printf("E' stato ucciso il porto.\n");
     exit(0);
 }
