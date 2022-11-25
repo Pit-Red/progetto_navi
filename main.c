@@ -1,4 +1,3 @@
-#define GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,10 +10,12 @@
 #include <sys/msg.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPU
+#define NO_INPUT
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
+/*MACRO UTILIZZATA PER TRASFORMARE DOUBLE IN STRINGA*/
+#define STRINGA(x) "x"
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -58,7 +59,7 @@ int main(){
     sinfo* arraynavi;
     int i,j,c;
     double SO_LATO;
-    char* nave[]= {"",SO_CAPACITY,SO_VELOCITA, NULL};  /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
+    char* nave[] = {"",SO_CAPACITY,SO_VELOCITA, "30", "40",NULL}; /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     char* porto[] = {"", "12", "25","34",NULL};
     int status;
     FILE* my_f;
@@ -184,6 +185,9 @@ int main(){
                         }
                     }
             }while(uguali);
+ /*           sprintf(nave[3], "%f",arraynavi[i].y);
+            sprintf(nave[4], "%f",arraynavi[i].x);
+            TEST_ERROR;*/
             printf("creazione nave %d con cordinate x=%.2f, y=%.2f\n\n", arraynavi[i].pid, arraynavi[i].x,arraynavi[i].y);
             execvp("./nave", nave);
             TEST_ERROR;
