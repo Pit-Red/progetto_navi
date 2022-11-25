@@ -53,15 +53,18 @@ void close_all(int signum);
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
+    char* nave[6];
+    char* porto[5];
+    int idshmnavi, idshmporti;
+    sinfo* shmnavi, shmporti;
     short uguali;
     struct timespec now;
     sinfo* arrayporti;
     sinfo* arraynavi;
     int i,j,c;
     double SO_LATO;
-    char* nave[] = {"",SO_CAPACITY,SO_VELOCITA, "30", "40",NULL}; /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
-    char* porto[] = {"", "12", "25","34",NULL};
     int status;
+    FILE* my_f;
     struct sigaction ca;
     struct sigaction sa;
     bzero(&ca,sizeof(ca));
@@ -72,7 +75,7 @@ int main(){
     sigaction(SIGALRM, &sa, NULL);
 
     /*CREO LA CODA DI MESSAGGI*/
-    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600);
+    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
     TEST_ERROR;
 
     srand(time(NULL));
@@ -98,12 +101,14 @@ int main(){
     printf("\nSO_NAVI = %d",SO_NAVI);
     printf("\nSO_PORTI = %d\n\n",SO_PORTI);
 #endif
-
+    idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
+    idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
     /*ALLOCAZ   IONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI,sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
 
     alarm(4);
+    porto = {"", "12", "25","34",NULL};
     arrayporti = calloc(SO_PORTI,sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
     for(i=0;i<SO_PORTI;i++){
@@ -158,7 +163,10 @@ int main(){
             /* PARENT */
         }
     }
-    
+    shmporti = shmat(idshmporti,NULL,0);
+    strncpy((char*)shmporti, (char*)arrayporti, sizeof(arrayporti));
+
+    nave = {"",SO_CAPACITY,SO_VELOCITA, "30", "40", itoa(idshmporti),NULL}; /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     arraynavi = calloc(SO_NAVI,sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for(i=0;i<SO_NAVI;i++){
@@ -201,8 +209,7 @@ int main(){
     /*DEALLOCAZIONE DELLA CODA*/
     while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
-    }
-    /*
+    }/*
     while(msgctl(1, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
