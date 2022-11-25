@@ -10,7 +10,7 @@
 #include <sys/msg.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPUT
+#define NO_INPU
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
@@ -62,7 +62,6 @@ int main(){
     char* nave[] = {"",SO_CAPACITY,SO_VELOCITA, "30", "40",NULL}; /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     char* porto[] = {"", "12", "25","34",NULL};
     int status;
-    FILE* my_f;
     struct sigaction ca;
     struct sigaction sa;
     bzero(&ca,sizeof(ca));
@@ -73,7 +72,7 @@ int main(){
     sigaction(SIGALRM, &sa, NULL);
 
     /*CREO LA CODA DI MESSAGGI*/
-    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600);
     TEST_ERROR;
 
     srand(time(NULL));
@@ -160,7 +159,6 @@ int main(){
         }
     }
     
-
     arraynavi = calloc(SO_NAVI,sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for(i=0;i<SO_NAVI;i++){
@@ -203,7 +201,8 @@ int main(){
     /*DEALLOCAZIONE DELLA CODA*/
     while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
-    }/*
+    }
+    /*
     while(msgctl(1, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
