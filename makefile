@@ -18,6 +18,7 @@ clean:
 	
 download:
 	rm -f *
+	rm -rf .git
 	git init
 	git pull https://github.com/Pit-Red/progetto_navi.git
 
