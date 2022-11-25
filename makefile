@@ -2,7 +2,9 @@
 FLAGS= -std=c89 -pedantic -D_GNU_SOURCE
 
 all: nave porto main
-	echo $^
+	
+avvia: main nave porto
+	./main
 	
 main: main.c
 	gcc $(FLAGS) main.c -o main
