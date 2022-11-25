@@ -9,6 +9,8 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
+/*ciao*/
+
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUT
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
