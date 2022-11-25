@@ -10,7 +10,7 @@
 #include <sys/msg.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPU
+#define NO_INPUT
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
