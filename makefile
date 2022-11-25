@@ -10,7 +10,7 @@ main: main.c
 	gcc $(FLAGS) main.c -o main
 	
 nave: nave.c
-	gcc $(FLAGS) nave.c -o nave
+	gcc $(FLAGS) nave.c -o nave -lm
 
 porto: porto.c
 	gcc $(FLAGS) porto.c -o porto
