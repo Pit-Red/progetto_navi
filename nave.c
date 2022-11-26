@@ -5,13 +5,17 @@
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+
 
 int capacita, velocita;
 double ord,asc;
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
-    printf("E' stata uccisa la nave\n");
+    printf("uccisa nave [%d]\n", getpid());
     exit(EXIT_SUCCESS);
 }
 

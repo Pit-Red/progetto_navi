@@ -29,7 +29,7 @@ int sem_id;
 void handle_signal(int signum){
     semctl(sem_id,1,IPC_RMID);
     TEST_ERROR;
-    printf("E' stato ucciso il porto.\n");
+    printf("ucciso porto [%d]\n", getpid());
     exit(0);
 }
 

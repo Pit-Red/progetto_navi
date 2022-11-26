@@ -18,6 +18,11 @@ porto: porto.c
 clean:
 	rm -f *.o main nave porto
 	
+touch:
+	touch main.c
+	touch nave.c
+	touch porto.c
+
 download:
 	rm -f *
 	rm -rf .git
@@ -30,3 +35,4 @@ upload:
 	git commit -m "commit from make"
 	git push https://github.com/Pit-Red/progetto_navi.git
 	echo ciao
+
