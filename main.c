@@ -86,14 +86,14 @@ int main() {
     printf("\033[033;34m");
     system("clear");
 #ifndef NO_INPUT
-    printf("inserisci la grandezza della mappa:");
+    printf("inserisci la grandezza della mappa: ");
     scanf("%le", &SO_LATO);
     do {
-        printf("inserisci il numero di navi:");
+        printf("inserisci il numero di navi: ");
         scanf("%d", &SO_NAVI);
     } while (SO_NAVI < 1);
     do {
-        printf("inserisci il numero di porti:");
+        printf("inserisci il numero di porti: ");
         scanf("%d", &SO_PORTI);
     } while (SO_PORTI < 4);
     system("clear");
