@@ -24,9 +24,8 @@ int main(int argc, char** argv){
     srand(time(NULL));
     capacita = atoi(argv[1]);
     velocita = atoi(argv[2]);
-    pow(capacita, 2);
     ord = atoi(argv[3]);
-     asc = atoi(argv[4]);
+    asc = atoi(argv[4]);
     
     printf("E' stata creata la nave.\n");
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
