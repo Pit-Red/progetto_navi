@@ -10,9 +10,10 @@
 #include <sys/msg.h>
 #include <sys/shm.h>
 #include <sys/types.h>
+#define _OPEN_SYS_ITOA_EXT
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPU
+#define NO_INPUT
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
@@ -54,7 +55,8 @@ void close_all(int signum);
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
-    char* nave[7]={"",SO_CAPACITY,SO_VELOCITA, "30", "40","", NULL};
+    char stringporti[3*sizeof(idshmporti)+1];
+    char* nave[7]={"",SO_CAPACITY,SO_VELOCITA, "30", "40"};
     char* porto[5] = {"", "12", "25","34",NULL};
     char* shmnavi, *shmporti;
     short uguali;
@@ -74,8 +76,8 @@ int main(){
     sigaction(SIGALRM, &sa, NULL);
 
     /*CREO LA CODA DI MESSAGGI*/
-    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
-    TEST_ERROR;
+    /*q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    TEST_ERROR;*/
 
     srand(time(NULL));
 	
@@ -105,7 +107,10 @@ int main(){
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI,sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
-    sprintf(nave[5], "%d",idshmporti); 
+    printf("\n%d\n", idshmporti);
+    sprintf(stringporti, "%d",idshmporti);
+    nave[5] = stringporti; 
+    nave[6] = NULL;
     alarm(4);
     arrayporti = calloc(SO_PORTI,sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
@@ -193,7 +198,7 @@ int main(){
             sprintf(nave[4], "%f",arraynavi[i].x);
             TEST_ERROR;*/
             printf("creazione nave %d con cordinate x=%.2f, y=%.2f\n\n", arraynavi[i].pid, arraynavi[i].x,arraynavi[i].y);
-            execvp("./nave", nave);
+            execvp("./nave",nave);
             TEST_ERROR;
             exit(EXIT_FAILURE);
         }
@@ -204,18 +209,36 @@ int main(){
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
 	
+    shmctl(idshmporti, IPC_RMID, NULL);
+    TEST_ERROR;
     /*DEALLOCAZIONE DELLA CODA*/
-    while(msgctl(q_id, IPC_RMID, NULL)){
+    /*while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
 
-    shmctl(idshmporti, IPC_RMID, NULL);
-    TEST_ERROR;
-    /*
+    
     while(msgctl(1, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
-    while(msgctl(8, IPC_RMID, NULL)){
+    while(msgctl(7, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    while(msgctl(0, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    while(msgctl(2, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    while(msgctl(3, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    while(msgctl(4, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    while(msgctl(5, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    while(msgctl(6, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }*/
     printf("\n\nFine del programma\n");

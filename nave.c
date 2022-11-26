@@ -27,7 +27,7 @@ int main(int argc, char** argv){
     ord = atoi(argv[3]);
     asc = atoi(argv[4]);
     
-    printf("E' stata creata la nave.\n");
+    printf("E' stata creata la nave, l'id della memoria condivisa e': %d\n", atoi(argv[5]));
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
