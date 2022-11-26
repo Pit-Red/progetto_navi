@@ -8,14 +8,14 @@
 #include <sys/wait.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
+#include <sys/types.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPUT
+#define NO_INPU
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
-/*MACRO UTILIZZATA PER TRASFORMARE DOUBLE IN STRINGA*/
-#define STRINGA(x) "x"
 
 /* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -30,6 +30,7 @@
 pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI, q_id;
+int idshmnavi, idshmporti;
 
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 typedef struct{
@@ -53,10 +54,9 @@ void close_all(int signum);
 
 int main(){
     /* DICHIARAZIONE DELLE VARIABILI */
-    char* nave[6];
-    char* porto[5];
-    int idshmnavi, idshmporti;
-    sinfo* shmnavi, shmporti;
+    char* nave[7]={"",SO_CAPACITY,SO_VELOCITA, "30", "40","", NULL};
+    char* porto[5] = {"", "12", "25","34",NULL};
+    char* shmnavi, *shmporti;
     short uguali;
     struct timespec now;
     sinfo* arrayporti;
@@ -64,7 +64,6 @@ int main(){
     int i,j,c;
     double SO_LATO;
     int status;
-    FILE* my_f;
     struct sigaction ca;
     struct sigaction sa;
     bzero(&ca,sizeof(ca));
@@ -103,12 +102,11 @@ int main(){
 #endif
     idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
-    /*ALLOCAZ   IONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
+    /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI,sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
-
+    sprintf(nave[5], "%d",idshmporti); 
     alarm(4);
-    porto = {"", "12", "25","34",NULL};
     arrayporti = calloc(SO_PORTI,sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
     for(i=0;i<SO_PORTI;i++){
@@ -161,12 +159,12 @@ int main(){
         }
         else{
             /* PARENT */
+            printf("creazione porti\n\n");
         }
     }
     shmporti = shmat(idshmporti,NULL,0);
-    strncpy((char*)shmporti, (char*)arrayporti, sizeof(arrayporti));
+    strncpy(shmporti, (char*)arrayporti, sizeof(arrayporti));
 
-    nave = {"",SO_CAPACITY,SO_VELOCITA, "30", "40", itoa(idshmporti),NULL}; /*STO PASSANDO COME ARGOMENTO LA VELOCITA DELLA NAVE E LA POSIZIONE INIZIALE*/
     arraynavi = calloc(SO_NAVI,sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for(i=0;i<SO_NAVI;i++){
@@ -209,7 +207,11 @@ int main(){
     /*DEALLOCAZIONE DELLA CODA*/
     while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
-    }/*
+    }
+
+    shmctl(idshmporti, IPC_RMID, NULL);
+    TEST_ERROR;
+    /*
     while(msgctl(1, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
@@ -238,6 +240,13 @@ void handle_alarm(int signum){
     while(msgctl(q_id, IPC_RMID, NULL)){
 	    TEST_ERROR;
     }
+    while(msgctl(6, IPC_RMID, NULL)){
+	    TEST_ERROR;
+    }
+    shmctl(idshmporti, IPC_RMID, NULL);
+    shmctl(29, IPC_RMID, NULL);
+    shmctl(30, IPC_RMID, NULL);
+    TEST_ERROR;
     printf("\n\nFine del programma\n");
     exit(0);
  }
