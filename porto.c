@@ -29,7 +29,9 @@ int sem_id;
 void handle_signal(int signum){
     semctl(sem_id,1,IPC_RMID);
     TEST_ERROR;
-    printf("ucciso porto [%d]\n", getpid());
+    printf("\033[0;31m");
+    printf("ucciso porto[%d]\n", getpid());
+    printf("\033[0m");
     exit(0);
 }
 
@@ -49,9 +51,8 @@ int main(int argc, char** argv){
     /*DEFINIZIONE DEL NUMERO DI BANCHINE*/
     clock_gettime(CLOCK_REALTIME ,&now);
     SO_BANCHINE = now.tv_nsec % SO_BANCHINE;
-    printf("E' stato creato un porto con %d banchine\n\n\n", SO_BANCHINE);
+    printf("creato porto[%d] con %d banchine\n\n",getpid(), SO_BANCHINE);
     TEST_ERROR;
-
 
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.

@@ -15,7 +15,10 @@ double ord,asc;
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
-    printf("uccisa nave [%d]\n", getpid());
+    printf("\033[0;31m");
+    printf("uccisa nave[%d]\n", getpid());
+    printf("\033[0m");
+
     exit(EXIT_SUCCESS);
 }
 
@@ -31,7 +34,7 @@ int main(int argc, char** argv){
     ord = atoi(argv[3]);
     asc = atoi(argv[4]);
     
-    printf("E' stata creata la nave, l'id della memoria condivisa e': %d\n", atoi(argv[5]));
+    printf("creata nave[%d] , id della memoria condivisa: %d\n",getpid(), atoi(argv[5]));
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
