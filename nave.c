@@ -1,17 +1,40 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
 #include <signal.h>
 #include <time.h>
-#include <string.h>
-#include <math.h>
-#include <errno.h>
+#include <sys/wait.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+#include <sys/shm.h>
 #include <sys/types.h>
-#include <unistd.h>
+#include <math.h>
+#include <sys/sem.h>
 
+/* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
+#define TEST_ERROR    if (errno) {fprintf(stderr,           \
+                      "%s:%d: PID=%5d: Error %d (%s)\n", \
+                      __FILE__,         \
+                      __LINE__,         \
+                      getpid(),         \
+                      errno,            \
+                      strerror(errno));}
 
 
 int capacita, velocita;
 double ord,asc;
+
+typedef struct {
+    pid_t pid;
+    double x;
+    double y;
+} sinfo;
+
+void sem_accesso(int semid,int num_risorsa);
+
+void sem_uscita(int semid,int num_risorsa);
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
@@ -24,19 +47,31 @@ void handle_signal(int signum){
 
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
+    int sem_id;
+    sinfo* shmnavi, *shmporti;
     struct sigaction sa;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT,&sa,NULL);
     srand(time(NULL));
-    capacita = atoi(argv[1]);
-    velocita = atoi(argv[2]);
-    ord = atoi(argv[3]);
-    asc = atoi(argv[4]);
+    capacita = atoi(argv[4]);
+    velocita = atoi(argv[5]);
+    shmporti = shmat(atoi(argv[2]), NULL, 0);
+    shmnavi = shmat(atoi(argv[3]), NULL, 0);
+    sem_id = atoi(argv[1]);
+    TEST_ERROR;
+
     
-    printf("creata nave[%d] , id della memoria condivisa: %d\n",getpid(), atoi(argv[5]));
+
+    sem_accesso(sem_id,0);
+
+    printf("\n\nPROVA:%f\n\n",shmnavi[4].x);/*LEZ GOOOOOOOO*/
+
+    sem_uscita(sem_id,0);
+
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
+    
     for(;;){}
     exit(0);
 }
@@ -55,4 +90,25 @@ void navigazione(double x, double y){
     nanosleep(&my_time, NULL);
     ord = y;
     asc = x;
+}
+
+void sem_accesso(int semid, int num_risorsa){
+    struct sembuf my_op;
+    printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);
+    my_op.sem_num = num_risorsa;
+    my_op.sem_flg = 0;
+    my_op.sem_op = -1;
+    semop(semid,&my_op,1);
+    printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);
+    TEST_ERROR;
+}
+
+void sem_uscita(int semid, int num_risorsa){
+    struct sembuf my_op;
+    my_op.sem_num = num_risorsa;
+    my_op.sem_flg = 0;
+    my_op.sem_op = 1;
+    semop(semid,&my_op,1);
+    printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);
+    TEST_ERROR;
 }

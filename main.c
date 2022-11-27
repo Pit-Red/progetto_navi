@@ -10,10 +10,10 @@
 #include <sys/msg.h>
 #include <sys/shm.h>
 #include <sys/types.h>
-#define _OPEN_SYS_ITOA_EXT
+#include <sys/sem.h>
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPUt
+#define NO_INPUT
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
@@ -50,15 +50,21 @@ void handle_alarm(int signal);
 /*HANDLER PER IL SEGNALE MANUALE DI TERMINAZIONE*/
 void close_all(int signum);
 
+void sem_accesso(int semid,int num_risorsa);
+
+void sem_uscita(int semid,int num_risorsa);
 
 /*HANDLER PER IL SEGNALE DI FINE PROGRAMMA (ALARM)*/
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
+    int sem_id; /*id del semaforo che permette l'accesso alla shm*/
+    char stringsem_id[3 * sizeof(sem_id) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
-    char* nave[7] = {"", SO_CAPACITY, SO_VELOCITA, "30", "40"};
-    char* porto[5] = {"", "12", "25", "34", NULL};
-    char* shmnavi, *shmporti;
+    char stringnavi[3 * sizeof(idshmnavi) + 1];
+    char* nave[8] = {""};
+    char* porto[8] = {""};
+    sinfo* shmnavi, *shmporti;
     short uguali;
     struct timespec now;
     sinfo* arrayporti;
@@ -74,6 +80,10 @@ int main() {
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_alarm;
     sigaction(SIGALRM, &sa, NULL);
+
+    sem_id = semget(IPC_PRIVATE, 2, 0600); /*INIZIALIZZAZIONE DI 2 SEMAFORI,
+                                            IL SEMAFORO 0 SI OCCUPA DELLA SHM DEL 
+                                            PORTO ED IL SEMAFORO 1 DELLA SHM DELLE NAVI*/
 
     /*CREO LA CODA DI MESSAGGI*/
     /*q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
@@ -102,7 +112,7 @@ int main() {
 #ifdef NO_INPUT
     SO_LATO = 10;   /*(n > 0) !di tipo double!*/
     SO_NAVI = 5;    /*(n >= 1)*/
-    SO_PORTI = 20;   /*(n >= 4)*/
+    SO_PORTI = 5;   /*(n >= 4)*/
 #endif
     /*FINE INPUT*/
 
@@ -110,20 +120,43 @@ int main() {
     printf("\nSO_LATO = %.2f", SO_LATO);
     printf("\nSO_NAVI = %d", SO_NAVI);
     printf("\nSO_PORTI = %d", SO_PORTI);
-
+   
     idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
+    shmporti = shmat(idshmporti, NULL, 0);
+    shmnavi = shmat(idshmnavi, NULL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI, sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
     printf("\nidshmporti: %d\n\n", idshmporti);
     printf("\033[0m");
     /*FINE MENU*/
-
+    sprintf(stringsem_id, "%d", sem_id);
     sprintf(stringporti, "%d", idshmporti);
-    nave[5] = stringporti;
+    TEST_ERROR;
+    porto[1] = stringsem_id;
+    porto[2] = stringporti;
+    porto[3] = stringnavi;
+    porto[4] = NULL;
+    sprintf(stringnavi, "%d", idshmnavi);
+    TEST_ERROR;
+    nave[1] = stringsem_id;
+    nave[2] = stringporti;
+    nave[3] = stringnavi;
+    nave[4] = SO_CAPACITY;
+    nave[5] = SO_VELOCITA;
     nave[6] = NULL;
-    alarm(4);
+
+    /*DICHIARAZOINE SEMAFORO FIRST*/
+    semctl(sem_id, 0 , SETVAL, 1);
+    semctl(sem_id, 1 , SETVAL, 1);
+    TEST_ERROR;
+
+
+    TEST_ERROR;
+    printf("\n\nciao\n\n");
+
+    alarm(5);
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
     for (i = 0; i < SO_PORTI; i++) {
@@ -169,19 +202,23 @@ int main() {
                     }
                 } while (uguali);
             }
-            printf("creazione porto[%d] con coordinate x=%.2f, y=%.2f\n\n", arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y);
+            sem_accesso(sem_id,0);
+            shmporti[i] = arrayporti[i];
+            sem_uscita(sem_id,0);
+            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y);
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
         }
         else {
-            /* PARENT */
-            printf("creazione porti\n");
+
         }
     }
-    shmporti = shmat(idshmporti, NULL, 0);
-    strncpy(shmporti, (char*)arrayporti, sizeof(arrayporti));
-
+    /*sem_accesso(sem_id,0);
+    strncpy((char*)shmporti, (char*)arrayporti, sizeof(arrayporti));
+    TEST_ERROR;
+    sem_uscita(sem_id,0);*/
+    printf("\n\nPROVA:%f\n\n",arrayporti[4].x);
     arraynavi = calloc(SO_NAVI, sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for (i = 0; i < SO_NAVI; i++) {
@@ -209,7 +246,10 @@ int main() {
             /*           sprintf(nave[3], "%f",arraynavi[i].y);
                        sprintf(nave[4], "%f",arraynavi[i].x);
                        TEST_ERROR;*/
-            printf("creazione nave[%d] con coordinate x=%.2f, y=%.2f\n\n", arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
+            sem_accesso(sem_id,1);
+            shmnavi[i] = arraynavi[i];
+            sem_uscita(sem_id,1);
+            printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n",i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
             execvp("./nave", nave);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -218,8 +258,14 @@ int main() {
             /* PARENT */
         }
     }
+    /*sem_accesso(sem_id,1);
+    strncpy((char*)shmnavi, (char*)arraynavi, sizeof(arraynavi));
+    TEST_ERROR;
+    sem_uscita(sem_id,1);*/
+
+    TEST_ERROR;
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
-    pause();
+    printf("\n\n%d\n\n",pause());
 
     shmctl(idshmporti, IPC_RMID, NULL);
     TEST_ERROR;
@@ -263,11 +309,15 @@ void handle_alarm(int signum) {
     printf("\n\n\n\n");
     for (i = 0; i < SO_NAVI; i++) {
         kill(na[i], SIGINT);
+        TEST_ERROR;
         wait(&status);
+        TEST_ERROR;
     }
     for (i = 0; i < SO_PORTI; i++) {
         kill(po[i], SIGINT);
+        TEST_ERROR;
         wait(&status);
+        TEST_ERROR;
     }
 }
 void close_all(int signum) {
@@ -284,4 +334,25 @@ void close_all(int signum) {
     TEST_ERROR;
     printf("\n\n\033[0;33mFine del programma\n");
     exit(0);
+}
+
+void sem_accesso(int semid,int num_risorsa){
+    struct sembuf my_op;
+    printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);
+    my_op.sem_num = num_risorsa;
+    my_op.sem_flg = 0;
+    my_op.sem_op = -1;
+    semop(semid,&my_op,1);
+    printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);
+    TEST_ERROR;
+}
+
+void sem_uscita(int semid,int num_risorsa){
+    struct sembuf my_op;
+    my_op.sem_num = num_risorsa;
+    my_op.sem_flg = 0;
+    my_op.sem_op = 1;
+    semop(semid,&my_op,1);
+    printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);
+    TEST_ERROR;
 }
