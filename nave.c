@@ -22,20 +22,25 @@
                       errno,            \
                       strerror(errno));}
 
-
-int capacita, velocita;
-double ord,asc;
-int id;
-
 typedef struct {
     pid_t pid;
     double x;
     double y;
 } sinfo;
 
+int capacita, velocita;
+double ord,asc;
+double xdest,ydest;
+int id;
+int sem_id;
+sinfo* shmnavi, *shmporti;
+
+
 void sem_accesso(int semid,int num_risorsa);
 
 void sem_uscita(int semid,int num_risorsa);
+
+void navigazione(double x, double y);
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
@@ -48,8 +53,6 @@ void handle_signal(int signum){
 
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
-    int sem_id;
-    sinfo* shmnavi, *shmporti;
     struct sigaction sa;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
@@ -63,14 +66,22 @@ int main(int argc, char** argv){
     id = atoi(argv[6]);
     TEST_ERROR;
 
-    sem_accesso(sem_id,0);
+    sem_accesso(sem_id,1);/*sem[0]=>shmporti, sem[1]=>shmnavi*/
     ord = shmnavi[id].x;
     asc = shmnavi[id].y;
-    sem_uscita(sem_id,0);
+    sem_uscita(sem_id,1);
 
-    
-    printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, ord, asc);
-
+    if(id==0){/*prova di navigazione verso porto[0]*/
+        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, ord, asc);
+        sem_accesso(sem_id,0);
+        xdest = shmporti[1].x;
+        ydest = shmporti[1].y;
+        sem_uscita(sem_id,0);
+        printf("navigazione verso porto[1]");
+        navigazione(xdest,ydest);
+        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, shmnavi[0].x, shmnavi[0].y);
+        
+    }
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
@@ -91,16 +102,20 @@ void navigazione(double x, double y){
     nanosleep(&my_time, NULL);
     ord = y;
     asc = x;
+    sem_accesso(sem_id,1);
+    shmnavi[id].x = ord;
+    shmnavi[id].y = asc;
+    sem_uscita(sem_id,1);
 }
 
 void sem_accesso(int semid, int num_risorsa){
     struct sembuf my_op;
-    printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);
+    /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
     my_op.sem_num = num_risorsa;
     my_op.sem_flg = 0;
     my_op.sem_op = -1;
     semop(semid,&my_op,1);
-    printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);
+    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
 
@@ -110,6 +125,6 @@ void sem_uscita(int semid, int num_risorsa){
     my_op.sem_flg = 0;
     my_op.sem_op = 1;
     semop(semid,&my_op,1);
-    printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);
+    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
