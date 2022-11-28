@@ -206,7 +206,7 @@ int main() {
             shmporti[i] = arrayporti[i];
             sem_uscita(sem_id,0);
             sprintf(stringid,"%d",i);
-            porto[4] = i;
+            porto[4] = stringid;
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y);
             execvp("./porto", porto);
             TEST_ERROR;
@@ -244,7 +244,7 @@ int main() {
             shmnavi[i] = arraynavi[i];
             sem_uscita(sem_id,1);
             sprintf(stringid,"%d",i);
-            nave[6] = i;
+            nave[6] = stringid;
             printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n",i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
             execvp("./nave", nave);
             TEST_ERROR;
