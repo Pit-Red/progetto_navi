@@ -25,6 +25,7 @@
 
 int capacita, velocita;
 double ord,asc;
+int id;
 
 typedef struct {
     pid_t pid;
@@ -59,15 +60,16 @@ int main(int argc, char** argv){
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     shmnavi = shmat(atoi(argv[3]), NULL, 0);
     sem_id = atoi(argv[1]);
+    id = atoi(argv[6]);
     TEST_ERROR;
 
-    
-
     sem_accesso(sem_id,0);
-
-    printf("\n\nPROVA:%f\n\n",shmnavi[4].x);/*LEZ GOOOOOOOO*/
-
+    ord = shmnavi[id].x;
+    asc = shmnavi[id].y;
     sem_uscita(sem_id,0);
+
+    
+    printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, ord, asc);
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
