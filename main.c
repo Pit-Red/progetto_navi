@@ -267,7 +267,9 @@ int main() {
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     printf("\n\n%d\n\n",pause());
 
-    shmctl(idshmporti, IPC_RMID, NULL);
+    semctl(sem_id,1,IPC_RMID);
+    shmctl(idshmporti,IPC_RMID,NULL);
+    shmctl(idshmnavi,IPC_RMID,NULL);
     TEST_ERROR;
     /*DEALLOCAZIONE DELLA CODA*/
     /*while(msgctl(q_id, IPC_RMID, NULL)){
