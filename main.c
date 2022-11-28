@@ -41,11 +41,7 @@ typedef struct {
     double y;
 } sinfo;
 
-struct my_msg_q {
-    long mtype;
-    int quantita;
-    int tipo;
-};
+
 
 void handle_alarm(int signal);
 /*HANDLER PER IL SEGNALE MANUALE DI TERMINAZIONE*/
@@ -185,8 +181,7 @@ int main() {
                 arrayporti[i].x = SO_LATO;
                 arrayporti[i].y = SO_LATO;
                 break;
-            }
-            if (i > 3) {
+            default:
                 j = 0;
                 do {
                     int RANDMAX = (int)SO_LATO;

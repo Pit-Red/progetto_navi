@@ -54,6 +54,7 @@ void handle_signal(int signum){
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
     struct sigaction sa;
+    int temp;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT,&sa,NULL);
@@ -67,19 +68,20 @@ int main(int argc, char** argv){
     TEST_ERROR;
 
     sem_accesso(sem_id,1);/*sem[0]=>shmporti, sem[1]=>shmnavi*/
-    ord = shmnavi[id].x;
-    asc = shmnavi[id].y;
+    asc = shmnavi[id].x;
+    ord = shmnavi[id].y;
     sem_uscita(sem_id,1);
 
-    if(id==0){/*prova di navigazione verso porto[0]*/
-        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, ord, asc);
+    if(id==0){/*prova di navigazione verso porto[1]*/
+        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, asc, ord);
         sem_accesso(sem_id,0);
-        xdest = shmporti[1].x;
-        ydest = shmporti[1].y;
+        temp = rand()%5;
+        xdest = shmporti[temp].x;
+        ydest = shmporti[temp].y;
         sem_uscita(sem_id,0);
-        printf("navigazione verso porto[1]");
+        printf("navigazione verso porto[%d]\n", temp);
         navigazione(xdest,ydest);
-        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, shmnavi[0].x, shmnavi[0].y);
+        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, asc, ord);
         
     }
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
@@ -98,7 +100,7 @@ void navigazione(double x, double y){
     dist = sqrt(pow((y-ord),2)+pow((x-asc),2));
     tempo = dist/velocita;
     my_time.tv_sec = (int)tempo;
-    my_time.tv_nsec = tempo-(int)tempo;
+    my_time.tv_nsec = (tempo-(int)tempo) * 10000;
     nanosleep(&my_time, NULL);
     ord = y;
     asc = x;
