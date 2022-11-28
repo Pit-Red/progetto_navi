@@ -88,13 +88,13 @@ int main() {
     /*CREO LA CODA DI MESSAGGI*/
     /*q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
     TEST_ERROR;*/
-
+    printf("sem_id: %d\n\n",sem_id);
     srand(time(NULL));
 
 
     /*INIZIO INPUT*/
     printf("\033[033;34m");
-    system("clear");
+    
 #ifndef NO_INPUT
     printf("inserisci la grandezza della mappa: ");
     scanf("%le", &SO_LATO);
@@ -106,7 +106,7 @@ int main() {
         printf("inserisci il numero di porti: ");
         scanf("%d", &SO_PORTI);
     } while (SO_PORTI < 4);
-    system("clear");
+    
 #endif
 
 #ifdef NO_INPUT
@@ -218,7 +218,6 @@ int main() {
     strncpy((char*)shmporti, (char*)arrayporti, sizeof(arrayporti));
     TEST_ERROR;
     sem_uscita(sem_id,0);*/
-    printf("\n\nPROVA:%f\n\n",arrayporti[4].x);
     arraynavi = calloc(SO_NAVI, sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for (i = 0; i < SO_NAVI; i++) {
@@ -266,10 +265,13 @@ int main() {
     TEST_ERROR;
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     printf("\n\n%d\n\n",pause());
+    TEST_ERROR;
 
-    semctl(sem_id,1,IPC_RMID);
     shmctl(idshmporti,IPC_RMID,NULL);
+    TEST_ERROR;
     shmctl(idshmnavi,IPC_RMID,NULL);
+    TEST_ERROR;
+    semctl(sem_id,1,IPC_RMID);
     TEST_ERROR;
     /*DEALLOCAZIONE DELLA CODA*/
     /*while(msgctl(q_id, IPC_RMID, NULL)){
@@ -336,16 +338,17 @@ void close_all(int signum) {
     TEST_ERROR;
     printf("\n\n\033[0;33mFine del programma\n");
     exit(0);
+    
 }
 
 void sem_accesso(int semid,int num_risorsa){
     struct sembuf my_op;
-    printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);
+    /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
     my_op.sem_num = num_risorsa;
     my_op.sem_flg = 0;
     my_op.sem_op = -1;
     semop(semid,&my_op,1);
-    printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);
+    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
 
@@ -355,6 +358,6 @@ void sem_uscita(int semid,int num_risorsa){
     my_op.sem_flg = 0;
     my_op.sem_op = 1;
     semop(semid,&my_op,1);
-    printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);
+    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }

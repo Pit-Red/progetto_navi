@@ -33,8 +33,6 @@ int sem_id;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
-    semctl(sem_id,1,IPC_RMID);
-    TEST_ERROR;
     printf("\033[0;31m");
     printf("ucciso porto[%d]\n", getpid());
     printf("\033[0m");
@@ -49,7 +47,6 @@ int main(int argc, char** argv){
     bzero(&sa,sizeof(sa));
     sa.sa_handler = handle_signal;
     SO_BANCHINE = 10;/*RICORDIAMOCI CHE QUESTO NUMERO GLIELO DOBBIAMO PASSARE DAL MAIN*/
-    sem_id = semget(IPC_PRIVATE, SO_BANCHINE, 0600); /*INIZIALIZZAZIONE DI SO_BANCHINE SEMAFORI*/
     TEST_ERROR;
     sigaction(SIGINT,&sa,NULL);
     TEST_ERROR;

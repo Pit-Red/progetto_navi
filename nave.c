@@ -71,7 +71,6 @@ int main(int argc, char** argv){
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
-    
     for(;;){}
     exit(0);
 }
