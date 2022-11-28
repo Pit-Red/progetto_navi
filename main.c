@@ -32,6 +32,7 @@ pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI, q_id;
 int idshmnavi, idshmporti;
+int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 typedef struct {
@@ -58,7 +59,6 @@ void sem_uscita(int semid,int num_risorsa);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
-    int sem_id; /*id del semaforo che permette l'accesso alla shm*/
     char stringsem_id[3 * sizeof(sem_id) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
@@ -154,7 +154,6 @@ int main() {
 
 
     TEST_ERROR;
-    printf("\n\nciao\n\n");
 
     alarm(5);
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
@@ -214,10 +213,6 @@ int main() {
 
         }
     }
-    /*sem_accesso(sem_id,0);
-    strncpy((char*)shmporti, (char*)arrayporti, sizeof(arrayporti));
-    TEST_ERROR;
-    sem_uscita(sem_id,0);*/
     arraynavi = calloc(SO_NAVI, sizeof(*arraynavi));
     /* CREAZIONE DELLE NAVI */
     for (i = 0; i < SO_NAVI; i++) {
@@ -242,9 +237,6 @@ int main() {
                     }
                 }
             } while (uguali);
-            /*           sprintf(nave[3], "%f",arraynavi[i].y);
-                       sprintf(nave[4], "%f",arraynavi[i].x);
-                       TEST_ERROR;*/
             sem_accesso(sem_id,1);
             shmnavi[i] = arraynavi[i];
             sem_uscita(sem_id,1);
@@ -257,52 +249,14 @@ int main() {
             /* PARENT */
         }
     }
-    /*sem_accesso(sem_id,1);
-    strncpy((char*)shmnavi, (char*)arraynavi, sizeof(arraynavi));
-    TEST_ERROR;
-    sem_uscita(sem_id,1);*/
 
     TEST_ERROR;
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
-    printf("\n\n%d\n\n",pause());
-    TEST_ERROR;
+    pause();
 
     shmctl(idshmporti,IPC_RMID,NULL);
-    TEST_ERROR;
     shmctl(idshmnavi,IPC_RMID,NULL);
-    TEST_ERROR;
     semctl(sem_id,1,IPC_RMID);
-    TEST_ERROR;
-    /*DEALLOCAZIONE DELLA CODA*/
-    /*while(msgctl(q_id, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-
-
-    while(msgctl(1, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(7, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(0, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(2, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(3, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(4, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(5, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }
-    while(msgctl(6, IPC_RMID, NULL)){
-        TEST_ERROR;
-    }*/
     printf("\n\nFine del programma\n");
 
     exit(EXIT_SUCCESS);
@@ -325,18 +279,10 @@ void handle_alarm(int signum) {
     }
 }
 void close_all(int signum) {
-    /*DEALLOCAZIONE DELLA CODA*/
-    while (msgctl(q_id, IPC_RMID, NULL)) {
-        TEST_ERROR;
-    }
-    while (msgctl(6, IPC_RMID, NULL)) {
-        TEST_ERROR;
-    }
     shmctl(idshmporti, IPC_RMID, NULL);
-    shmctl(29, IPC_RMID, NULL);
-    shmctl(30, IPC_RMID, NULL);
-    TEST_ERROR;
-    printf("\n\n\033[0;33mFine del programma\n");
+    shmctl(idshmnavi,IPC_RMID,NULL);
+    semctl(sem_id,1,IPC_RMID);
+    printf("\n\nFine del programma\n");
     exit(0);
     
 }
