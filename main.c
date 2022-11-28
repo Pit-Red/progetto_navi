@@ -62,6 +62,7 @@ int main() {
     char stringsem_id[3 * sizeof(sem_id) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
+    char stringid[13];
     char* nave[8] = {""};
     char* porto[8] = {""};
     sinfo* shmnavi, *shmporti;
@@ -137,7 +138,7 @@ int main() {
     porto[1] = stringsem_id;
     porto[2] = stringporti;
     porto[3] = stringnavi;
-    porto[4] = NULL;
+    porto[7] = NULL;
     sprintf(stringnavi, "%d", idshmnavi);
     TEST_ERROR;
     nave[1] = stringsem_id;
@@ -145,7 +146,7 @@ int main() {
     nave[3] = stringnavi;
     nave[4] = SO_CAPACITY;
     nave[5] = SO_VELOCITA;
-    nave[6] = NULL;
+    nave[7] = NULL;
 
     /*DICHIARAZOINE SEMAFORO FIRST*/
     semctl(sem_id, 0 , SETVAL, 1);
@@ -204,6 +205,8 @@ int main() {
             sem_accesso(sem_id,0);
             shmporti[i] = arrayporti[i];
             sem_uscita(sem_id,0);
+            sprintf(stringid,"%d",i);
+            porto[4] = i;
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y);
             execvp("./porto", porto);
             TEST_ERROR;
@@ -240,6 +243,8 @@ int main() {
             sem_accesso(sem_id,1);
             shmnavi[i] = arraynavi[i];
             sem_uscita(sem_id,1);
+            sprintf(stringid,"%d",i);
+            nave[6] = i;
             printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n",i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
             execvp("./nave", nave);
             TEST_ERROR;
