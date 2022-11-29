@@ -17,6 +17,7 @@ typedef struct {
     pid_t pid;
     double x;
     double y;
+    int banchineLibere;
 } sinfo;
 
 #define TEST_ERROR    if (errno) {fprintf(stderr,           \
