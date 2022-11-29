@@ -30,7 +30,7 @@
 /*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 pid_t* na;
 pid_t* po;
-int SO_NAVI, SO_PORTI, q_id;
+int SO_NAVI, SO_PORTI, q_id, SO_BANCHINE;
 int idshmnavi, idshmporti;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 
@@ -39,6 +39,7 @@ typedef struct {
     pid_t pid;
     double x;
     double y;
+    int banchineLibere;
 } sinfo;
 
 
@@ -110,6 +111,7 @@ int main() {
     SO_LATO = 10;   /*(n > 0) !di tipo double!*/
     SO_NAVI = 5;    /*(n >= 1)*/
     SO_PORTI = 5;   /*(n >= 4)*/
+    SO_BANCHINE = 10;
 #endif
     /*FINE INPUT*/
 
@@ -189,6 +191,8 @@ int main() {
                     arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
                     clock_gettime(CLOCK_REALTIME , &now);
                     arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
+                    clock_gettime(CLOCK_REALTIME, &now);
+                    arrayporti[i].banchineLibere =(rand(now.tv_nsec)(SO_BANCHINE*100 -1))+1;
                     uguali = 0;
                     for (j = 0; j < i; j++) {
                         if (arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y) {
@@ -249,8 +253,6 @@ int main() {
             /* PARENT */
         }
     }
-
-    TEST_ERROR;
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
 

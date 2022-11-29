@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
 #include <math.h>
 
 #define TEST_ERROR    if (errno) {fprintf(stderr,			\
@@ -20,6 +21,14 @@
 					  errno,			\
 					  strerror(errno));}
 
+typedef struct {
+    pid_t pid;
+    double x;
+    double y;
+    int banchineLibere;
+} sinfo;
+
+
 void reset_sem(int sem_id);/*resetto tutti i semafori*/
 
 void sem_accesso(int semid,int num_risorsa);
@@ -27,8 +36,10 @@ void sem_accesso(int semid,int num_risorsa);
 void sem_uscita(int semid,int num_risorsa);
 
 struct sembuf my_op;
-int SO_BANCHINE;
+int ban;
+int id;
 int sem_id;
+sinfo* shmporti;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
@@ -45,17 +56,15 @@ int main(int argc, char** argv){
     struct timespec now;
     bzero(&sa,sizeof(sa));
     sa.sa_handler = handle_signal;
-    SO_BANCHINE = 10;/*RICORDIAMOCI CHE QUESTO NUMERO GLIELO DOBBIAMO PASSARE DAL MAIN*/
-    TEST_ERROR;
     sigaction(SIGINT,&sa,NULL);
     TEST_ERROR;
+    shmporti = shmat(atoi(argv[2]), NULL, 0);
     /*DEFINIZIONE DEL NUMERO DI BANCHINE*/
-    clock_gettime(CLOCK_REALTIME ,&now);
-    SO_BANCHINE = (now.tv_nsec % SO_BANCHINE)+1;
     sem_id = atoi(argv[1]);
+    id = atoi(argv[4]);
 
-
-
+    ban = shmporti[id].banchineLibere;
+    printf("il porto %d ha in tutto %d banchine\n\n\n\n\n", getpid(), ban);
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
@@ -65,7 +74,7 @@ int main(int argc, char** argv){
 
 void reset_sem(int sem_id){
     int i;
-    for(i=0;i<SO_BANCHINE;i++){
+    for(i=0;i<ban;i++){
         semctl(sem_id, i, SETVAL, 0);
         TEST_ERROR;
     }

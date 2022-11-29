@@ -51,6 +51,7 @@ void handle_signal(int signum){
     exit(EXIT_SUCCESS);
 }
 
+
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
     struct sigaction sa;
@@ -71,7 +72,6 @@ int main(int argc, char** argv){
     asc = shmnavi[id].x;
     ord = shmnavi[id].y;
     sem_uscita(sem_id,1);
-
     if(id==0){/*prova di navigazione verso porto[1]*/
         printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, asc, ord);
         sem_accesso(sem_id,0);
