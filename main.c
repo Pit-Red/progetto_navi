@@ -176,8 +176,6 @@ int main() {
                     arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
                     clock_gettime(CLOCK_REALTIME , &now);
                     arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
-                    clock_gettime(CLOCK_REALTIME, &now);
-                    arrayporti[i].banchineLibere = (now.tv_nsec % SO_BANCHINE);
                     uguali = 0;
                     for (j = 0; j < i; j++) {
                         if (arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y) {
@@ -186,6 +184,9 @@ int main() {
                     }
                 } while (uguali);
             }
+            clock_gettime(CLOCK_REALTIME, &now);
+            arrayporti[i].banchineLibere = ((now.tv_nsec % SO_BANCHINE * 1000) / 1000) + 1;
+            
             sem_accesso(sem_id,0);
             shmporti[i] = arrayporti[i];
             sem_uscita(sem_id,0);
