@@ -12,28 +12,9 @@
 #include <sys/msg.h>
 #include <sys/shm.h>
 #include <math.h>
-
-#define TEST_ERROR    if (errno) {fprintf(stderr,			\
-					  "%s:%d: PID=%5d: Error %d (%s)\n", \
-					  __FILE__,			\
-					  __LINE__,			\
-					  getpid(),			\
-					  errno,			\
-					  strerror(errno));}
-
-typedef struct {
-    pid_t pid;
-    double x;
-    double y;
-    int banchineLibere;
-} sinfo;
+#include "utilities.h"
 
 
-void reset_sem(int sem_id);/*resetto tutti i semafori*/
-
-void sem_accesso(int semid,int num_risorsa);
-
-void sem_uscita(int semid,int num_risorsa);
 
 struct sembuf my_op;
 int ban;
@@ -71,32 +52,3 @@ int main(int argc, char** argv){
     exit(0);
 }
 
-
-void reset_sem(int sem_id){
-    int i;
-    for(i=0;i<ban;i++){
-        semctl(sem_id, i, SETVAL, 0);
-        TEST_ERROR;
-    }
-}
-
-void sem_accesso(int semid, int num_risorsa){
-    struct sembuf my_op;
-    printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);
-    my_op.sem_num = num_risorsa;
-    my_op.sem_flg = 0;
-    my_op.sem_op = -1;
-    semop(semid,&my_op,1);
-    printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);
-    TEST_ERROR;
-}
-
-void sem_uscita(int semid, int num_risorsa){
-    struct sembuf my_op;
-    my_op.sem_num = num_risorsa;
-    my_op.sem_flg = 0;
-    my_op.sem_op = 1;
-    semop(semid,&my_op,1);
-    printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);
-    TEST_ERROR;
-}

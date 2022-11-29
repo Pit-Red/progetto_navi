@@ -11,6 +11,7 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <sys/sem.h>
+#include "utilities.h"
 
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUT
@@ -18,14 +19,6 @@
 #define SO_VELOCITA "20"
 #define SO_CAPACITY "100"
 
-/* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
-#define TEST_ERROR    if (errno) {fprintf(stderr,           \
-                      "%s:%d: PID=%5d: Error %d (%s)\n", \
-                      __FILE__,         \
-                      __LINE__,         \
-                      getpid(),         \
-                      errno,            \
-                      strerror(errno));}
 
 /*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 pid_t* na;
@@ -35,12 +28,6 @@ int idshmnavi, idshmporti;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
-typedef struct {
-    pid_t pid;
-    double x;
-    double y;
-    int banchineLibere;
-} sinfo;
 
 
 
@@ -48,9 +35,7 @@ void handle_alarm(int signal);
 /*HANDLER PER IL SEGNALE MANUALE DI TERMINAZIONE*/
 void close_all(int signum);
 
-void sem_accesso(int semid,int num_risorsa);
 
-void sem_uscita(int semid,int num_risorsa);
 
 /*HANDLER PER IL SEGNALE DI FINE PROGRAMMA (ALARM)*/
 
@@ -192,7 +177,7 @@ int main() {
                     clock_gettime(CLOCK_REALTIME , &now);
                     arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
                     clock_gettime(CLOCK_REALTIME, &now);
-                    arrayporti[i].banchineLibere =(rand(now.tv_nsec)(SO_BANCHINE*100 -1))+1;
+                    arrayporti[i].banchineLibere = (now.tv_nsec % SO_BANCHINE);
                     uguali = 0;
                     for (j = 0; j < i; j++) {
                         if (arrayporti[i].x == arrayporti[j].x && arrayporti[i].y == arrayporti[j].y) {
@@ -206,7 +191,7 @@ int main() {
             sem_uscita(sem_id,0);
             sprintf(stringid,"%d",i);
             porto[4] = stringid;
-            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y);
+            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, arrayporti[i].banchineLibere);
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -289,23 +274,3 @@ void close_all(int signum) {
     
 }
 
-void sem_accesso(int semid,int num_risorsa){
-    struct sembuf my_op;
-    /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
-    my_op.sem_num = num_risorsa;
-    my_op.sem_flg = 0;
-    my_op.sem_op = -1;
-    semop(semid,&my_op,1);
-    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
-    TEST_ERROR;
-}
-
-void sem_uscita(int semid,int num_risorsa){
-    struct sembuf my_op;
-    my_op.sem_num = num_risorsa;
-    my_op.sem_flg = 0;
-    my_op.sem_op = 1;
-    semop(semid,&my_op,1);
-    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
-    TEST_ERROR;
-}

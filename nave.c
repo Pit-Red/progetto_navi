@@ -12,21 +12,8 @@
 #include <sys/types.h>
 #include <math.h>
 #include <sys/sem.h>
+#include "utilities.h"
 
-/* LA SEGUENTE MACRO E' STATA PRESA DA test-pipe-round.c */
-#define TEST_ERROR    if (errno) {fprintf(stderr,           \
-                      "%s:%d: PID=%5d: Error %d (%s)\n", \
-                      __FILE__,         \
-                      __LINE__,         \
-                      getpid(),         \
-                      errno,            \
-                      strerror(errno));}
-
-typedef struct {
-    pid_t pid;
-    double x;
-    double y;
-} sinfo;
 
 int capacita, velocita;
 double ord,asc;
@@ -36,9 +23,6 @@ int sem_id;
 sinfo* shmnavi, *shmporti;
 
 
-void sem_accesso(int semid,int num_risorsa);
-
-void sem_uscita(int semid,int num_risorsa);
 
 void navigazione(double x, double y);
 
@@ -108,25 +92,4 @@ void navigazione(double x, double y){
     shmnavi[id].x = ord;
     shmnavi[id].y = asc;
     sem_uscita(sem_id,1);
-}
-
-void sem_accesso(int semid, int num_risorsa){
-    struct sembuf my_op;
-    /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
-    my_op.sem_num = num_risorsa;
-    my_op.sem_flg = 0;
-    my_op.sem_op = -1;
-    semop(semid,&my_op,1);
-    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
-    TEST_ERROR;
-}
-
-void sem_uscita(int semid, int num_risorsa){
-    struct sembuf my_op;
-    my_op.sem_num = num_risorsa;
-    my_op.sem_flg = 0;
-    my_op.sem_op = 1;
-    semop(semid,&my_op,1);
-    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
-    TEST_ERROR;
 }
