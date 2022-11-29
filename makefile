@@ -1,19 +1,25 @@
 
 FLAGS= -std=c89 -pedantic -D_GNU_SOURCE
 
-all: nave porto main
+all: utilities.o nave porto main 
 	
 avvia: main nave porto
 	./main
 	
 main: main.c
-	gcc $(FLAGS) main.c -o main
+	gcc $(FLAGS) -c main.c -o main.o
+	gcc $(FLAGS) main.o utilities.o -o main
 	
 nave: nave.c
-	gcc $(FLAGS) nave.c -o nave -lm
+	gcc $(FLAGS) -c	nave.c -o nave.o -lm
+	gcc $(FLAGS) nave.c utilities.o -o nave -lm
 
 porto: porto.c
-	gcc $(FLAGS) porto.c -o porto
+	gcc $(FLAGS) -c porto.c -o porto.o
+	gcc $(FLAGS) porto.c utilities.o -o porto
+
+utilities.o : utilities.c utilities.h
+	gcc $(FLAGS) -c utilities.c -o utilities.o
 
 clean:
 	rm -f *.o main nave porto
