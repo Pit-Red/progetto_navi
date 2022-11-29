@@ -16,7 +16,7 @@
 
 
 int capacita, velocita;
-double ord,asc;
+double xnave,ynave;
 double xdest,ydest;
 int id;
 int sem_id;
@@ -53,11 +53,11 @@ int main(int argc, char** argv){
     TEST_ERROR;
 
     sem_accesso(sem_id,1);/*sem[0]=>shmporti, sem[1]=>shmnavi*/
-    asc = shmnavi[id].x;
-    ord = shmnavi[id].y;
+    xnave = shmnavi[id].x;
+    ynave = shmnavi[id].y;
     sem_uscita(sem_id,1);
     if(id==0){/*prova di navigazione verso porto[1]*/
-        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, asc, ord);
+        printf("\n\nnave[%d]:(x=%.2f, y=%.2f)\n\n", id, xnave, ynave);
         sem_accesso(sem_id,0);
         temp = rand()%5;
         xdest = shmporti[temp].x;
@@ -65,7 +65,7 @@ int main(int argc, char** argv){
         sem_uscita(sem_id,0);
         printf("navigazione verso porto[%d]\n", temp);
         navigazione(xdest,ydest);
-        printf("\n\nnave[%d]:(%.2f,%.2f)\n\n", id, asc, ord);
+        printf("\n\nnave[%d]:(x=%.2f, y=%.2f)\n\n", id, xnave, ynave);
         
     }
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
@@ -81,15 +81,13 @@ void navigazione(double x, double y){
     double dist;
     double tempo;
     struct timespec my_time;
-    dist = sqrt(pow((y-ord),2)+pow((x-asc),2));
+    dist = sqrt(pow((y-ynave),2)+pow((x-xnave),2));
     tempo = dist/velocita;
     my_time.tv_sec = (int)tempo;
     my_time.tv_nsec = (tempo-(int)tempo) * 10000;
     nanosleep(&my_time, NULL);
-    ord = y;
-    asc = x;
     sem_accesso(sem_id,1);
-    shmnavi[id].x = ord;
-    shmnavi[id].y = asc;
+    shmnavi[id].x = x;
+    shmnavi[id].y = y;
     sem_uscita(sem_id,1);
 }
