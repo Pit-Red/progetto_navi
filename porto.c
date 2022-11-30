@@ -42,8 +42,9 @@ int main(int argc, char** argv){
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     /*DEFINIZIONE DEL NUMERO DI BANCHINE*/
     sem_id = atoi(argv[1]);
-    id = atoi(argv[4]);
     sem_porto = atoi(argv[5]);
+    id = atoi(argv[4]);
+    
     printf("il porto %d \n\n\n\n\n", getpid());
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/

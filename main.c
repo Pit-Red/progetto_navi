@@ -95,7 +95,7 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 10;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 5;    /*(n >= 1)*/
+    SO_NAVI = 20;    /*(n >= 1)*/
     SO_PORTI = 5;   /*(n >= 4)*/
     SO_BANCHINE = 10;
 #endif
@@ -144,7 +144,7 @@ int main() {
 
     TEST_ERROR;
 
-    alarm(5);
+    alarm(4);
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
     for (i = 0; i < SO_PORTI; i++) {
@@ -250,6 +250,7 @@ int main() {
     shmctl(idshmporti,IPC_RMID,NULL);
     shmctl(idshmnavi,IPC_RMID,NULL);
     semctl(sem_id,1,IPC_RMID);
+    semctl(sem_porto,1,IPC_RMID);
     printf("\n\nFine del programma\n");
 
     exit(EXIT_SUCCESS);
@@ -275,6 +276,8 @@ void close_all(int signum) {
     shmctl(idshmporti, IPC_RMID, NULL);
     shmctl(idshmnavi,IPC_RMID,NULL);
     semctl(sem_id,1,IPC_RMID);
+    semctl(sem_porto,1,IPC_RMID);
+
     printf("\n\nFine del programma\n");
     exit(0);
     

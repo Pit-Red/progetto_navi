@@ -17,8 +17,10 @@
 
 int capacita, velocita;
 double xdest,ydest;
+double xnave,ynave;
 int id;
 int sem_id;
+int sem_porto;
 sinfo* shmnavi, *shmporti;
 
 
@@ -48,6 +50,7 @@ int main(int argc, char** argv){
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     shmnavi = shmat(atoi(argv[3]), NULL, 0);
     sem_id = atoi(argv[1]);
+    sem_porto = atoi(argv[7]);
     id = atoi(argv[6]);
     TEST_ERROR;
 
@@ -55,7 +58,9 @@ int main(int argc, char** argv){
     xnave = shmnavi[id].x;
     ynave = shmnavi[id].y;
     sem_uscita(sem_id,1);
-    if(id==0){/*prova di navigazione verso porto[1]*/
+
+
+    /*if(id==0){prova di navigazione verso porto[1]
         printf("\n\nnave[%d]:(x=%.2f, y=%.2f)\n\n", id, xnave, ynave);
         temp = rand()%5;
         sem_accesso(sem_id,0);
@@ -66,7 +71,7 @@ int main(int argc, char** argv){
         navigazione(xdest,ydest);
         printf("\n\nnave[%d]:(x=%.2f, y=%.2f)\n\n", id, shmnavi[id].x, shmnavi[id].y);
         
-    }
+    }*/
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
