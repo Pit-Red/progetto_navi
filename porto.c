@@ -17,7 +17,7 @@
 
 
 struct sembuf my_op;
-int ban;
+int sem_porto;
 int id;
 int sem_id;
 sinfo* shmporti;
@@ -43,9 +43,8 @@ int main(int argc, char** argv){
     /*DEFINIZIONE DEL NUMERO DI BANCHINE*/
     sem_id = atoi(argv[1]);
     id = atoi(argv[4]);
-
-    ban = shmporti[id].banchineLibere;
-    printf("il porto %d ha in tutto %d banchine\n\n\n\n\n", getpid(), ban);
+    sem_porto = atoi(argv[5]);
+    printf("il porto %d \n\n\n\n\n", getpid());
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}

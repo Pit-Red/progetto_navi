@@ -26,7 +26,7 @@ pid_t* po;
 int SO_NAVI, SO_PORTI, q_id, SO_BANCHINE;
 int idshmnavi, idshmporti;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
-
+int sem_porto;/*semaforo per far approdare le navi al porto*/
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 
 
@@ -42,17 +42,18 @@ void close_all(int signum);
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
     char stringsem_id[3 * sizeof(sem_id) + 1];
+    char stringsem_porto[3 * sizeof(sem_porto) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
     char stringid[13];
-    char* nave[8] = {""};
-    char* porto[8] = {""};
+    char* nave[10] = {""};
+    char* porto[10] = {""};
     sinfo* shmnavi, *shmporti;
     short uguali;
     struct timespec now;
     sinfo* arrayporti;
     sinfo* arraynavi;
-    int i, j, c;
+    int i, j, c, banchine_effettive;
     double SO_LATO;
     int status;
     struct sigaction ca;
@@ -104,7 +105,8 @@ int main() {
     printf("\nSO_LATO = %.2f", SO_LATO);
     printf("\nSO_NAVI = %d", SO_NAVI);
     printf("\nSO_PORTI = %d", SO_PORTI);
-   
+    
+    sem_porto = semget(IPC_PRIVATE, SO_PORTI, 0600);
     idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
     shmporti = shmat(idshmporti, NULL, 0);
@@ -115,12 +117,14 @@ int main() {
     printf("\nidshmporti: %d\n\n", idshmporti);
     printf("\033[0m");
     /*FINE MENU*/
+    sprintf(stringsem_porto, "%d", sem_porto);
     sprintf(stringsem_id, "%d", sem_id);
     sprintf(stringporti, "%d", idshmporti);
     TEST_ERROR;
     porto[1] = stringsem_id;
     porto[2] = stringporti;
     porto[3] = stringnavi;
+    porto[5] = stringsem_porto;
     porto[7] = NULL;
     sprintf(stringnavi, "%d", idshmnavi);
     TEST_ERROR;
@@ -129,7 +133,8 @@ int main() {
     nave[3] = stringnavi;
     nave[4] = SO_CAPACITY;
     nave[5] = SO_VELOCITA;
-    nave[7] = NULL;
+    nave[7] = stringsem_porto;
+    nave[8] = NULL;
 
     /*DICHIARAZOINE SEMAFORO FIRST*/
     semctl(sem_id, 0 , SETVAL, 1);
@@ -185,14 +190,14 @@ int main() {
                 } while (uguali);
             }
             clock_gettime(CLOCK_REALTIME, &now);
-            arrayporti[i].banchineLibere = ((now.tv_nsec % SO_BANCHINE * 1000) / 1000) + 1;
-            
+            banchine_effettive = ((now.tv_nsec % SO_BANCHINE * 1000) / 1000) + 1;
+            semctl(sem_porto, i , SETVAL, banchine_effettive);
             sem_accesso(sem_id,0);
             shmporti[i] = arrayporti[i];
             sem_uscita(sem_id,0);
             sprintf(stringid,"%d",i);
             porto[4] = stringid;
-            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, arrayporti[i].banchineLibere);
+            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
