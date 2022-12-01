@@ -221,6 +221,7 @@ int main() {
         if (na[i] == 0) {
             /* CHILD */
             arraynavi[i].pid = getpid();
+            arraynavi[i].carico = calloc(SO_MERCI, sizeof(*arraynavi[i].carico));
             do {
                 int RANDMAX = (int)SO_LATO;
                 clock_gettime(CLOCK_REALTIME , &now);
