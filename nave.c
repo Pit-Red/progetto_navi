@@ -21,7 +21,7 @@ double xnave,ynave;
 int id;
 int sem_id;
 int sem_porto;
-sinfo* shmnavi, *shmporti;
+snave* shmnavi; sporto*shmporti;
 
 
 

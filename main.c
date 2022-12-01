@@ -48,13 +48,14 @@ int main() {
     char stringid[13];
     char* nave[10] = {""};
     char* porto[10] = {""};
-    sinfo* shmnavi, *shmporti;
+    snave* shmnavi; sporto* shmporti;
     short uguali;
     struct timespec now;
-    sinfo* arrayporti;
-    sinfo* arraynavi;
+    sporto* arrayporti;
+    snave* arraynavi;
     int i, j, c, banchine_effettive;
     double SO_LATO;
+    int SO_MERCI;
     int status;
     struct sigaction ca;
     struct sigaction sa;
@@ -80,6 +81,8 @@ int main() {
     printf("\033[033;34m");
     
 #ifndef NO_INPUT
+    printf("inserisci il numero di merci utilzzabii: ");
+    scanf("%d", &SO_MERCI);
     printf("inserisci la grandezza della mappa: ");
     scanf("%le", &SO_LATO);
     do {
@@ -98,6 +101,7 @@ int main() {
     SO_NAVI = 20;    /*(n >= 1)*/
     SO_PORTI = 5;   /*(n >= 4)*/
     SO_BANCHINE = 10;
+    SO_MERCI = 3;
 #endif
     /*FINE INPUT*/
 

@@ -17,7 +17,20 @@ typedef struct {
     pid_t pid;
     double x;
     double y;
-} sinfo;
+    smerce* carico;
+}snave;
+
+typedef struct {
+    pid_t pid;
+    double x;
+    double y;
+}sporto;
+
+
+typedef struct{
+    int quantita;
+    int tempo_scadenza;
+}smerce;
 
 #define TEST_ERROR    if (errno) {fprintf(stderr,           \
                       "%s:%d: PID=%5d: Error %d (%s)\n", \

@@ -20,7 +20,7 @@ struct sembuf my_op;
 int sem_porto;
 int id;
 int sem_id;
-sinfo* shmporti;
+sporto* shmporti;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
