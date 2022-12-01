@@ -46,6 +46,7 @@ int main() {
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
     char stringid[13];
+    char stringq[13];
     char* nave[10] = {""};
     char* porto[10] = {""};
     snave* shmnavi; sporto* shmporti;
@@ -62,17 +63,19 @@ int main() {
     bzero(&ca, sizeof(ca));
     ca.sa_handler = close_all;
     sigaction(SIGINT, &ca, NULL);
+    TEST_ERROR;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_alarm;
     sigaction(SIGALRM, &sa, NULL);
+    TEST_ERROR;
 
     sem_id = semget(IPC_PRIVATE, 2, 0600); /*INIZIALIZZAZIONE DI 2 SEMAFORI,
                                             IL SEMAFORO 0 SI OCCUPA DELLA SHM DEL 
                                             PORTO ED IL SEMAFORO 1 DELLA SHM DELLE NAVI*/
-
+    TEST_ERROR;
     /*CREO LA CODA DI MESSAGGI*/
-    /*q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
-    TEST_ERROR;*/
+    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    TEST_ERROR;
     printf("sem_id: %d\n\n",sem_id);
     srand(time(NULL));
 
@@ -124,11 +127,13 @@ int main() {
     sprintf(stringsem_porto, "%d", sem_porto);
     sprintf(stringsem_id, "%d", sem_id);
     sprintf(stringporti, "%d", idshmporti);
+    sprintf(stringq, "%d", q_id);
     TEST_ERROR;
     porto[1] = stringsem_id;
     porto[2] = stringporti;
     porto[3] = stringnavi;
     porto[5] = stringsem_porto;
+    porto[6] = stringq;
     porto[7] = NULL;
     sprintf(stringnavi, "%d", idshmnavi);
     TEST_ERROR;
@@ -138,7 +143,8 @@ int main() {
     nave[4] = SO_CAPACITY;
     nave[5] = SO_VELOCITA;
     nave[7] = stringsem_porto;
-    nave[8] = NULL;
+    nave[8] = stringq;
+    nave[9] = NULL;
 
     /*DICHIARAZOINE SEMAFORO FIRST*/
     semctl(sem_id, 0 , SETVAL, 1);
@@ -251,7 +257,7 @@ int main() {
     }
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
-
+    msgctl(q_id,IPC_RMID,NULL);
     shmctl(idshmporti,IPC_RMID,NULL);
     shmctl(idshmnavi,IPC_RMID,NULL);
     semctl(sem_id,1,IPC_RMID);
@@ -278,6 +284,7 @@ void handle_alarm(int signum) {
     }
 }
 void close_all(int signum) {
+    msgctl(q_id,IPC_RMID,NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
     shmctl(idshmnavi,IPC_RMID,NULL);
     semctl(sem_id,1,IPC_RMID);

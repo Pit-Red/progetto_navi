@@ -20,6 +20,7 @@ struct sembuf my_op;
 int sem_porto;
 int id;
 int sem_id;
+int q_id;
 sporto* shmporti;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
@@ -44,6 +45,7 @@ int main(int argc, char** argv){
     sem_id = atoi(argv[1]);
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
+    q_id = atoi(argv[6]);
     
     printf("il porto %d \n\n\n\n\n", getpid());
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
