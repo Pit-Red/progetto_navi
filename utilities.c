@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 
 
@@ -24,4 +26,12 @@ void sem_uscita(int semid, int num_risorsa){
     semop(semid,&my_op,1);
     /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
+}
+
+void stampa_merci(smerce* temp_merci){
+    int i;
+    int size = sizeof(temp_merci)/sizeof(*temp_merci);
+    for(i=0; i<size;i++){
+        printf("\nsmerce[%d]:quantita=%d\tdimensione=%d\ttempo di scadenza=%d\n", i,temp_merci[i].quantita,temp_merci[i].dimensione, temp_merci[i].tempo_scadenza);
+    }
 }

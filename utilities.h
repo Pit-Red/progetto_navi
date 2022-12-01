@@ -13,11 +13,18 @@
 #include <sys/sem.h>
 #include <math.h>
 
+typedef struct{
+    int quantita;
+    int dimensione;
+    int tempo_scadenza;
+}smerce;
+
 typedef struct {
     pid_t pid;
     double x;
     double y;
     smerce* carico;
+    int carico_tot;
 }snave;
 
 typedef struct {
@@ -27,10 +34,6 @@ typedef struct {
 }sporto;
 
 
-typedef struct{
-    int quantita;
-    int tempo_scadenza;
-}smerce;
 
 #define TEST_ERROR    if (errno) {fprintf(stderr,           \
                       "%s:%d: PID=%5d: Error %d (%s)\n", \
@@ -43,3 +46,5 @@ typedef struct{
 void sem_accesso(int semid,int num_risorsa);
 
 void sem_uscita(int semid,int num_risorsa);
+
+void stampa_merci(smerce* temp_merci);
