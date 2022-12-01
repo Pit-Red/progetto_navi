@@ -16,14 +16,13 @@
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUT
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
-#define SO_VELOCITA "20"
-#define SO_CAPACITY "100"
+
 
 
 /*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 pid_t* na;
 pid_t* po;
-int SO_NAVI, SO_PORTI, q_id, SO_BANCHINE;
+int SO_NAVI, SO_PORTI, q_id, SO_BANCHINE, SO_SIZE;
 int idshmnavi, idshmporti;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto;/*semaforo per far approdare le navi al porto*/
@@ -41,12 +40,14 @@ void close_all(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
+    smerce* temp_merci;
     char stringsem_id[3 * sizeof(sem_id) + 1];
     char stringsem_porto[3 * sizeof(sem_porto) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
     char stringid[13];
     char stringq[13];
+    char stringvelocita[13], stringcapacity[13];
     char* nave[10] = {""};
     char* porto[10] = {""};
     snave* shmnavi; sporto* shmporti;
@@ -57,6 +58,9 @@ int main() {
     int i, j, c, banchine_effettive;
     double SO_LATO;
     int SO_MERCI;
+    int SO_MIN_VITA, SO_MAX_VITA; 
+    int SO_CAPACITY;
+    int SO_VELOCITA;
     int status;
     struct sigaction ca;
     struct sigaction sa;
@@ -83,9 +87,7 @@ int main() {
     /*INIZIO INPUT*/
     printf("\033[033;34m");
     
-#ifndef NO_INPUT
-    printf("inserisci il numero di merci utilzzabii: ");
-    scanf("%d", &SO_MERCI);
+#ifndef NO_INPUT/*TO DO: CONTROLLO CHE I PARAMETRI SIANO POSITIVI*/
     printf("inserisci la grandezza della mappa: ");
     scanf("%le", &SO_LATO);
     do {
@@ -96,6 +98,18 @@ int main() {
         printf("inserisci il numero di porti: ");
         scanf("%d", &SO_PORTI);
     } while (SO_PORTI < 4);
+    printf("inserisci il carico massimo trasportabile delle navi: ");
+    scanf("%d", &SO_CAPACITY);
+    printf("inserisci la velocita' delle navi: ");
+    scanf("%d", &SO_VELOCITA);
+    printf("inserisci la dimensione massima della merce: ");
+    scanf("%d", &SO_SIZE);
+    printf("inserisci il numero di merci utilzzabi: ");
+    scanf("%d", &SO_MERCI);
+    printf("inserisci il minimo di giorni di vita delle merci: ");
+    scanf("%d", &SO_MIN_VITA);
+    printf("inserisci il massimo di giorni di vita delle merci: ");
+    scanf("%d", &SO_MAX_VITA);
     
 #endif
 
@@ -105,6 +119,11 @@ int main() {
     SO_PORTI = 5;   /*(n >= 4)*/
     SO_BANCHINE = 10;
     SO_MERCI = 3;
+    SO_SIZE = 10;
+    SO_CAPACITY = 100;
+    SO_VELOCITA = 20;
+    SO_MAX_VITA = 5;
+    SO_MIN_VITA = 2;
 #endif
     /*FINE INPUT*/
 
@@ -128,6 +147,8 @@ int main() {
     sprintf(stringsem_id, "%d", sem_id);
     sprintf(stringporti, "%d", idshmporti);
     sprintf(stringq, "%d", q_id);
+    sprintf(stringcapacity, "%d", SO_CAPACITY);
+    sprintf(stringvelocita, "%d", SO_VELOCITA);
     TEST_ERROR;
     porto[1] = stringsem_id;
     porto[2] = stringporti;
@@ -140,8 +161,8 @@ int main() {
     nave[1] = stringsem_id;
     nave[2] = stringporti;
     nave[3] = stringnavi;
-    nave[4] = SO_CAPACITY;
-    nave[5] = SO_VELOCITA;
+    nave[4] = stringcapacity;
+    nave[5] = stringvelocita;
     nave[7] = stringsem_porto;
     nave[8] = stringq;
     nave[9] = NULL;
@@ -217,6 +238,16 @@ int main() {
         }
     }
     arraynavi = calloc(SO_NAVI, sizeof(*arraynavi));
+    temp_merci = calloc(SO_MERCI, sizeof(*temp_merci));
+    for(i=0; i<SO_MERCI;i++){/*dichiarazione array merci*/
+        temp_merci[i].quantita = 0;
+        clock_gettime(CLOCK_REALTIME , &now);
+        temp_merci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
+        clock_gettime(CLOCK_REALTIME , &now);
+        temp_merci[i].tempo_scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA)) + SO_MIN_VITA +1;
+    }
+    stampa_merci(temp_merci);
+
     /* CREAZIONE DELLE NAVI */
     for (i = 0; i < SO_NAVI; i++) {
         na[i] = fork();
@@ -227,7 +258,7 @@ int main() {
         if (na[i] == 0) {
             /* CHILD */
             arraynavi[i].pid = getpid();
-            arraynavi[i].carico = calloc(SO_MERCI, sizeof(*arraynavi[i].carico));
+            arraynavi[i].carico = temp_merci;
             do {
                 int RANDMAX = (int)SO_LATO;
                 clock_gettime(CLOCK_REALTIME , &now);
@@ -255,6 +286,7 @@ int main() {
             /* PARENT */
         }
     }
+    free(temp_merci);
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
     msgctl(q_id,IPC_RMID,NULL);
