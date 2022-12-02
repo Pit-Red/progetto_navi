@@ -1,9 +1,10 @@
 
 FLAGS= -std=c89 -pedantic -D_GNU_SOURCE
 
-all: utilities.o nave porto main 
+all: touch utilities.o nave porto main 
 	
-avvia: main nave porto
+avvia: all
+	rm -f *.o
 	./main
 	
 main: main.c
