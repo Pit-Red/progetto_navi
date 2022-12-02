@@ -12,12 +12,13 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 #include <math.h>
+#define MSG_LEN 120 /*ossia 120 meno size di variabile tipo long*/
 
-typedef struct{
+typedef struct {
     int quantita;
     int dimensione;
     int tempo_scadenza;
-}smerce;
+} smerce;
 
 typedef struct {
     pid_t pid;
@@ -25,13 +26,25 @@ typedef struct {
     double y;
     smerce* carico;
     int carico_tot;
-}snave;
+} snave;
 
 typedef struct {
     pid_t pid;
     double x;
     double y;
-}sporto;
+} sporto;
+
+/*struct requestbuf {
+    long rtype;           
+    char rtext[MSG_LEN];    
+};*/
+
+struct requestbuf {
+    long rtype;             /*REQUEST TYPE (n>0)*/
+    int idporto;            /*REQUEST DATA*/
+    int idmerce;
+    int qmerce;
+};
 
 
 
@@ -43,8 +56,8 @@ typedef struct {
                       errno,            \
                       strerror(errno));}
 
-void sem_accesso(int semid,int num_risorsa);
+void sem_accesso(int semid, int num_risorsa);
 
-void sem_uscita(int semid,int num_risorsa);
+void sem_uscita(int semid, int num_risorsa);
 
 void stampa_merci(smerce* temp_merci);
