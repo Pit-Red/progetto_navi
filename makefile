@@ -1,9 +1,11 @@
 
 FLAGS= -std=c89 -pedantic -D_GNU_SOURCE
 
-all: touch utilities.o nave porto main 
+all: compile avvia
+
+compile: touch utilities.o nave porto main 
 	
-avvia: all
+avvia:
 	rm -f *.o
 	./main
 	
