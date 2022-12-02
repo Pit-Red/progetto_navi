@@ -32,23 +32,24 @@ void handle_signal(int signum){
     exit(0);
 }
 
-struct my_request{
-    long rtype;
-    int idporto;            /*REQUEST DATA*/
-    int idmerce;
-    int qmerce;
-};
 
 my_request create_request(int idporto, int idmerce, int qmerce){
-    //
 }
 
-int request_send(int queue, const struct my_request*, size_t request_length);
+int request_send(int queue,const my_request* my_requestbuf, size_t request_length);
 
 static void request_print_stats(int fd, int q_id);
     
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
+    /*DEFINIZIONE VAR CODA MEX*/
+    size_t requestsize_user, requestsize_max;
+    int status, num_bytes;
+    my_request mybuf;
+    FILE * in_stream;
+    struct msqid_ds my_queue_stat;
+    pid_t snd_pid;
+    pid_t rcv_pid;
     struct sigaction sa;
     struct timespec now;
     bzero(&sa,sizeof(sa));
@@ -61,14 +62,6 @@ int main(int argc, char** argv){
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
     q_id = atoi(argv[6]);
-    /*DEFINIZIONE VAR CODA MEX*/
-    size_t requestsize_user, requestsize_max;
-    int status, num_bytes;
-    struct my_request mybuf;
-    FILE * in_stream;
-    struct msqid_ds my_queue_stat;
-    pid_t snd_pid;
-    pid_t rcv_pid;
     /*CREAZIONE QUEUE*/
     q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0600);
     TEST_ERROR;
@@ -83,7 +76,7 @@ int main(int argc, char** argv){
     exit(0);
 }
 
-int request_send(int queue, const struct my_request* my_requestbuf, size_t request_length){
+int request_send(int queue, const my_request* my_requestbuf, size_t request_length){
 
     msgsnd(queue, my_requestbuf, request_length, 0);
 
