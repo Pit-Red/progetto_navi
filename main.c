@@ -292,16 +292,6 @@ int main() {
     /*PRINT STATUS OF MESSAGE QUEUE*/
     msg_print_stats(1, q_id);
 
-    while (1) {
-        /* Get the status of the queue */
-        msgctl(q_id, IPC_STAT, &my_queue_stat);
-        dprintf(1, "Messages left after sender termination %ld\n",
-                my_queue_stat.msg_qnum);
-        if (my_queue_stat.msg_qnum == 0)
-            break;
-        sleep(1);
-    }
-
     msgctl(q_id, IPC_RMID, NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
     shmctl(idshmnavi, IPC_RMID, NULL);
