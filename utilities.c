@@ -7,31 +7,102 @@
 
 
 
-void sem_accesso(int semid, int num_risorsa){
+void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
     /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
     my_op.sem_num = num_risorsa;
     my_op.sem_flg = 0;
     my_op.sem_op = -1;
-    semop(semid,&my_op,1);
+    semop(semid, &my_op, 1);
     /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
 
-void sem_uscita(int semid, int num_risorsa){
+void sem_uscita(int semid, int num_risorsa) {
     struct sembuf my_op;
     my_op.sem_num = num_risorsa;
     my_op.sem_flg = 0;
     my_op.sem_op = 1;
-    semop(semid,&my_op,1);
+    semop(semid, &my_op, 1);
     /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
 
-void stampa_merci(smerce* temp_merci){
+void stampa_merci(smerce* temp_merci) {
     int i;
-    int size = sizeof(temp_merci)/sizeof(*temp_merci);
-    for(i=0; i<size;i++){
-        printf("\nsmerce[%d]:quantita=%d\tdimensione=%d\ttempo di scadenza=%d\n", i,temp_merci[i].quantita,temp_merci[i].dimensione, temp_merci[i].tempo_scadenza);
+    int size = sizeof(temp_merci) / sizeof(*temp_merci);
+    for (i = 0; i < size; i++) {
+        printf("\nsmerce[%d]:quantita=%d\tdimensione=%d\ttempo di scadenza=%d\n", i, temp_merci[i].quantita, temp_merci[i].dimensione, temp_merci[i].tempo_scadenza);
     }
+}
+
+
+int msg_send(int queue, const msg* my_msg, size_t msg_length) {
+
+    msgsnd(queue, my_msg, msg_length, 0);
+
+    switch (errno) {
+    case EAGAIN:
+        dprintf(2,
+                "Queue is full and IPC_NOWAIT was set to have a non-blocking msgsnd()\n\
+Fix it by:\n                                \
+  (1) making sure that some process read messages, or\n         \
+  (2) changing the queue size by msgctl()\n");
+        return (-1);
+    case EACCES:
+        dprintf(2,
+                "No write permission to the queue.\n\
+Fix it by adding permissions properly\n");
+        return (-1);
+    case EFAULT:
+        dprintf(2,
+                "The address of the message isn't accessible\n");
+        return (-1);
+    case EIDRM:
+        dprintf(2,
+                "The queue was removed\n");
+        return (-1);
+    case EINTR:
+        dprintf(2,
+                "The process got unblocked by a signal, while waiting on a full queue\n");
+        return (-1);
+    case EINVAL:
+        TEST_ERROR;
+        return (-1);
+    case ENOMEM:
+        TEST_ERROR;
+        return (-1);
+    default:
+        TEST_ERROR;
+    }
+    return (0);
+}
+
+void msg_print_stats(int fd, int q_id) {
+    struct msqid_ds my_q_data;
+    int ret_val;
+
+    while (ret_val = msgctl(q_id, IPC_STAT, &my_q_data)) {
+        TEST_ERROR;
+    }
+    dprintf(fd, "--- IPC Message Queue ID: %8d, START ---\n", q_id);
+    dprintf(fd, "---------------------- Time of last msgsnd: %ld\n",
+            my_q_data.msg_stime);
+    dprintf(fd, "---------------------- Time of last msgrcv: %ld\n",
+            my_q_data.msg_rtime);
+    dprintf(fd, "---------------------- Time of last change: %ld\n",
+            my_q_data.msg_ctime);
+    dprintf(fd, "---------- Number of messages in the queue: %ld\n",
+            my_q_data.msg_qnum);
+    dprintf(fd, "- Max number of bytes allowed in the queue: %ld\n",
+            my_q_data.msg_qbytes);
+    dprintf(fd, "----------------------- PID of last msgsnd: %d\n",
+            my_q_data.msg_lspid);
+    dprintf(fd, "----------------------- PID of last msgrcv: %d\n",
+            my_q_data.msg_lrpid);
+    dprintf(fd, "--- IPC Message Queue ID: %8d, END -----\n", q_id);
+}
+
+void print_msg(msg demand) { /*TODO*/
+printf("\nporto[%d]",getpid());
 }
