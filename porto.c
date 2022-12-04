@@ -41,10 +41,11 @@ void handle_signal(int signum) {
 int main(int argc, char** argv) {
     /*DICHIARAZIONE DELLE VARIABILI*/
     /*DEFINIZIONE VAR CODA MEX*/
+    argomento_coda r;
     int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
     size_t msgsize_user, msgesize_max;
     int status, num_bytes;
-    msg mybuf;
+    /*msg mybuf;*/
     FILE * in_stream;
     struct msqid_ds my_queue_stat;
     pid_t snd_pid;
@@ -56,22 +57,30 @@ int main(int argc, char** argv) {
     sigaction(SIGINT, &sa, NULL);
     TEST_ERROR;
     shmporti = shmat(atoi(argv[2]), NULL, 0);
-    /*DEFINIZIONE DEL NUMERO DI BANCHINE*/
     sem_id = atoi(argv[1]);
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
     q_id = atoi(argv[6]);
     
 
-    num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
+    /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
-    mybuf.mtype = 1; /*1 lo usiamo per le domande (n>0) */
+    mybuf.mtype = 1; 
 
 
-    msg_send(q_id, &mybuf, num_bytes);
+    msg_send(q_id, &mybuf, num_bytes);*/
 
 
     printf("porto[%d] \n\n\n", getpid());
+    if(id == 0){
+        r.rtype = 1;
+        r.idporto = id;
+        r.idmerce = 2;
+        r.qmerce = 10;
+
+        msg_invio(q_id, r);
+    }
+
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for (;;) {}

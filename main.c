@@ -119,7 +119,7 @@ int main() {
     SO_PORTI = 5;   /*(n >= 4)*/
     SO_BANCHINE = 10;
     SO_MERCI = 3;
-    SO_SIZE = 10;
+    SO_SIZE = 1000;
     SO_CAPACITY = 100;
     SO_VELOCITA = 20;
     SO_MAX_VITA = 5;

@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/msg.h>
 
 
 
@@ -30,17 +31,30 @@ void sem_uscita(int semid, int num_risorsa) {
 
 void stampa_merci(smerce* temp_merci) {
     int i;
-    int size = sizeof(temp_merci) / sizeof(*temp_merci);
+    int size = 3;
     for (i = 0; i < size; i++) {
         printf("\nsmerce[%d]:quantita=%d\tdimensione=%d\ttempo di scadenza=%d\n", i, temp_merci[i].quantita, temp_merci[i].dimensione, temp_merci[i].tempo_scadenza);
     }
 }
 
+int msg_invio(int id, argomento_coda r){
+    msg mybuf;
+    int num_bytes = sizeof(r);
+    mybuf.mtype = 1; /*1 lo usiamo per le domande (n>0) */
+    mybuf.mtext = r;
+    msgsnd(id, &mybuf, num_bytes, 0);
+    return msg_error();
+}
 
-int msg_send(int queue, const msg* my_msg, size_t msg_length) {
+int msg_lettura(int id, argomento_coda* r){
+    msg mybuf;
+    msgrcv(id, &mybuf, sizeof(*r), 1, 0);
+    *r = mybuf.mtext;
+    return msg_error();
+}
 
-    msgsnd(queue, my_msg, msg_length, 0);
-
+int msg_error(){
+    
     switch (errno) {
     case EAGAIN:
         dprintf(2,
@@ -75,8 +89,8 @@ Fix it by adding permissions properly\n");
     default:
         TEST_ERROR;
     }
-    return (0);
-}
+    return 0;
+}  
 
 void msg_print_stats(int fd, int q_id) {
     struct msqid_ds my_q_data;
@@ -101,8 +115,4 @@ void msg_print_stats(int fd, int q_id) {
     dprintf(fd, "----------------------- PID of last msgrcv: %d\n",
             my_q_data.msg_lrpid);
     dprintf(fd, "--- IPC Message Queue ID: %8d, END -----\n", q_id);
-}
-
-void print_msg(msg demand) { /*TODO*/
-printf("\nporto[%d]",getpid());
 }

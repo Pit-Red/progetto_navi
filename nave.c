@@ -40,6 +40,7 @@ void handle_signal(int signum){
 
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
+    argomento_coda r;
     struct sigaction sa;
     int temp;
     bzero(&sa, sizeof(sa));
@@ -62,18 +63,9 @@ int main(int argc, char** argv){
     sem_uscita(sem_id,1);
 
 
-    /*if(id==0){prova di navigazione verso porto[1]
-        printf("\n\nnave[%d]:(x=%.2f, y=%.2f)\n\n", id, xnave, ynave);
-        temp = rand()%5;
-        sem_accesso(sem_id,0);
-        xdest = shmporti[temp].x;
-        ydest = shmporti[temp].y;
-        sem_uscita(sem_id,0);
-        printf("navigazione verso porto[%d] con coordinate x = %.2f e y = %.2f \n", temp, xdest, ydest);
-        navigazione(xdest,ydest);
-        printf("\n\nnave[%d]:(x=%.2f, y=%.2f)\n\n", id, shmnavi[id].x, shmnavi[id].y);
-        
-    }*/
+        msg_lettura(q_id, &r);
+        printf("\n\nidporto:%d idmerce:%d qmerce:%d\n\n", r.idporto,r.idmerce, r.qmerce);
+
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for(;;){}
