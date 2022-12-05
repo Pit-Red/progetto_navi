@@ -21,7 +21,8 @@ struct sembuf my_op;
 int sem_porto;
 int id;
 int sem_id;
-int q_id;
+int msg_richiesta;
+int msg_offerta;
 sporto* shmporti;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
@@ -60,7 +61,8 @@ int main(int argc, char** argv) {
     sem_id = atoi(argv[1]);
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
-    q_id = atoi(argv[6]);
+    msg_richiesta = atoi(argv[6]);
+    msg_offerta = atoi(argv[7]);
     
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
@@ -78,7 +80,7 @@ int main(int argc, char** argv) {
         r.idmerce = 2;
         r.qmerce = 10;
 
-        msg_invio(q_id, r);
+        msg_invio(msg_richiesta, r);
     }
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.

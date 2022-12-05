@@ -22,7 +22,7 @@
 /*DICHIARAZIONE DEGLI ARRAY DEI PID DEI PORTI E DELLE NAVI*/
 pid_t* na;
 pid_t* po;
-int SO_NAVI, SO_PORTI, q_id, SO_SIZE;
+int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE;
 int idshmnavi, idshmporti;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto;/*semaforo per far approdare le navi al porto*/
@@ -46,10 +46,11 @@ int main() {
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
     char stringid[13];
-    char stringq[13];
+    char stringrichiesta[13];
+    char stringofferta[13];
     char stringvelocita[13], stringcapacity[13];
-    char* nave[10] = {""};
-    char* porto[10] = {""};
+    char* nave[12] = {""};
+    char* porto[12] = {""};
     snave* shmnavi; sporto* shmporti;
     short uguali;
     struct timespec now;
@@ -57,8 +58,8 @@ int main() {
     snave* arraynavi;
     int i, j, c, banchine_effettive;
     double SO_LATO;
-    int SO_MERCI, SO_BANCHINE;
-    int SO_MIN_VITA, SO_MAX_VITA;
+    int SO_MERCI;
+    int SO_MIN_VITA, SO_MAX_VITA; 
     int SO_CAPACITY;
     int SO_VELOCITA;
     int status;
@@ -74,19 +75,20 @@ int main() {
     TEST_ERROR;
 
     sem_id = semget(IPC_PRIVATE, 2, 0600); /*INIZIALIZZAZIONE DI 2 SEMAFORI,
-                                            IL SEMAFORO 0 SI OCCUPA DELLA SHM DEL
+                                            IL SEMAFORO 0 SI OCCUPA DELLA SHM DEL 
                                             PORTO ED IL SEMAFORO 1 DELLA SHM DELLE NAVI*/
     TEST_ERROR;
     /*CREO LA CODA DI MESSAGGI*/
-    q_id = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    msg_richiesta = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    msg_offerta = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
     TEST_ERROR;
-    printf("sem_id: %d\n\n", sem_id);
+    printf("sem_id: %d\n\n",sem_id);
     srand(time(NULL));
 
 
     /*INIZIO INPUT*/
     printf("\033[033;34m");
-
+    
 #ifndef NO_INPUT/*TO DO: CONTROLLO CHE I PARAMETRI SIANO POSITIVI*/
     printf("inserisci la grandezza della mappa: ");
     scanf("%le", &SO_LATO);
@@ -110,7 +112,7 @@ int main() {
     scanf("%d", &SO_MIN_VITA);
     printf("inserisci il massimo di giorni di vita delle merci: ");
     scanf("%d", &SO_MAX_VITA);
-
+    
 #endif
 
 #ifdef NO_INPUT
@@ -119,7 +121,7 @@ int main() {
     SO_PORTI = 5;   /*(n >= 4)*/
     SO_BANCHINE = 10;
     SO_MERCI = 3;
-    SO_SIZE = 1000;
+    SO_SIZE = 10;
     SO_CAPACITY = 100;
     SO_VELOCITA = 20;
     SO_MAX_VITA = 5;
@@ -131,7 +133,7 @@ int main() {
     printf("\nSO_LATO = %.2f", SO_LATO);
     printf("\nSO_NAVI = %d", SO_NAVI);
     printf("\nSO_PORTI = %d", SO_PORTI);
-
+    
     sem_porto = semget(IPC_PRIVATE, SO_PORTI, 0600);
     idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
@@ -146,7 +148,8 @@ int main() {
     sprintf(stringsem_porto, "%d", sem_porto);
     sprintf(stringsem_id, "%d", sem_id);
     sprintf(stringporti, "%d", idshmporti);
-    sprintf(stringq, "%d", q_id);
+    sprintf(stringrichiesta, "%d", msg_richiesta);
+    sprintf(stringofferta, "%d", msg_offerta);
     sprintf(stringcapacity, "%d", SO_CAPACITY);
     sprintf(stringvelocita, "%d", SO_VELOCITA);
     TEST_ERROR;
@@ -154,8 +157,9 @@ int main() {
     porto[2] = stringporti;
     porto[3] = stringnavi;
     porto[5] = stringsem_porto;
-    porto[6] = stringq;
-    porto[7] = NULL;
+    porto[6] = stringrichiesta;
+    porto[7] = stringofferta;
+    porto[8] = NULL;
     sprintf(stringnavi, "%d", idshmnavi);
     TEST_ERROR;
     nave[1] = stringsem_id;
@@ -164,8 +168,9 @@ int main() {
     nave[4] = stringcapacity;
     nave[5] = stringvelocita;
     nave[7] = stringsem_porto;
-    nave[8] = stringq;
-    nave[9] = NULL;
+    nave[8] = stringrichiesta;
+    nave[9] = stringofferta;
+    nave[10] = NULL;
 
     /*DICHIARAZOINE SEMAFORO FIRST*/
     semctl(sem_id, 0 , SETVAL, 1);
@@ -221,13 +226,14 @@ int main() {
                 } while (uguali);
             }
             clock_gettime(CLOCK_REALTIME, &now);
-            semctl(sem_porto, i , SETVAL, (now.tv_nsec  % (SO_BANCHINE * 1000)) / 1000 + 1);
-            sem_accesso(sem_id, 0);
+            banchine_effettive = ((now.tv_nsec % SO_BANCHINE * 1000) / 1000) + 1;
+            semctl(sem_porto, i , SETVAL, banchine_effettive);
+            sem_accesso(sem_id,0);
             shmporti[i] = arrayporti[i];
-            sem_uscita(sem_id, 0);
-            sprintf(stringid, "%d", i);
+            sem_uscita(sem_id,0);
+            sprintf(stringid,"%d",i);
             porto[4] = stringid;
-            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, semctl(sem_porto, i, GETVAL));
+            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -238,12 +244,12 @@ int main() {
     }
     arraynavi = calloc(SO_NAVI, sizeof(*arraynavi));
     temp_merci = calloc(SO_MERCI, sizeof(*temp_merci));
-    for (i = 0; i < SO_MERCI; i++) { /*dichiarazione array merci*/
+    for(i=0; i<SO_MERCI;i++){/*dichiarazione array merci*/
         temp_merci[i].quantita = 0;
         clock_gettime(CLOCK_REALTIME , &now);
         temp_merci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
         clock_gettime(CLOCK_REALTIME , &now);
-        temp_merci[i].tempo_scadenza = (now.tv_nsec % (SO_MAX_VITA - SO_MIN_VITA)) + SO_MIN_VITA + 1;
+        temp_merci[i].tempo_scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA)) + SO_MIN_VITA +1;
     }
     stampa_merci(temp_merci);
 
@@ -271,12 +277,12 @@ int main() {
                     }
                 }
             } while (uguali);
-            sem_accesso(sem_id, 1);
+            sem_accesso(sem_id,1);
             shmnavi[i] = arraynavi[i];
-            sem_uscita(sem_id, 1);
-            sprintf(stringid, "%d", i);
+            sem_uscita(sem_id,1);
+            sprintf(stringid,"%d",i);
             nave[6] = stringid;
-            printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
+            printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n",i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
             execvp("./nave", nave);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -285,18 +291,15 @@ int main() {
             /* PARENT */
         }
     }
-
     free(temp_merci);
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     pause();
-    /*PRINT STATUS OF MESSAGE QUEUE*/
-    msg_print_stats(1, q_id);
-
-    msgctl(q_id, IPC_RMID, NULL);
-    shmctl(idshmporti, IPC_RMID, NULL);
-    shmctl(idshmnavi, IPC_RMID, NULL);
-    semctl(sem_id, 1, IPC_RMID);
-    semctl(sem_porto, 1, IPC_RMID);
+    msgctl(msg_offerta,IPC_RMID,NULL);
+    msgctl(msg_richiesta,IPC_RMID,NULL);
+    shmctl(idshmporti,IPC_RMID,NULL);
+    shmctl(idshmnavi,IPC_RMID,NULL);
+    semctl(sem_id,1,IPC_RMID);
+    semctl(sem_porto,1,IPC_RMID);
     printf("\n\nFine del programma\n");
 
     exit(EXIT_SUCCESS);
@@ -319,14 +322,17 @@ void handle_alarm(int signum) {
     }
 }
 void close_all(int signum) {
-    msgctl(q_id, IPC_RMID, NULL);
+    int i, status;
+    printf("\n\n\n\n");
+    msgctl(msg_richiesta,IPC_RMID,NULL);
+    msgctl(msg_offerta,IPC_RMID,NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
-    shmctl(idshmnavi, IPC_RMID, NULL);
-    semctl(sem_id, 1, IPC_RMID);
-    semctl(sem_porto, 1, IPC_RMID);
+    shmctl(idshmnavi,IPC_RMID,NULL);
+    semctl(sem_id,1,IPC_RMID);
+    semctl(sem_porto,1,IPC_RMID);
 
     printf("\n\nFine del programma\n");
     exit(0);
-
+    
 }
 

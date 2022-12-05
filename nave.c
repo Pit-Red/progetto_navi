@@ -21,7 +21,8 @@ double xnave,ynave;
 int id;
 int sem_id;
 int sem_porto;
-int q_id;
+int msg_richiesta;
+int msg_offerta;
 snave* shmnavi; sporto*shmporti;
 
 
@@ -54,7 +55,8 @@ int main(int argc, char** argv){
     sem_id = atoi(argv[1]);
     sem_porto = atoi(argv[7]);
     id = atoi(argv[6]);
-    q_id = atoi(argv[8]);
+    msg_richiesta = atoi(argv[8]);
+    msg_offerta = atoi(argv[9]);
     TEST_ERROR;
 
     sem_accesso(sem_id,1);/*sem[0]=>shmporti, sem[1]=>shmnavi*/
@@ -63,7 +65,7 @@ int main(int argc, char** argv){
     sem_uscita(sem_id,1);
 
 
-        msg_lettura(q_id, &r);
+        msg_lettura(msg_richiesta, &r);
         printf("\n\nidporto:%d idmerce:%d qmerce:%d\n\n", r.idporto,r.idmerce, r.qmerce);
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
