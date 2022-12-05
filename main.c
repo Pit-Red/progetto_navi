@@ -26,6 +26,7 @@ int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE;
 int idshmnavi, idshmporti;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto;/*semaforo per far approdare le navi al porto*/
+snave* shmnavi; sporto* shmporti;
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 
 
@@ -51,7 +52,6 @@ int main() {
     char stringvelocita[13], stringcapacity[13];
     char* nave[12] = {""};
     char* porto[12] = {""};
-    snave* shmnavi; sporto* shmporti;
     short uguali;
     struct timespec now;
     sporto* arrayporti;
@@ -180,7 +180,6 @@ int main() {
 
     TEST_ERROR;
 
-    alarm(4);
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
     for (i = 0; i < SO_PORTI; i++) {
@@ -264,6 +263,7 @@ int main() {
             /* CHILD */
             arraynavi[i].pid = getpid();
             arraynavi[i].carico = temp_merci;
+            arraynavi[i].stato_nave = 0;
             do {
                 int RANDMAX = (int)SO_LATO;
                 clock_gettime(CLOCK_REALTIME , &now);
@@ -293,6 +293,12 @@ int main() {
     }
     free(temp_merci);
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
+    
+    for(;;){
+        alarm(5);
+        pause();
+    }
+    
     pause();
     msgctl(msg_offerta,IPC_RMID,NULL);
     msgctl(msg_richiesta,IPC_RMID,NULL);
@@ -306,20 +312,16 @@ int main() {
 }
 
 void handle_alarm(int signum) {
-    int i, status;
+    int i;
+    for(i = 0; i<SO_NAVI; i++){
+        if(shmnavi[i].stato_nave == 0)
+            printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot );
+        else if(shmnavi[i].stato_nave == 1)
+            printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot);
+        else
+            printf("nave[%d]\tSTATO: carico/scarico\n",shmnavi[i].pid);
+    }
     printf("\n\n\n\n");
-    for (i = 0; i < SO_NAVI; i++) {
-        kill(na[i], SIGINT);
-        TEST_ERROR;
-        wait(&status);
-        TEST_ERROR;
-    }
-    for (i = 0; i < SO_PORTI; i++) {
-        kill(po[i], SIGINT);
-        TEST_ERROR;
-        wait(&status);
-        TEST_ERROR;
-    }
 }
 void close_all(int signum) {
     int i, status;
@@ -330,7 +332,9 @@ void close_all(int signum) {
     shmctl(idshmnavi,IPC_RMID,NULL);
     semctl(sem_id,1,IPC_RMID);
     semctl(sem_porto,1,IPC_RMID);
-
+    for(i=0;i <SO_NAVI + SO_PORTI;i++){
+        wait(&status);
+    }
     printf("\n\nFine del programma\n");
     exit(0);
     
