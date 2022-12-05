@@ -1,3 +1,4 @@
+
 #include "utilities.h"
 #include <unistd.h>
 #include <errno.h>
@@ -115,4 +116,32 @@ void msg_print_stats(int fd, int q_id) {
     dprintf(fd, "----------------------- PID of last msgrcv: %d\n",
             my_q_data.msg_lrpid);
     dprintf(fd, "--- IPC Message Queue ID: %8d, END -----\n", q_id);
+}
+
+list list_insert_head(list p, smerce m){
+	list new_elem;
+	new_elem = malloc(sizeof(*new_elem));
+	new_elem->elem = m;
+	new_elem->next = p;
+	return new_elem;
+}
+
+void list_print(list p){
+	if (p == NULL) {
+		printf("Empty list\n");
+		return;
+	}
+	printf("[id:%d, quantita:%d, tempo scadenza:%d]", p->elem.id, p->elem.quantita, p->elem.tempo_scadenza);
+	for(; p->next!=NULL; p = p->next) {
+		printf(" -> [id:%d, quantita:%d, tempo scadenza:%d]", p->elem.id, p->elem.quantita, p->elem.tempo_scadenza);
+	}
+	printf("\n");
+}
+
+void list_free(list p){
+	if (p == NULL) {
+		return;
+	}
+	list_free(p->next);
+	free(p);
 }

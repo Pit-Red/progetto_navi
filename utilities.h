@@ -12,27 +12,37 @@
 #include <sys/types.h>
 #include <sys/sem.h>
 #include <math.h>
-#define MSG_LEN 120 /*ossia 120 meno size di variabile tipo long*/
+
+
 
 typedef struct {
+    int id;
     int quantita;
     int dimensione;
     int tempo_scadenza;
-} smerce;
+}smerce;
+
+typedef struct node {
+	smerce elem;
+	struct node * next;  
+} node;
+
+typedef node* list;
 
 typedef struct {
     pid_t pid;
     double x;
     double y;
-    smerce* carico;
+    list carico;
     int carico_tot;
-} snave;
+    int stato_nave;
+}snave;
 
 typedef struct {
     pid_t pid;
     double x;
     double y;
-} sporto;
+}sporto;
 
 typedef struct {
     long rtype;
@@ -48,7 +58,6 @@ typedef struct{
 
 
 
-
 #define TEST_ERROR    if (errno) {fprintf(stderr,           \
                       "%s:%d: PID=%5d: Error %d (%s)\n", \
                       __FILE__,         \
@@ -56,6 +65,14 @@ typedef struct{
                       getpid(),         \
                       errno,            \
                       strerror(errno));}
+
+list list_insert_head(list p, smerce m);
+
+void list_print(list p);
+
+void list_free(list p);
+
+
 
 void sem_accesso(int semid, int num_risorsa);
 
