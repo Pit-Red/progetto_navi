@@ -14,16 +14,21 @@
 #include <math.h>
 
 
-
 typedef struct {
     int id;
-    int quantita;
     int dimensione;
-    int tempo_scadenza;
+    int scadenza;
 }smerce;
 
+typedef struct {
+    int pid;
+    int idmerce;            /*REQUEST DATA*/
+    int qmerce;
+    int scadenza;
+}carico;
+
 typedef struct node {
-	smerce elem;
+	carico elem;
 	struct node * next;  
 } node;
 
@@ -33,7 +38,7 @@ typedef struct {
     pid_t pid;
     double x;
     double y;
-    list carico;
+    list lista_merci;
     int carico_tot;
     int stato_nave;
 }snave;
@@ -42,18 +47,13 @@ typedef struct {
     pid_t pid;
     double x;
     double y;
+    carico offerta;
 }sporto;
 
-typedef struct {
-    long rtype;
-    int idporto;            /*REQUEST DATA*/
-    int idmerce;
-    int qmerce;
-}argomento_coda;
 
 typedef struct{
 	long mtype;            
-	argomento_coda mtext;    
+	carico mtext;    
 }msg;
 
 
@@ -66,7 +66,7 @@ typedef struct{
                       errno,            \
                       strerror(errno));}
 
-list list_insert_head(list p, smerce m);
+list list_insert_head(list p, carico m);
 
 void list_print(list p);
 
@@ -80,9 +80,9 @@ void sem_uscita(int semid, int num_risorsa);
 
 void stampa_merci(smerce* temp_merci);
 
-int msg_invio(int id, argomento_coda r);
+int msg_invio(int id, carico r);
 
-int msg_lettura(int id, argomento_coda* r);
+int msg_lettura(int id, carico* r);
 
 int msg_error();
 

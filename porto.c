@@ -42,7 +42,6 @@ void handle_signal(int signum) {
 int main(int argc, char** argv) {
     /*DICHIARAZIONE DELLE VARIABILI*/
     /*DEFINIZIONE VAR CODA MEX*/
-    argomento_coda r;
     int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
     size_t msgsize_user, msgesize_max;
     int status, num_bytes;
@@ -72,16 +71,9 @@ int main(int argc, char** argv) {
 
     msg_send(q_id, &mybuf, num_bytes);*/
 
-
+    /*NON SO A CHE CAZZO SERVA (DA FIXARE)*/
     printf("porto[%d] \n\n\n", getpid());
-    if(id == 0){
-        r.rtype = 1;
-        r.idporto = id;
-        r.idmerce = 2;
-        r.qmerce = 10;
 
-        msg_invio(msg_richiesta, r);
-    }
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/

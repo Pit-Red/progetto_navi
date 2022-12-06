@@ -23,13 +23,15 @@
 pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE;
-int idshmnavi, idshmporti;
+int idshmnavi, idshmporti, idshmmerci;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto;/*semaforo per far approdare le navi al porto*/
-snave* shmnavi; sporto* shmporti;
+snave* shmnavi; sporto* shmporti; smerce* shmmerci;
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 
-
+void test(list p){
+    printf("[pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
+}
 
 void handle_alarm(int signal);
 /*HANDLER PER IL SEGNALE MANUALE DI TERMINAZIONE*/
@@ -41,11 +43,12 @@ void close_all(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
-    smerce* temp_merci;
+    list temp_merci = NULL;
     char stringsem_id[3 * sizeof(sem_id) + 1];
     char stringsem_porto[3 * sizeof(sem_porto) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
+    char stringmerci[13];
     char stringid[13];
     char stringrichiesta[13];
     char stringofferta[13];
@@ -56,6 +59,7 @@ int main() {
     struct timespec now;
     sporto* arrayporti;
     snave* arraynavi;
+    smerce* arraymerci;
     int i, j, c, banchine_effettive;
     double SO_LATO;
     int SO_MERCI;
@@ -137,8 +141,10 @@ int main() {
     sem_porto = semget(IPC_PRIVATE, SO_PORTI, 0600);
     idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
+    idshmmerci = shmget(IPC_PRIVATE, sizeof(arraymerci), 0600);
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
+    shmmerci = shmat(idshmmerci, NULL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI, sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
@@ -148,6 +154,8 @@ int main() {
     sprintf(stringsem_porto, "%d", sem_porto);
     sprintf(stringsem_id, "%d", sem_id);
     sprintf(stringporti, "%d", idshmporti);
+    sprintf(stringnavi, "%d", idshmnavi);
+    sprintf(stringmerci, "%d", idshmmerci);
     sprintf(stringrichiesta, "%d", msg_richiesta);
     sprintf(stringofferta, "%d", msg_offerta);
     sprintf(stringcapacity, "%d", SO_CAPACITY);
@@ -159,8 +167,8 @@ int main() {
     porto[5] = stringsem_porto;
     porto[6] = stringrichiesta;
     porto[7] = stringofferta;
-    porto[8] = NULL;
-    sprintf(stringnavi, "%d", idshmnavi);
+    porto[8] = stringmerci;
+    porto[9] = NULL;
     TEST_ERROR;
     nave[1] = stringsem_id;
     nave[2] = stringporti;
@@ -178,7 +186,16 @@ int main() {
     TEST_ERROR;
 
 
-    TEST_ERROR;
+    arraymerci = calloc(SO_MERCI, sizeof(*arraymerci));
+    for(i=0; i<SO_MERCI; i++){
+        arraymerci[i].id = i;
+        clock_gettime(CLOCK_REALTIME, &now);
+        arraymerci[i].scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA)) + SO_MIN_VITA +1;
+        clock_gettime(CLOCK_REALTIME, &now);
+        arraymerci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
+    }
+    shmmerci = arraymerci;
+
 
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
@@ -242,16 +259,6 @@ int main() {
         }
     }
     arraynavi = calloc(SO_NAVI, sizeof(*arraynavi));
-    temp_merci = calloc(SO_MERCI, sizeof(*temp_merci));
-    for(i=0; i<SO_MERCI;i++){/*dichiarazione array merci*/
-        temp_merci[i].quantita = 0;
-        clock_gettime(CLOCK_REALTIME , &now);
-        temp_merci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
-        clock_gettime(CLOCK_REALTIME , &now);
-        temp_merci[i].tempo_scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA)) + SO_MIN_VITA +1;
-    }
-    stampa_merci(temp_merci);
-
     /* CREAZIONE DELLE NAVI */
     for (i = 0; i < SO_NAVI; i++) {
         na[i] = fork();
@@ -262,7 +269,7 @@ int main() {
         if (na[i] == 0) {
             /* CHILD */
             arraynavi[i].pid = getpid();
-            arraynavi[i].carico = temp_merci;
+            arraynavi[i].lista_merci = NULL;
             arraynavi[i].stato_nave = 0;
             do {
                 int RANDMAX = (int)SO_LATO;
@@ -321,6 +328,8 @@ void handle_alarm(int signum) {
         else
             printf("nave[%d]\tSTATO: carico/scarico\n",shmnavi[i].pid);
     }
+    test(shmnavi[0].lista_merci);
+    
     printf("\n\n\n\n");
 }
 void close_all(int signum) {

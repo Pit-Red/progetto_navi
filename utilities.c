@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <sys/msg.h>
 
-
+int i;
 
 void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
@@ -34,11 +34,11 @@ void stampa_merci(smerce* temp_merci) {
     int i;
     int size = 3;
     for (i = 0; i < size; i++) {
-        printf("\nsmerce[%d]:quantita=%d\tdimensione=%d\ttempo di scadenza=%d\n", i, temp_merci[i].quantita, temp_merci[i].dimensione, temp_merci[i].tempo_scadenza);
+        printf("\nsmerce[%d]:id=%d\tdimensione=%d\ttempo di scadenza=%d\n", i, temp_merci[i].id, temp_merci[i].dimensione, temp_merci[i].scadenza);
     }
 }
 
-int msg_invio(int id, argomento_coda r){
+int msg_invio(int id, carico r){
     msg mybuf;
     int num_bytes = sizeof(r);
     mybuf.mtype = 1; /*1 lo usiamo per le domande (n>0) */
@@ -47,7 +47,7 @@ int msg_invio(int id, argomento_coda r){
     return msg_error();
 }
 
-int msg_lettura(int id, argomento_coda* r){
+int msg_lettura(int id, carico* r){
     msg mybuf;
     msgrcv(id, &mybuf, sizeof(*r), 1, 0);
     *r = mybuf.mtext;
@@ -114,11 +114,12 @@ void msg_print_stats(int fd, int q_id) {
     dprintf(fd, "----------------------- PID of last msgsnd: %d\n",
             my_q_data.msg_lspid);
     dprintf(fd, "----------------------- PID of last msgrcv: %d\n",
-            my_q_data.msg_lrpid);
+            my_q_data.msg_lrpid);            /*arraynavi[i].carico = list_insert_head(arraynavi[i].carico, ) DA FIXARE*/ 
     dprintf(fd, "--- IPC Message Queue ID: %8d, END -----\n", q_id);
 }
 
-list list_insert_head(list p, smerce m){
+
+list list_insert_head(list p, carico m){
 	list new_elem;
 	new_elem = malloc(sizeof(*new_elem));
 	new_elem->elem = m;
@@ -126,14 +127,15 @@ list list_insert_head(list p, smerce m){
 	return new_elem;
 }
 
-void list_print(list p){
+void list_print(list p){  
+
 	if (p == NULL) {
 		printf("Empty list\n");
 		return;
 	}
-	printf("[id:%d, quantita:%d, tempo scadenza:%d]", p->elem.id, p->elem.quantita, p->elem.tempo_scadenza);
+	printf("[pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
 	for(; p->next!=NULL; p = p->next) {
-		printf(" -> [id:%d, quantita:%d, tempo scadenza:%d]", p->elem.id, p->elem.quantita, p->elem.tempo_scadenza);
+		printf(" -> [pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
 	}
 	printf("\n");
 }

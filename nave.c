@@ -41,7 +41,7 @@ void handle_signal(int signum){
 
 int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
-    argomento_coda r;
+    carico temp_merce;
     struct sigaction sa;
     int temp;
     bzero(&sa, sizeof(sa));
@@ -64,9 +64,18 @@ int main(int argc, char** argv){
     ynave = shmnavi[id].y;
     sem_uscita(sem_id,1);
 
+    /*prova carico*/
+    if(id==0){
+        temp_merce.pid = getpid();
+        temp_merce.idmerce = 0;
+        temp_merce.qmerce = 10;
+        temp_merce.scadenza = 19;
+        sem_accesso(sem_id,1);
+        shmnavi[id].lista_merci = list_insert_head(shmnavi[id].lista_merci, temp_merce);
+        sem_uscita(sem_id,1);
+    }
 
-        msg_lettura(msg_richiesta, &r);
-        printf("\n\nidporto:%d idmerce:%d qmerce:%d\n\n", r.idporto,r.idmerce, r.qmerce);
+
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
