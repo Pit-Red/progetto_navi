@@ -63,7 +63,8 @@ typedef struct{
                       __LINE__,         \
                       getpid(),         \
                       errno,            \
-                      strerror(errno));}
+                      strerror(errno));}\
+                      errno = 0;
 
 list list_insert_head(list p, carico m);
 
@@ -86,3 +87,5 @@ int msg_lettura(int id, carico* r);
 int msg_error();
 
 void msg_print_stats(int fd, int q_id);
+
+list carico_nave(carico c, list p, int speed, smerce* m, snave n);

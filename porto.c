@@ -23,7 +23,8 @@ int id;
 int sem_id;
 int msg_richiesta;
 int msg_offerta;
-sporto* shmporti;
+sporto* shmporti; smerce* shmmerci;
+int* shmgiorno;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -45,11 +46,6 @@ int main(int argc, char** argv) {
     int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
     size_t msgsize_user, msgesize_max;
     int status, num_bytes;
-    /*msg mybuf;*/
-    FILE * in_stream;
-    struct msqid_ds my_queue_stat;
-    pid_t snd_pid;
-    pid_t rcv_pid;
     struct sigaction sa;
     struct timespec now;
     bzero(&sa, sizeof(sa));
@@ -62,7 +58,19 @@ int main(int argc, char** argv) {
     id = atoi(argv[4]);
     msg_richiesta = atoi(argv[6]);
     msg_offerta = atoi(argv[7]);
-    
+    shmmerci = shmat(atoi(argv[8]),NULL,0);
+    shmgiorno = shmat(atoi(argv[9]),NULL,0);
+
+    if(id==0){
+        sem_accesso(sem_id,0);
+        shmporti[id].offerta.idmerce = 0;
+        shmporti[id].offerta.pid = getpid();
+        shmporti[id].offerta.qmerce = 12;
+        shmporti[id].offerta.scadenza = shmmerci[0].scadenza + *shmgiorno;
+        printf("\n\nnumero minchia%d\n\n",shmmerci[0].scadenza);
+        sem_uscita(sem_id,0);
+        TEST_ERROR;
+    }
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;

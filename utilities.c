@@ -150,3 +150,14 @@ void list_free(list p){
 	list_free(p->next);
 	free(p);
 }
+
+list carico_nave(carico c, list p, int speed, smerce* m, snave n){
+    struct timespec my_time;
+    TEST_ERROR;
+    my_time.tv_sec =(time_t)(c.qmerce*m[c.idmerce].dimensione)/speed;
+    my_time.tv_nsec = (long)0;
+    TEST_ERROR;
+    nanosleep(&my_time, NULL);
+    TEST_ERROR;
+    return list_insert_head(p, c);
+}

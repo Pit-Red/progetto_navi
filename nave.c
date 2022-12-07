@@ -23,7 +23,9 @@ int sem_id;
 int sem_porto;
 int msg_richiesta;
 int msg_offerta;
-snave* shmnavi; sporto*shmporti;
+snave* shmnavi; sporto*shmporti;smerce* shmmerci; int* shmgiorno;
+int SO_LOADSPEED;
+list lista_carico;
 
 
 
@@ -57,16 +59,22 @@ int main(int argc, char** argv){
     id = atoi(argv[6]);
     msg_richiesta = atoi(argv[8]);
     msg_offerta = atoi(argv[9]);
+    shmgiorno = shmat(atoi(argv[10]),NULL,0);
+    shmmerci = shmat(atoi(argv[12]),NULL,0);
+    SO_LOADSPEED = atoi(argv[11]);
     TEST_ERROR;
 
     sem_accesso(sem_id,1);/*sem[0]=>shmporti, sem[1]=>shmnavi*/
     xnave = shmnavi[id].x;
     ynave = shmnavi[id].y;
+    if(id==0){
+    lista_carico = carico_nave(shmporti[id].offerta,lista_carico, SO_LOADSPEED, shmmerci, shmnavi[id]);
+    list_print(lista_carico);
+    }
     sem_uscita(sem_id,1);
 
-    if(id == 0){
-        navigazione(shmporti[0].x, shmporti[0].y);
-    }
+
+    
 
     /*prova carico*/
 

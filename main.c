@@ -52,9 +52,9 @@ int main() {
     char stringid[13];
     char stringrichiesta[13];
     char stringofferta[13];
-    char stringvelocita[13], stringcapacity[13], stringgiorno[13];
-    char* nave[12] = {""};
-    char* porto[12] = {""};
+    char stringvelocita[13], stringcapacity[13], stringgiorno[13], stringload_speed[13];
+    char* nave[20] = {""};
+    char* porto[20] = {""};
     short uguali;
     struct timespec now;
     sporto* arrayporti;
@@ -66,6 +66,7 @@ int main() {
     int SO_MIN_VITA, SO_MAX_VITA; 
     int SO_CAPACITY;
     int SO_VELOCITA;
+    int SO_LOADSPEED;
     int status;
     struct sigaction ca;
     struct sigaction sa;
@@ -89,7 +90,7 @@ int main() {
     printf("sem_id: %d\n\n",sem_id);
     srand(time(NULL));
 
-
+    giorno = 1;
     /*INIZIO INPUT*/
     printf("\033[033;34m");
     
@@ -128,8 +129,9 @@ int main() {
     SO_SIZE = 10;
     SO_CAPACITY = 100;
     SO_VELOCITA = 20;
-    SO_MAX_VITA = 5;
+    SO_MAX_VITA = 1000;
     SO_MIN_VITA = 2;
+    SO_LOADSPEED = 5;
 #endif
     /*FINE INPUT*/
 
@@ -163,6 +165,7 @@ int main() {
     sprintf(stringcapacity, "%d", SO_CAPACITY);
     sprintf(stringvelocita, "%d", SO_VELOCITA);
     sprintf(stringgiorno, "%d", idshmgiorno);
+    sprintf(stringload_speed, "%d", SO_LOADSPEED);
     TEST_ERROR;
     porto[1] = stringsem_id;
     porto[2] = stringporti;
@@ -183,7 +186,9 @@ int main() {
     nave[8] = stringrichiesta;
     nave[9] = stringofferta;
     nave[10] = stringgiorno;
-    nave[11] = NULL;
+    nave[11] = stringload_speed;
+    nave[12] = stringmerci;
+    nave[13] = NULL;
 
     /*DICHIARAZOINE SEMAFORO FIRST*/
     semctl(sem_id, 0 , SETVAL, 1);
@@ -199,8 +204,9 @@ int main() {
         arraymerci[i].scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA)) + SO_MIN_VITA +1;
         clock_gettime(CLOCK_REALTIME, &now);
         arraymerci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
+        printf("merce[%d]:\tSCADENZA:%d\tDIMENSIONE:%d\n",i, arraymerci[i].scadenza,arraymerci[i].dimensione);
+        shmmerci[i] = arraymerci[i];
     }
-    shmmerci = arraymerci;
 
 
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
@@ -275,7 +281,7 @@ int main() {
         if (na[i] == 0) {
             /* CHILD */
             arraynavi[i].pid = getpid();
-            arraynavi[i].stato_nave = 0;
+            arraynavi[i].stato_nave = 1;
             do {
                 int RANDMAX = (int)SO_LATO;
                 clock_gettime(CLOCK_REALTIME , &now);
@@ -324,7 +330,6 @@ int main() {
 
 void handle_alarm(int signum) {
     int i;
-    giorno++;
     *shmgiorno = giorno;
     printf("giorno:%d\n",giorno);
     for(i = 0; i<SO_NAVI; i++){
@@ -335,6 +340,7 @@ void handle_alarm(int signum) {
         else
             printf("nave[%d]\tSTATO: carico/scarico\n",shmnavi[i].pid);
     }
+    giorno++;
     
     printf("\n\n\n\n");
 }
@@ -344,6 +350,8 @@ void close_all(int signum) {
     msgctl(msg_offerta,IPC_RMID,NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
     shmctl(idshmnavi,IPC_RMID,NULL);
+    shmctl(idshmgiorno, IPC_RMID, NULL);
+    shmctl(idshmmerci, IPC_RMID, NULL);
     semctl(sem_id,1,IPC_RMID);
     semctl(sem_porto,1,IPC_RMID);
     for(i=0;i <SO_NAVI + SO_PORTI;i++){
