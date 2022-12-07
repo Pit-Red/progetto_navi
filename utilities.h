@@ -38,7 +38,6 @@ typedef struct {
     pid_t pid;
     double x;
     double y;
-    list lista_merci;
     int carico_tot;
     int stato_nave;
 }snave;

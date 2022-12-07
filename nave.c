@@ -65,15 +65,6 @@ int main(int argc, char** argv){
     sem_uscita(sem_id,1);
 
     /*prova carico*/
-    if(id==0){
-        temp_merce.pid = getpid();
-        temp_merce.idmerce = 0;
-        temp_merce.qmerce = 10;
-        temp_merce.scadenza = 19;
-        sem_accesso(sem_id,1);
-        shmnavi[id].lista_merci = list_insert_head(shmnavi[id].lista_merci, temp_merce);
-        sem_uscita(sem_id,1);
-    }
 
 
 

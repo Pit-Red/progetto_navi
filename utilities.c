@@ -114,15 +114,18 @@ void msg_print_stats(int fd, int q_id) {
     dprintf(fd, "----------------------- PID of last msgsnd: %d\n",
             my_q_data.msg_lspid);
     dprintf(fd, "----------------------- PID of last msgrcv: %d\n",
-            my_q_data.msg_lrpid);            /*arraynavi[i].carico = list_insert_head(arraynavi[i].carico, ) DA FIXARE*/ 
+            my_q_data.msg_lrpid);            
     dprintf(fd, "--- IPC Message Queue ID: %8d, END -----\n", q_id);
 }
 
 
 list list_insert_head(list p, carico m){
-	list new_elem;
+    list new_elem;
 	new_elem = malloc(sizeof(*new_elem));
-	new_elem->elem = m;
+	new_elem->elem.pid = m.pid;
+    new_elem->elem.idmerce = m.idmerce;
+    new_elem->elem.qmerce = m.qmerce;
+    new_elem->elem.scadenza = m.scadenza;
 	new_elem->next = p;
 	return new_elem;
 }

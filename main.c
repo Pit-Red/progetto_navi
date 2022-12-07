@@ -30,7 +30,8 @@ snave* shmnavi; sporto* shmporti; smerce* shmmerci;
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 
 void test(list p){
-    printf("[pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
+    /*printf("[pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);*/
+    printf("%d\n", p->elem.pid);
 }
 
 void handle_alarm(int signal);
@@ -43,7 +44,6 @@ void close_all(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
-    list temp_merci = NULL;
     char stringsem_id[3 * sizeof(sem_id) + 1];
     char stringsem_porto[3 * sizeof(sem_porto) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
@@ -269,7 +269,6 @@ int main() {
         if (na[i] == 0) {
             /* CHILD */
             arraynavi[i].pid = getpid();
-            arraynavi[i].lista_merci = NULL;
             arraynavi[i].stato_nave = 0;
             do {
                 int RANDMAX = (int)SO_LATO;
@@ -298,7 +297,6 @@ int main() {
             /* PARENT */
         }
     }
-    free(temp_merci);
     /*IL PROCESSO PADRE RIMANE IN PAUSA FINO ALL'ARRIVO DI UN SEGNALE (ALARM)*/
     
     for(;;){
@@ -328,13 +326,11 @@ void handle_alarm(int signum) {
         else
             printf("nave[%d]\tSTATO: carico/scarico\n",shmnavi[i].pid);
     }
-    test(shmnavi[0].lista_merci);
     
     printf("\n\n\n\n");
 }
 void close_all(int signum) {
     int i, status;
-    printf("\n\n\n\n");
     msgctl(msg_richiesta,IPC_RMID,NULL);
     msgctl(msg_offerta,IPC_RMID,NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
