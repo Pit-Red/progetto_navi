@@ -64,6 +64,10 @@ int main(int argc, char** argv){
     ynave = shmnavi[id].y;
     sem_uscita(sem_id,1);
 
+    if(id == 0){
+        navigazione(shmporti[0].x, shmporti[0].y);
+    }
+
     /*prova carico*/
 
 
@@ -83,11 +87,15 @@ void navigazione(double x, double y){
     struct timespec my_time;
     dist = sqrt(pow((y-ynave),2)+pow((x-xnave),2));
     tempo = dist/velocita;
-    my_time.tv_sec = (int)tempo;
-    my_time.tv_nsec = (tempo-(int)tempo) * 10000;
+    shmnavi[id].stato_nave = 1;
+    /*my_time.tv_sec = (int)tempo;
+    my_time.tv_nsec = (tempo-(int)tempo) * 10000;*/
+    my_time.tv_sec = 7;
+    my_time.tv_nsec = 50;
     nanosleep(&my_time, NULL);
     sem_accesso(sem_id,1);
     shmnavi[id].x = x;
     shmnavi[id].y = y;
     sem_uscita(sem_id,1);
+    shmnavi[id].stato_nave = 0;
 }

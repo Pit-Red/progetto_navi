@@ -320,9 +320,9 @@ void handle_alarm(int signum) {
     int i;
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)
-            printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot );
+            printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot );
         else if(shmnavi[i].stato_nave == 1)
-            printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot);
+            printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot);
         else
             printf("nave[%d]\tSTATO: carico/scarico\n",shmnavi[i].pid);
     }
