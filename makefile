@@ -32,6 +32,10 @@ touch:
 	touch nave.c
 	touch porto.c
 
+rm: 
+	killall -SIGKILL porto nave
+	ipcrm -a
+
 download:
 	rm -f *
 	rm -rf .git
@@ -44,4 +48,3 @@ upload:
 	git commit -m "commit from make"
 	git push https://github.com/Pit-Red/progetto_navi.git
 	echo ciao
-
