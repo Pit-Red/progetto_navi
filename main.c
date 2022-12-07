@@ -23,10 +23,10 @@
 pid_t* na;
 pid_t* po;
 int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE;
-int idshmnavi, idshmporti, idshmmerci;
+int idshmnavi, idshmporti, idshmmerci, idshmgiorno;
 int sem_id; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto;/*semaforo per far approdare le navi al porto*/
-snave* shmnavi; sporto* shmporti; smerce* shmmerci;
+snave* shmnavi; sporto* shmporti; smerce* shmmerci;int giorno;int* shmgiorno;
 /*STRUCT PER DEFINIRE LE COORDINATE DEI PORTI E DELLE NAVI E I RELATIVI PID*/
 
 void test(list p){
@@ -52,7 +52,7 @@ int main() {
     char stringid[13];
     char stringrichiesta[13];
     char stringofferta[13];
-    char stringvelocita[13], stringcapacity[13];
+    char stringvelocita[13], stringcapacity[13], stringgiorno[13];
     char* nave[12] = {""};
     char* porto[12] = {""};
     short uguali;
@@ -142,9 +142,11 @@ int main() {
     idshmporti = shmget(IPC_PRIVATE, sizeof(arrayporti), 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(arraynavi), 0600);
     idshmmerci = shmget(IPC_PRIVATE, sizeof(arraymerci), 0600);
+    idshmgiorno = shmget(IPC_PRIVATE, sizeof(giorno), 0600);
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
     shmmerci = shmat(idshmmerci, NULL, 0);
+    shmgiorno = (int*)shmat(idshmgiorno, NULL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI, sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
@@ -160,6 +162,7 @@ int main() {
     sprintf(stringofferta, "%d", msg_offerta);
     sprintf(stringcapacity, "%d", SO_CAPACITY);
     sprintf(stringvelocita, "%d", SO_VELOCITA);
+    sprintf(stringgiorno, "%d", idshmgiorno);
     TEST_ERROR;
     porto[1] = stringsem_id;
     porto[2] = stringporti;
@@ -168,7 +171,8 @@ int main() {
     porto[6] = stringrichiesta;
     porto[7] = stringofferta;
     porto[8] = stringmerci;
-    porto[9] = NULL;
+    porto[9] = stringgiorno;
+    porto[10] = NULL;
     TEST_ERROR;
     nave[1] = stringsem_id;
     nave[2] = stringporti;
@@ -178,13 +182,15 @@ int main() {
     nave[7] = stringsem_porto;
     nave[8] = stringrichiesta;
     nave[9] = stringofferta;
-    nave[10] = NULL;
+    nave[10] = stringgiorno;
+    nave[11] = NULL;
 
     /*DICHIARAZOINE SEMAFORO FIRST*/
     semctl(sem_id, 0 , SETVAL, 1);
     semctl(sem_id, 1 , SETVAL, 1);
     TEST_ERROR;
 
+    *shmgiorno = giorno;
 
     arraymerci = calloc(SO_MERCI, sizeof(*arraymerci));
     for(i=0; i<SO_MERCI; i++){
@@ -318,6 +324,9 @@ int main() {
 
 void handle_alarm(int signum) {
     int i;
+    giorno++;
+    *shmgiorno = giorno;
+    printf("giorno:%d\n",giorno);
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)
             printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot );
