@@ -334,7 +334,7 @@ void handle_alarm(int signum) {
     *shmgiorno = giorno;
     printf("giorno:%d\n",giorno);
     for(i = 0; i<SO_PORTI; i++){
-        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza );
+        printf("porto[%d]\tOFFERTA->merce[%d]:\tqmerce:%d,\tdata di scadenza:%d\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
     }
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)
@@ -345,7 +345,7 @@ void handle_alarm(int signum) {
             printf("nave[%d]\tSTATO: carico/scarico\tCORDINATE:(%.2f,%.2f)\n",shmnavi[i].pid,shmnavi[i].x,shmnavi[i].y);
     }
     giorno++;
-    
+    msg_print_stats(1, msg_richiesta);
     printf("\n\n\n\n");
 }
 void close_all(int signum) {
