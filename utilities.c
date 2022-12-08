@@ -177,8 +177,9 @@ list carico_nave(carico c, list p, int speed, smerce* m, snave n){
 int pid_to_id_porto(pid_t pid, sporto* p){
     j=0;
     while(1){
-        if(p[j].pid = pid)
+        if(p[j].pid == pid)
             return j;
+        j++;
     }
     return -1;
 }
