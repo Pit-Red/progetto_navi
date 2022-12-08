@@ -22,7 +22,7 @@ typedef struct {
 
 typedef struct {
     int pid;
-    int idmerce;            /*REQUEST DATA*/
+    int idmerce;            
     int qmerce;
     int scadenza;
 }carico;
@@ -63,14 +63,17 @@ typedef struct{
                       __LINE__,         \
                       getpid(),         \
                       errno,            \
-                      strerror(errno));}\
-                      errno = 0;
+                      strerror(errno));}
+
+#define STAMPA_ROSSO(x) printf("\033[0;31m"); x; printf("\033[0m"); 
 
 list list_insert_head(list p, carico m);
 
 void list_print(list p);
 
 void list_free(list p);
+
+int list_sum(list p, smerce* m);
 
 
 
@@ -89,3 +92,5 @@ int msg_error();
 void msg_print_stats(int fd, int q_id);
 
 list carico_nave(carico c, list p, int speed, smerce* m, snave n);
+
+int pid_to_id_porto(pid_t pid, sporto* p);

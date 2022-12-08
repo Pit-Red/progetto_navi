@@ -25,6 +25,7 @@ int msg_richiesta;
 int msg_offerta;
 sporto* shmporti; smerce* shmmerci;
 int* shmgiorno;
+int SO_MERCI;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -34,7 +35,7 @@ void handle_signal(int signum) {
     exit(0);
 }
 
-
+carico creazione_offerta();
 
 
 /*int message_send(int queue, const message* my_message , size_t message_length);*/
@@ -57,17 +58,17 @@ int main(int argc, char** argv) {
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
     msg_richiesta = atoi(argv[6]);
-    msg_offerta = atoi(argv[7]);
+    SO_MERCI = atoi(argv[7]);
     shmmerci = shmat(atoi(argv[8]),NULL,0);
     shmgiorno = shmat(atoi(argv[9]),NULL,0);
 
-    if(id==0){
+    sleep(5);
+
+    if(id==0||id==1){
         sem_accesso(sem_id,0);
-        shmporti[id].offerta.idmerce = 0;
-        shmporti[id].offerta.pid = getpid();
-        shmporti[id].offerta.qmerce = 12;
-        shmporti[id].offerta.scadenza = shmmerci[0].scadenza + *shmgiorno;
-        printf("\n\nnumero minchia%d\n\n",shmmerci[0].scadenza);
+        shmporti[id].offerta = creazione_offerta();
+        msg_invio(msg_richiesta, shmporti[id].offerta);
+        TEST_ERROR;
         sem_uscita(sem_id,0);
         TEST_ERROR;
     }
@@ -79,8 +80,6 @@ int main(int argc, char** argv) {
 
     msg_send(q_id, &mybuf, num_bytes);*/
 
-    /*NON SO A CHE CAZZO SERVA (DA FIXARE)*/
-    printf("porto[%d] \n\n\n", getpid());
 
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
@@ -89,5 +88,16 @@ int main(int argc, char** argv) {
     exit(0);
 }
 
+carico creazione_offerta(){
+    carico c;
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    c.idmerce = now.tv_nsec % SO_MERCI;
+    c.pid = getpid();
+    clock_gettime(CLOCK_REALTIME, &now);
+    c.qmerce = now.tv_nsec % 100 +1;
+    c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
+    return c;
+}
 
 

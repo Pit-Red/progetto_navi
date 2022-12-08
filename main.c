@@ -52,7 +52,7 @@ int main() {
     char stringid[13];
     char stringrichiesta[13];
     char stringofferta[13];
-    char stringvelocita[13], stringcapacity[13], stringgiorno[13], stringload_speed[13];
+    char stringvelocita[13], stringcapacity[13], stringgiorno[13], stringload_speed[13], stringnum_merci[13];
     char* nave[20] = {""};
     char* porto[20] = {""};
     short uguali;
@@ -122,12 +122,12 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 10;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 20;    /*(n >= 1)*/
-    SO_PORTI = 5;   /*(n >= 4)*/
+    SO_NAVI = 3;    /*(n >= 1)*/
+    SO_PORTI = 4;   /*(n >= 4)*/
     SO_BANCHINE = 10;
     SO_MERCI = 3;
-    SO_SIZE = 10;
-    SO_CAPACITY = 100;
+    SO_SIZE = 100;
+    SO_CAPACITY = 10000;
     SO_VELOCITA = 20;
     SO_MAX_VITA = 1000;
     SO_MIN_VITA = 2;
@@ -166,13 +166,14 @@ int main() {
     sprintf(stringvelocita, "%d", SO_VELOCITA);
     sprintf(stringgiorno, "%d", idshmgiorno);
     sprintf(stringload_speed, "%d", SO_LOADSPEED);
+    sprintf(stringnum_merci, "%d", SO_MERCI);
     TEST_ERROR;
     porto[1] = stringsem_id;
     porto[2] = stringporti;
     porto[3] = stringnavi;
     porto[5] = stringsem_porto;
     porto[6] = stringrichiesta;
-    porto[7] = stringofferta;
+    porto[7] = stringnum_merci;
     porto[8] = stringmerci;
     porto[9] = stringgiorno;
     porto[10] = NULL;
@@ -332,13 +333,16 @@ void handle_alarm(int signum) {
     int i;
     *shmgiorno = giorno;
     printf("giorno:%d\n",giorno);
+    for(i = 0; i<SO_PORTI; i++){
+        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza );
+    }
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)
-            printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot );
+            printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\tCORDINATE:(%.2f,%.2f)\n",shmnavi[i].pid,shmnavi[i].carico_tot,shmnavi[i].x,shmnavi[i].y);
         else if(shmnavi[i].stato_nave == 1)
-            printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\n",shmnavi[i].pid,shmnavi[i].carico_tot);
+            printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\tCORDINATE:(%.2f,%.2f)\n",shmnavi[i].pid,shmnavi[i].carico_tot,shmnavi[i].x,shmnavi[i].y);
         else
-            printf("nave[%d]\tSTATO: carico/scarico\n",shmnavi[i].pid);
+            printf("nave[%d]\tSTATO: carico/scarico\tCORDINATE:(%.2f,%.2f)\n",shmnavi[i].pid,shmnavi[i].x,shmnavi[i].y);
     }
     giorno++;
     

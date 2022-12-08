@@ -8,6 +8,7 @@
 #include <sys/msg.h>
 
 int i;
+int j;
 
 void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
@@ -151,13 +152,33 @@ void list_free(list p){
 	free(p);
 }
 
+int list_sum(list p, smerce* m){
+    int sum=0;
+    for(;p != NULL; p = p->next){
+        sum += p->elem.qmerce * m[p->elem.idmerce].dimensione;
+    }
+    return sum;
+}
+
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     struct timespec my_time;
     TEST_ERROR;
-    my_time.tv_sec =(time_t)(c.qmerce*m[c.idmerce].dimensione)/speed;
+    n.stato_nave = 2;
+    /*my_time.tv_sec =(time_t)(c.qmerce*m[c.idmerce].dimensione)/speed;*/
+    my_time.tv_sec = 7;
     my_time.tv_nsec = (long)0;
     TEST_ERROR;
     nanosleep(&my_time, NULL);
     TEST_ERROR;
+    c.pid = getpid();
     return list_insert_head(p, c);
+}
+
+int pid_to_id_porto(pid_t pid, sporto* p){
+    j=0;
+    while(1){
+        if(p[j].pid = pid)
+            return j;
+    }
+    return -1;
 }
