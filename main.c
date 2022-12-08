@@ -129,7 +129,7 @@ int main() {
     SO_SIZE = 100;
     SO_CAPACITY = 10000;
     SO_VELOCITA = 20;
-    SO_MAX_VITA = 1000;
+    SO_MAX_VITA = 10;
     SO_MIN_VITA = 2;
     SO_LOADSPEED = 5;
 #endif
@@ -334,7 +334,9 @@ void handle_alarm(int signum) {
     *shmgiorno = giorno;
     printf("giorno:%d\n",giorno);
     for(i = 0; i<SO_PORTI; i++){
-        printf("porto[%d]\tOFFERTA->merce[%d]:\tqmerce:%d,\tdata di scadenza:%d\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
+        if(shmporti[i].offerta.scadenza <= giorno)
+            kill(shmporti[i].offerta.pid, SIGUSR1);
+        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d,data di scadenza:%d\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
     }
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)

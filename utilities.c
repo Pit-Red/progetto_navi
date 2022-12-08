@@ -152,12 +152,21 @@ void list_free(list p){
 	free(p);
 }
 
-int list_sum(list p, smerce* m){
+int list_sum(list p, smerce* m){  /*restituisce tonnellate*/
     int sum=0;
     for(;p != NULL; p = p->next){
         sum += p->elem.qmerce * m[p->elem.idmerce].dimensione;
     }
     return sum;
+}
+
+int list_sum_merce(list p, smerce* m, int tipo){        /*restituisce la quantitaa di merce i*/
+    int sum=0;
+        for(;p != NULL; p = p->next){
+            if(p->elem.idmerce == tipo)
+                sum += p->elem.qmerce;
+        }
+        return sum;
 }
 
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
@@ -170,6 +179,7 @@ list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     TEST_ERROR;
     nanosleep(&my_time, NULL);
     TEST_ERROR;
+    kill(c.pid, SIGUSR1);
     c.pid = getpid();
     return list_insert_head(p, c);
 }

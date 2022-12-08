@@ -37,8 +37,11 @@ void handle_signal(int signum) {
 
 carico creazione_offerta();
 
+carico creazione_richiesta();
 
-/*int message_send(int queue, const message* my_message , size_t message_length);*/
+void nuova_offerta(int signum);
+
+void nuova_richiesta(int signum);
 
 
 int main(int argc, char** argv) {
@@ -48,10 +51,17 @@ int main(int argc, char** argv) {
     size_t msgsize_user, msgesize_max;
     int status, num_bytes;
     struct sigaction sa;
+    struct sigaction ca;
     struct timespec now;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT, &sa, NULL);
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = nuova_offerta;
+    sigaction(SIGUSR1, &sa, NULL);
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = nuova_richiesta;
+    sigaction(SIGUSR2, &sa, NULL);
     TEST_ERROR;
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     sem_id = atoi(argv[1]);
@@ -62,16 +72,13 @@ int main(int argc, char** argv) {
     shmmerci = shmat(atoi(argv[8]),NULL,0);
     shmgiorno = shmat(atoi(argv[9]),NULL,0);
 
-    sleep(5);
 
-    if(id==0||id==1){
         sem_accesso(sem_id,0);
         shmporti[id].offerta = creazione_offerta();
         msg_invio(msg_richiesta, shmporti[id].offerta);
         TEST_ERROR;
         sem_uscita(sem_id,0);
         TEST_ERROR;
-    }
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
@@ -100,4 +107,25 @@ carico creazione_offerta(){
     return c;
 }
 
+carico creazione_richiesta(){
+    carico c;
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    do{
+        c.idmerce = now.tv_nsec % SO_MERCI;
+    }while(c.idmerce == shmporti[id].offerta.idmerce);
+    clock_gettime(CLOCK_REALTIME, &now);
+    c.qmerce = now.tv_nsec % 100 +1;
+    c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
+    return c; 
+}
 
+void nuova_offerta(int signum){
+    sem_accesso(sem_id, 0);
+    shmporti[id].offerta = creazione_offerta();
+    sem_uscita(sem_id, 0);
+}
+
+void nuova_richiesta(int signum){
+    msg_invio(msg_offerta, creazione_offerta());
+}

@@ -75,6 +75,8 @@ void list_free(list p);
 
 int list_sum(list p, smerce* m);
 
+int list_sum_merce(list p, smerce* m, int tipo);
+
 
 
 void sem_accesso(int semid, int num_risorsa);

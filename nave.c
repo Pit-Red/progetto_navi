@@ -71,11 +71,7 @@ int main(int argc, char** argv){
     ynave = shmnavi[id].y;
     sem_uscita(sem_id,1);
 
-    if(id==0){
-        cerca_rotta(temp_merce);
-    }
-
-    if(id==1){
+    while(1){
         cerca_rotta(temp_merce);
     }
 
@@ -114,9 +110,10 @@ void navigazione(double x, double y){
 }
 
 void cerca_rotta(carico c){
+    int differenza;
     int id_porto;
     msg_lettura(msg_richiesta, &c);
-    /*if(lista_carico == NULL){   /*la nave non contiene merci*/
+    if(differenza = c.qmerce - list_sum_merce(lista_carico, shmmerci, c.idmerce)){   /*la nave non contiene merci*/
         id_porto = pid_to_id_porto(c.pid, shmporti);
         navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto*/
         sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina*/
@@ -126,7 +123,7 @@ void cerca_rotta(carico c){
         TEST_ERROR;
         shmnavi[id].stato_nave = 0;
         /*bisogna mandare un segnale al porto per dirgli di aggiornare la sua offerta*/
-        /*msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta*/
+        msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta*/
         bzero(&c, sizeof(c));    /*azzero temp_merci*/
         sem_uscita(sem_id, 0);  
         sem_uscita(sem_porto, id_porto);
@@ -135,4 +132,5 @@ void cerca_rotta(carico c){
         shmnavi[id].stato_nave = 1;
         sem_uscita(sem_id, 1);
         TEST_ERROR;
+    }
 }
