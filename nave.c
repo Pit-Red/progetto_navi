@@ -19,7 +19,7 @@ int capacita, velocita;
 double xdest,ydest;
 double xnave,ynave;
 int id;
-int sem_id;
+int sem_shmnave, sem_shmporto;
 int sem_porto;
 int msg_richiesta;
 int msg_offerta;
@@ -30,7 +30,6 @@ list lista_carico = NULL;
 void cerca_rotta(carico c);
 
 void navigazione(double x, double y);
-
 void scadenza(int signum);
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
@@ -60,8 +59,9 @@ int main(int argc, char** argv){
     velocita = atoi(argv[5]);
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     shmnavi = shmat(atoi(argv[3]), NULL, 0);
-    sem_id = atoi(argv[1]);
+    sem_shmnave = atoi(argv[13]);
     sem_porto = atoi(argv[7]);
+    sem_shmporto = atoi(argv[1]);
     id = atoi(argv[6]);
     msg_richiesta = atoi(argv[8]);
     msg_offerta = atoi(argv[9]);
@@ -71,10 +71,10 @@ int main(int argc, char** argv){
     TEST_ERROR;
 
     sleep(5);
-    sem_accesso(sem_id,1);/*sem[0]=>shmporti, sem[1]=>shmnavi*/
+    sem_accesso(sem_shmnave,id);
     xnave = shmnavi[id].x;
     ynave = shmnavi[id].y;
-    sem_uscita(sem_id,1);
+    sem_uscita(sem_shmnave,id);
 
     while(1){
         cerca_rotta(temp_merce);
@@ -107,10 +107,10 @@ void navigazione(double x, double y){
     /*my_time.tv_nsec = (tempo-(int)tempo) * 10000;*/
     my_time.tv_nsec = 0;
     nanosleep(&my_time, NULL);
-    sem_accesso(sem_id,1);
+    sem_accesso(sem_shmnave, id);
     shmnavi[id].x = x;
     shmnavi[id].y = y;
-    sem_uscita(sem_id,1);
+    sem_uscita(sem_shmnave, id);
     shmnavi[id].stato_nave = 0;
 }
 
@@ -123,23 +123,23 @@ void cerca_rotta(carico c){
         navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto*/
         sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina*/
         shmnavi[id].stato_nave = 0;
-        sem_accesso(sem_id, 0);                         /*accediamo alla shmporto*/
+        sem_accesso(sem_shmporto, id);                         /*accediamo alla shmporto*/
         lista_carico = carico_nave(shmporti[id_porto].offerta, lista_carico, SO_LOADSPEED, shmmerci, shmnavi[id]);
         TEST_ERROR;
         shmnavi[id].stato_nave = 0;
         /*bisogna mandare un segnale al porto per dirgli di aggiornare la sua offerta*/
         msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta*/
         bzero(&c, sizeof(c));    /*azzero temp_merci*/
-        sem_uscita(sem_id, 0);  
+        sem_uscita(sem_shmporto, id);  
         sem_uscita(sem_porto, id_porto);
-        sem_accesso(sem_id, 1);
+        sem_accesso(sem_shmnave, id);
         shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
         shmnavi[id].stato_nave = 1;
-        sem_uscita(sem_id, 1);
+        sem_uscita(sem_shmnave, id);
         TEST_ERROR;
     }
 }
 
 void scadenza(int signum){
-    lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno); 
+    lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno);
 }
