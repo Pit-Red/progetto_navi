@@ -12,6 +12,11 @@ int j;
 
 void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
+    struct sigaction sa;
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = interruzione_system_call;
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGALRM, &sa, NULL);
     /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
     my_op.sem_num = num_risorsa;
@@ -27,6 +32,11 @@ void sem_accesso(int semid, int num_risorsa) {
 
 void sem_uscita(int semid, int num_risorsa) {
     struct sembuf my_op;
+    struct sigaction sa;
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = interruzione_system_call;
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGALRM, &sa, NULL);
     TEST_ERROR;
     my_op.sem_num = num_risorsa;
     TEST_ERROR;
@@ -50,9 +60,11 @@ void stampa_merci(smerce* temp_merci) {
 int msg_invio(int id, carico r){
     msg mybuf;
     int num_bytes = sizeof(r);
+    TEST_ERROR;
     mybuf.mtype = 1; /*1 lo usiamo per le domande (n>0) */
     mybuf.mtext = r;
     msgsnd(id, &mybuf, num_bytes, 0);
+    TEST_ERROR;
     return msg_error();
 }
 
@@ -189,6 +201,11 @@ list list_controllo_scadenza(list p, smerce* m, int giorno){
 
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     struct timespec my_time;
+    struct sigaction sa;
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = interruzione_system_call;
+    sa.sa_flags = SA_RESTART;
+    sigaction(SIGALRM, &sa, NULL);
     TEST_ERROR;
     n.stato_nave = 2;
     /*my_time.tv_sec =(time_t)(c.qmerce*m[c.idmerce].dimensione)/speed;*/
@@ -212,3 +229,6 @@ int pid_to_id_porto(pid_t pid, sporto* p){
     return -1;
 }
 
+void interruzione_system_call(int signum){
+    printf("\nciao\n");
+}
