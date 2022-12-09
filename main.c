@@ -140,7 +140,7 @@ int main() {
     idshmgiorno = shmget(IPC_PRIVATE, sizeof(giorno), IPC_CREAT | IPC_EXCL | 0600);
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600); 
     sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
-    sem_avvioporto = semget(IPC_PRIVATE,1, IPC_CREAT | IPC_EXCL | 0600); 
+    sem_avvioporto = semget(IPC_PRIVATE,2, IPC_CREAT | IPC_EXCL | 0600); 
     TEST_ERROR;
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
@@ -198,8 +198,8 @@ int main() {
     /*INIZIALIZZAZIONE SEMAFORO FIRST*/
     TEST_ERROR;
 
-    semctl(sem_avvioporto, 0 , SETVAL, SO_PORTI + SO_NAVI +1);
-
+    semctl(sem_avvioporto, 0 , SETVAL, 0);
+    semctl(sem_avvioporto, 1 , SETVAL, 0);
     *shmgiorno = giorno;
     /*ALLOCAZIONE DELLA MEMOIRA E CREAZIONE DELLE MERCI*/
     arraymerci = calloc(SO_MERCI, sizeof(*arraymerci));
@@ -214,12 +214,9 @@ int main() {
     }
 
 
+    printf("\n\n\nvalore del semaforo %d\n\n\n", semctl(sem_avvioporto,0,GETVAL));
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
-    my_op.sem_num = 0;
-    my_op.sem_flg = 0;
-    my_op.sem_op = -(SO_PORTI+SO_NAVI);
-    semop(sem_avvioporto, &my_op, 1);
 
 
     for (i = 0; i < SO_PORTI; i++) {
@@ -255,6 +252,7 @@ int main() {
                     int RANDMAX = (int)SO_LATO;
                     clock_gettime(CLOCK_REALTIME , &now);
                     arrayporti[i].x = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
+    
                     clock_gettime(CLOCK_REALTIME , &now);
                     arrayporti[i].y = (double)(now.tv_nsec % (RANDMAX * 100)) / 100;
                     uguali = 0;
@@ -323,7 +321,15 @@ int main() {
         }
     }
 
-    sem_uscita(sem_avvioporto, 0);
+    my_op.sem_num = 0;
+    my_op.sem_flg = 0;
+    my_op.sem_op = -(SO_PORTI+SO_NAVI);
+    semop(sem_avvioporto, &my_op, 1);
+    
+    my_op.sem_num = 1;
+    my_op.sem_flg = 0;
+    my_op.sem_op = (SO_NAVI+SO_PORTI);
+    semop(sem_avvioporto, &my_op, 1);
 
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for(;;){

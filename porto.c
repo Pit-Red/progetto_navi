@@ -75,6 +75,7 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
 
     sem_uscita(sem_avvio, 0);
+    sem_accesso(sem_avvio,1);
 
         sem_accesso(sem_shmporto , id);
         shmporti[id].offerta = creazione_offerta();

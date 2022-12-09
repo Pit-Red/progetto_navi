@@ -73,6 +73,7 @@ int main(int argc, char** argv){
     TEST_ERROR;
 
     sem_uscita(sem_avvio, 0);
+    sem_accesso(sem_avvio,1);
     
     sem_accesso(sem_shmnave,id);
     xnave = shmnavi[id].x;
