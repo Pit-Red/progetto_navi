@@ -112,7 +112,7 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 200;    /*(n >= 1)*/
+    SO_NAVI = 100;    /*(n >= 1)*/
     SO_PORTI = 100;   /*(n >= 4)*/
     SO_BANCHINE = 2;
     SO_MERCI = 15;
@@ -129,7 +129,6 @@ int main() {
     printf("\nSO_LATO = %.2f", SO_LATO);
     printf("\nSO_NAVI = %d", SO_NAVI);
     printf("\nSO_PORTI = %d", SO_PORTI);
-    
     
     /*CREO LE CODE DI MESSAGGI, I SEMAFORI E LE MEMORIE CONDIVISE*/
     msg_richiesta = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);

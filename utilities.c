@@ -13,9 +13,13 @@ int j;
 void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
     /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
+    TEST_ERROR;
     my_op.sem_num = num_risorsa;
+    TEST_ERROR;
     my_op.sem_flg = 0;
+    TEST_ERROR;
     my_op.sem_op = -1;
+    TEST_ERROR;
     semop(semid, &my_op, 1);
     /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
@@ -23,9 +27,13 @@ void sem_accesso(int semid, int num_risorsa) {
 
 void sem_uscita(int semid, int num_risorsa) {
     struct sembuf my_op;
+    TEST_ERROR;
     my_op.sem_num = num_risorsa;
+    TEST_ERROR;
     my_op.sem_flg = 0;
+    TEST_ERROR;
     my_op.sem_op = 1;
+    TEST_ERROR;
     semop(semid, &my_op, 1);
     /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
