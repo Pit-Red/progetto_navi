@@ -146,6 +146,8 @@ int main() {
     shmnavi = shmat(idshmnavi, NULL, 0);
     shmmerci = shmat(idshmmerci, NULL, 0);
     shmgiorno = (int*)shmat(idshmgiorno, NULL, 0);
+    semctl(sem_avvioporto, 0 , SETVAL, 0);
+    semctl(sem_avvioporto, 1 , SETVAL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
     na = calloc(SO_NAVI, sizeof(*na));
     po = calloc(SO_PORTI, sizeof(*po));
@@ -198,8 +200,6 @@ int main() {
     /*INIZIALIZZAZIONE SEMAFORO FIRST*/
     TEST_ERROR;
 
-    semctl(sem_avvioporto, 0 , SETVAL, 0);
-    semctl(sem_avvioporto, 1 , SETVAL, 0);
     *shmgiorno = giorno;
     /*ALLOCAZIONE DELLA MEMOIRA E CREAZIONE DELLE MERCI*/
     arraymerci = calloc(SO_MERCI, sizeof(*arraymerci));
@@ -272,6 +272,12 @@ int main() {
             sprintf(stringid,"%d",i);
             porto[4] = stringid;
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
+            my_op.sem_num = 0;
+            my_op.sem_op = 1;
+            semop(sem_avvioporto,&my_op,1);
+            printf("sono un porto, sto aspettando che mio padre mi dia il via.\n\n");
+            my_op.sem_num = 1;
+            my_op.sem_op = -1;
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -312,6 +318,14 @@ int main() {
             sprintf(stringid,"%d",i);
             nave[6] = stringid;
             printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n",i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
+            my_op.sem_num = 0;
+            my_op.sem_op = 1;
+            semop(sem_avvioporto,&my_op,1);
+            printf("sono una nave, sto aspettando che mio padre mi dia il via\n\n");
+            my_op.sem_num = 1;
+            my_op.sem_op = -1;
+            semop(sem_avvioporto,&my_op,1);
+            
             execvp("./nave", nave);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -326,11 +340,13 @@ int main() {
     my_op.sem_op = -(SO_PORTI+SO_NAVI);
     semop(sem_avvioporto, &my_op, 1);
     
+    printf("SUUUUUCAAAAA\n\n\n");
     my_op.sem_num = 1;
     my_op.sem_flg = 0;
     my_op.sem_op = (SO_NAVI+SO_PORTI);
     semop(sem_avvioporto, &my_op, 1);
 
+    sleep(5);
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for(;;){
         alarm(5);

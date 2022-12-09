@@ -48,6 +48,7 @@ int main(int argc, char** argv){
     carico temp_merce;
     int sem_avvio;
     struct sigaction sa;
+    struct sembuf sops;
     int temp;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
@@ -72,8 +73,7 @@ int main(int argc, char** argv){
     sem_avvio = atoi(argv[14]);
     TEST_ERROR;
 
-    sem_uscita(sem_avvio, 0);
-    sem_accesso(sem_avvio,1);
+    
     
     sem_accesso(sem_shmnave,id);
     xnave = shmnavi[id].x;
