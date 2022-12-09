@@ -24,7 +24,7 @@ pid_t* na;  /*array con i Pid delle navi*/
 pid_t* po;  /*array con i Pid dei porti*/
 int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE;
 int idshmnavi, idshmporti, idshmmerci, idshmgiorno;
-int sem_shmporto;int sem_shmnave; /*id del semaforo che permette l'accesso alla shm*/
+int sem_shmporto;int sem_shmnave; int sem_avvioporto; int sem_avvionave; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto;/*semaforo per far approdare le navi al porto*/
 snave* shmnavi; sporto* shmporti; smerce* shmmerci;int giorno;int* shmgiorno;
 
@@ -39,6 +39,8 @@ void close_all(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
+    char stringsem_avvioporto[13];
+    char stringsem_avvionave[13];
     char stringsem_shmporto[13];
     char stringsem_shmnave[13];
     char stringsem_porto[3 * sizeof(sem_porto) + 1];
@@ -52,6 +54,7 @@ int main() {
     char* nave[20] = {""};
     char* porto[20] = {""};
     short uguali;
+    struct sembuf my_op;
     struct timespec now;
     sporto* arrayporti;
     snave* arraynavi;
@@ -109,7 +112,7 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 100;    /*(n >= 1)*/
+    SO_NAVI = 200;    /*(n >= 1)*/
     SO_PORTI = 100;   /*(n >= 4)*/
     SO_BANCHINE = 2;
     SO_MERCI = 15;
@@ -137,7 +140,8 @@ int main() {
     idshmmerci = shmget(IPC_PRIVATE, sizeof(arraymerci), IPC_CREAT | IPC_EXCL | 0600);
     idshmgiorno = shmget(IPC_PRIVATE, sizeof(giorno), IPC_CREAT | IPC_EXCL | 0600);
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600); 
-    sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600); 
+    sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
+    sem_avvioporto = semget(IPC_PRIVATE,1, IPC_CREAT | IPC_EXCL | 0600); 
     TEST_ERROR;
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
@@ -149,6 +153,8 @@ int main() {
     printf("\nidshmporti: %d\n\n", idshmporti);
     printf("\033[0m");
     /*FINE MENU*/
+    sprintf(stringsem_avvioporto, "%d", sem_avvioporto);
+    sprintf(stringsem_avvionave, "%d", sem_avvionave);
     sprintf(stringsem_porto, "%d", sem_porto);
     sprintf(stringsem_shmporto, "%d", sem_shmporto);
     sprintf(stringsem_shmnave, "%d", sem_shmnave);
@@ -172,7 +178,8 @@ int main() {
     porto[8] = stringmerci;
     porto[9] = stringgiorno;
     porto[10] = stringsem_shmnave;
-    porto[11] = NULL;
+    porto[11] = stringsem_avvioporto;
+    porto[12] = NULL;
     /*NAVE*/
     nave[1] = stringsem_shmporto;
     nave[2] = stringporti;
@@ -186,10 +193,13 @@ int main() {
     nave[11] = stringload_speed;
     nave[12] = stringmerci;
     nave[13] = stringsem_shmnave;
-    nave[14] = NULL;
+    nave[14] = stringsem_avvioporto;
+    nave[15] = NULL;
 
     /*INIZIALIZZAZIONE SEMAFORO FIRST*/
     TEST_ERROR;
+
+    semctl(sem_avvioporto, 0 , SETVAL, SO_PORTI + SO_NAVI +1);
 
     *shmgiorno = giorno;
     /*ALLOCAZIONE DELLA MEMOIRA E CREAZIONE DELLE MERCI*/
@@ -207,6 +217,12 @@ int main() {
 
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
     /*CREAZIONE DEI PORTI*/
+    my_op.sem_num = 0;
+    my_op.sem_flg = 0;
+    my_op.sem_op = -(SO_PORTI+SO_NAVI);
+    semop(sem_avvioporto, &my_op, 1);
+
+
     for (i = 0; i < SO_PORTI; i++) {
         po[i] = fork();
         if (po[i] == -1) {
@@ -307,6 +323,9 @@ int main() {
             /* PARENT */
         }
     }
+
+    sem_uscita(sem_avvioporto, 0);
+
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for(;;){
         alarm(5);
@@ -321,6 +340,8 @@ int main() {
     semctl(sem_shmporto,1,IPC_RMID);
     semctl(sem_shmnave, 1, IPC_RMID);
     semctl(sem_porto,1,IPC_RMID);
+    semctl(sem_avvionave, 1, IPC_RMID);
+    semctl(sem_avvioporto, 1, IPC_RMID);
     printf("\n\nFine del programma\n");
 
     exit(EXIT_SUCCESS);
@@ -360,6 +381,8 @@ void close_all(int signum) {
     semctl(sem_shmporto,1,IPC_RMID);
     semctl(sem_shmnave, 1, IPC_RMID);
     semctl(sem_porto,1,IPC_RMID);
+    semctl(sem_avvionave, 1, IPC_RMID);
+    semctl(sem_avvioporto, 1, IPC_RMID);
     for(i=0;i <SO_NAVI + SO_PORTI;i++){
         wait(&status);
     }

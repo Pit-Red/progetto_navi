@@ -48,6 +48,7 @@ int main(int argc, char** argv) {
     /*DICHIARAZIONE DELLE VARIABILI*/
     /*DEFINIZIONE VAR CODA MEX*/
     int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
+    int sem_avvio;
     size_t msgsize_user, msgesize_max;
     int status, num_bytes;
     struct sigaction sa;
@@ -71,7 +72,9 @@ int main(int argc, char** argv) {
     SO_MERCI = atoi(argv[7]);
     shmmerci = shmat(atoi(argv[8]),NULL,0);
     shmgiorno = shmat(atoi(argv[9]),NULL,0);
+    sem_avvio = atoi(argv[11]);
 
+    sem_uscita(sem_avvio, 0);
 
         sem_accesso(sem_shmporto , id);
         shmporti[id].offerta = creazione_offerta();

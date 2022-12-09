@@ -33,8 +33,8 @@ touch:
 	touch porto.c
 
 rm: 
-	killall -SIGKILL porto nave
 	ipcrm -a
+	killall -SIGKILL porto nave
 
 download:
 	rm -f *

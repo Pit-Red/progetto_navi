@@ -46,6 +46,7 @@ int main(int argc, char** argv){
     /*DICHIARAZIONE DELLE VARIABILI*/
     int i;
     carico temp_merce;
+    int sem_avvio;
     struct sigaction sa;
     int temp;
     bzero(&sa, sizeof(sa));
@@ -68,9 +69,11 @@ int main(int argc, char** argv){
     shmgiorno = shmat(atoi(argv[10]),NULL,0);
     shmmerci = shmat(atoi(argv[12]),NULL,0);
     SO_LOADSPEED = atoi(argv[11]);
+    sem_avvio = atoi(argv[14]);
     TEST_ERROR;
 
-    sleep(5);
+    sem_uscita(sem_avvio, 0);
+    
     sem_accesso(sem_shmnave,id);
     xnave = shmnavi[id].x;
     ynave = shmnavi[id].y;
