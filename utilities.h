@@ -63,7 +63,8 @@ typedef struct{
                       __LINE__,         \
                       getpid(),         \
                       errno,            \
-                      strerror(errno));}
+                      strerror(errno));}\
+                      errno = 0;
 
 #define STAMPA_ROSSO(x) printf("\033[0;31m"); x; printf("\033[0m"); 
 
@@ -76,6 +77,8 @@ void list_free(list p);
 int list_sum(list p, smerce* m);
 
 int list_sum_merce(list p, smerce* m, int tipo);
+
+list list_controllo_scadenza(list p, smerce* m, int giorno);
 
 
 

@@ -31,6 +31,8 @@ void cerca_rotta(carico c);
 
 void navigazione(double x, double y);
 
+void scadenza(int signum);
+
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
     printf("\033[0;31m");
@@ -50,6 +52,9 @@ int main(int argc, char** argv){
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT,&sa,NULL);
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = scadenza;
+    sigaction(SIGUSR1,&sa,NULL);
     srand(time(NULL));
     capacita = atoi(argv[4]);
     velocita = atoi(argv[5]);
@@ -133,4 +138,8 @@ void cerca_rotta(carico c){
         sem_uscita(sem_id, 1);
         TEST_ERROR;
     }
+}
+
+void scadenza(int signum){
+    lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno); 
 }

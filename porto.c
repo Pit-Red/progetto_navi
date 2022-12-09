@@ -20,7 +20,7 @@
 struct sembuf my_op;
 int sem_porto;
 int id;
-int sem_id;
+int sem_shmporto, sem_shmnave;
 int msg_richiesta;
 int msg_offerta;
 sporto* shmporti; smerce* shmmerci;
@@ -51,7 +51,6 @@ int main(int argc, char** argv) {
     size_t msgsize_user, msgesize_max;
     int status, num_bytes;
     struct sigaction sa;
-    struct sigaction ca;
     struct timespec now;
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
@@ -64,7 +63,8 @@ int main(int argc, char** argv) {
     sigaction(SIGUSR2, &sa, NULL);
     TEST_ERROR;
     shmporti = shmat(atoi(argv[2]), NULL, 0);
-    sem_id = atoi(argv[1]);
+    sem_shmporto = atoi(argv[1]);
+    sem_shmnave = atoi(argv[10]);
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
     msg_richiesta = atoi(argv[6]);
@@ -73,11 +73,11 @@ int main(int argc, char** argv) {
     shmgiorno = shmat(atoi(argv[9]),NULL,0);
 
 
-        sem_accesso(sem_id,0);
+        sem_accesso(sem_shmporto , id);
         shmporti[id].offerta = creazione_offerta();
         msg_invio(msg_richiesta, shmporti[id].offerta);
         TEST_ERROR;
-        sem_uscita(sem_id,0);
+        sem_uscita(sem_shmporto, id);
         TEST_ERROR;
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
@@ -121,9 +121,9 @@ carico creazione_richiesta(){
 }
 
 void nuova_offerta(int signum){
-    sem_accesso(sem_id, 0);
+    sem_accesso(sem_shmporto, id);
     shmporti[id].offerta = creazione_offerta();
-    sem_uscita(sem_id, 0);
+    sem_uscita(sem_shmporto, id);
 }
 
 void nuova_richiesta(int signum){

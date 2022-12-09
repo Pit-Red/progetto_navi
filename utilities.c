@@ -169,6 +169,16 @@ int list_sum_merce(list p, smerce* m, int tipo){        /*restituisce la quantit
         return sum;
 }
 
+list list_controllo_scadenza(list p, smerce* m, int giorno){
+    list temp;
+    for(;p != NULL; p = p->next){
+        if(p->elem.scadenza > giorno){
+            temp = list_insert_head(temp, p->elem);
+        }
+    }
+    return temp;
+}
+
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     struct timespec my_time;
     TEST_ERROR;
@@ -193,3 +203,4 @@ int pid_to_id_porto(pid_t pid, sporto* p){
     }
     return -1;
 }
+
