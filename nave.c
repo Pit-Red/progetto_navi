@@ -127,14 +127,14 @@ void cerca_rotta(carico c){
         navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto*/
         sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina*/
         shmnavi[id].stato_nave = 0;
-        sem_accesso(sem_shmporto, id);                         /*accediamo alla shmporto*/
+        sem_accesso(sem_shmporto, id_porto);                         /*accediamo alla shmporto*/
         lista_carico = carico_nave(shmporti[id_porto].offerta, lista_carico, SO_LOADSPEED, shmmerci, shmnavi[id]);
         TEST_ERROR;
         shmnavi[id].stato_nave = 0;
         /*bisogna mandare un segnale al porto per dirgli di aggiornare la sua offerta*/
         msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta*/
         bzero(&c, sizeof(c));    /*azzero temp_merci*/
-        sem_uscita(sem_shmporto, id);  
+        sem_uscita(sem_shmporto, id_porto);  
         sem_uscita(sem_porto, id_porto);
         sem_accesso(sem_shmnave, id);
         shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);

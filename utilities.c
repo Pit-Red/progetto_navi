@@ -21,6 +21,8 @@ void sem_accesso(int semid, int num_risorsa) {
     my_op.sem_op = -1;
     TEST_ERROR;
     semop(semid, &my_op, 1);
+    if(errno == 27){
+        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));}
     /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
@@ -35,6 +37,8 @@ void sem_uscita(int semid, int num_risorsa) {
     my_op.sem_op = 1;
     TEST_ERROR;
     semop(semid, &my_op, 1);
+    if(errno == 27){
+        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));}
     /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
 }
