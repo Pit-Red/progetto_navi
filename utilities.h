@@ -80,6 +80,8 @@ int list_sum_merce(list p, smerce* m, int tipo);
 
 list list_controllo_scadenza(list p, smerce* m, int giorno);
 
+list list_rimuovi_richiesta(list p, carico richiesta);
+
 
 
 void sem_accesso(int semid, int num_risorsa);

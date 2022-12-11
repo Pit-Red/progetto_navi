@@ -111,16 +111,16 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 1000;    /*(n >= 1)*/
-    SO_PORTI = 100;   /*(n >= 4)*/
+    SO_NAVI = 2;    /*(n >= 1)*/
+    SO_PORTI = 4;   /*(n >= 4)*/
     SO_BANCHINE = 2;
-    SO_MERCI = 15;
-    SO_SIZE = 100;
+    SO_MERCI = 2;
+    SO_SIZE = 10;
     SO_CAPACITY = 10000;
     SO_VELOCITA = 20;
-    SO_MAX_VITA = 10;
-    SO_MIN_VITA = 2;
-    SO_LOADSPEED = 5;
+    SO_MAX_VITA = 50;
+    SO_MIN_VITA = 50;
+    SO_LOADSPEED = 1000;
 #endif
     /*FINE INPUT*/
 
@@ -204,7 +204,7 @@ int main() {
     for(i=0; i<SO_MERCI; i++){
         arraymerci[i].id = i;
         clock_gettime(CLOCK_REALTIME, &now);
-        arraymerci[i].scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA)) + SO_MIN_VITA +1;
+        arraymerci[i].scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA +1 )) + SO_MIN_VITA ;
         clock_gettime(CLOCK_REALTIME, &now);
         arraymerci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
         printf("merce[%d]:\tSCADENZA:%d\tDIMENSIONE:%d\n",i, arraymerci[i].scadenza,arraymerci[i].dimensione);
@@ -352,7 +352,7 @@ int main() {
 
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for(;;){
-        alarm(5);
+        alarm(1);
         pause();
     }
     
@@ -380,8 +380,6 @@ void handle_alarm(int signum) {
         printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
     }
     for(i = 0; i<SO_NAVI; i++){
-        /*if(giorno == 2)
-            kill(shmnavi[i].pid, SIGUSR1);*/
         if(shmnavi[i].stato_nave == 0)
             printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\t\tCORDINATE:(%.2f,%.2f)\n",shmnavi[i].pid,shmnavi[i].carico_tot,shmnavi[i].x,shmnavi[i].y);
         else if(shmnavi[i].stato_nave == 1)

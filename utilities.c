@@ -13,34 +13,26 @@ int j;
 void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
     /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
-    TEST_ERROR;
     my_op.sem_num = num_risorsa;
-    TEST_ERROR;
     my_op.sem_flg = 0;
-    TEST_ERROR;
     my_op.sem_op = -1;
-    TEST_ERROR;
     semop(semid, &my_op, 1);
     if(errno == 27){
         STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));}
-    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
+    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
 }
 
 void sem_uscita(int semid, int num_risorsa) {
     struct sembuf my_op;
-    TEST_ERROR;
     my_op.sem_num = num_risorsa;
-    TEST_ERROR;
     my_op.sem_flg = 0;
-    TEST_ERROR;
     my_op.sem_op = 1;
-    TEST_ERROR;
     semop(semid, &my_op, 1);
     if(errno == 27){
         STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));}
-    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
     TEST_ERROR;
+    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
 }
 
 void stampa_merci(smerce* temp_merci) {
@@ -182,7 +174,7 @@ int list_sum_merce(list p, smerce* m, int tipo){        /*restituisce la quantit
 }
 
 list list_controllo_scadenza(list p, smerce* m, int giorno){
-    list temp;
+    list temp = NULL;
     for(;p != NULL; p = p->next){
         if(p->elem.scadenza > giorno){
             temp = list_insert_head(temp, p->elem);
@@ -191,13 +183,39 @@ list list_controllo_scadenza(list p, smerce* m, int giorno){
     return temp;
 }
 
+list list_rimuovi_richiesta(list p, carico richiesta){
+    short scarico_completato;
+    list temp = NULL;
+    scarico_completato = 0;
+    for(;p != NULL &&!scarico_completato; p = p->next){
+        if(p->elem.idmerce = richiesta.idmerce){
+            if(p->elem.qmerce > richiesta.qmerce){
+                p->elem.qmerce-= richiesta.qmerce;
+                temp = list_insert_head(temp, p->elem);
+                scarico_completato = 1; 
+            }    
+            else if(p->elem.qmerce < richiesta.qmerce){
+                richiesta.qmerce -= p->elem.qmerce;
+            }
+            else{
+                scarico_completato = 1;
+            }
+        }
+        else{
+            temp = list_insert_head(temp, p->elem);
+        }
+    }
+    return temp;
+}
+
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     struct timespec my_time;
+    double tempo;
     TEST_ERROR;
     n.stato_nave = 2;
-    /*my_time.tv_sec =(time_t)(c.qmerce*m[c.idmerce].dimensione)/speed;*/
-    my_time.tv_sec = 7;
-    my_time.tv_nsec = (long)0;
+    tempo = (c.qmerce*m[c.idmerce].dimensione)/speed;
+    my_time.tv_sec =(time_t)tempo;
+    my_time.tv_nsec = (long)(tempo-(int)tempo)*10000;
     TEST_ERROR;
     nanosleep(&my_time, NULL);
     TEST_ERROR;

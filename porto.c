@@ -125,12 +125,12 @@ carico creazione_richiesta(){
     return c; 
 }
 
-void nuova_offerta(int signum){
+void nuova_offerta(int signum){     /*SIGUSR1*/
     sem_accesso(sem_shmporto, id);
     shmporti[id].offerta = creazione_offerta();
     sem_uscita(sem_shmporto, id);
 }
 
-void nuova_richiesta(int signum){
-    msg_invio(msg_offerta, creazione_offerta());
+void nuova_richiesta(int signum){   /*SIGUSR2*/
+    msg_invio(msg_richiesta, creazione_offerta());
 }
