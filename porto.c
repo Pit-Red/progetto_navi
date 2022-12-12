@@ -35,9 +35,9 @@ void handle_signal(int signum) {
     exit(0);
 }
 
-carico creazione_offerta(int qmerce);
+carico creazione_offerta();
 
-carico creazione_richiesta(int qmerce);
+carico creazione_richiesta();
 
 void creazione_random();
 
