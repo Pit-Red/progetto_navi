@@ -26,6 +26,7 @@ int msg_offerta;
 sporto* shmporti; smerce* shmmerci;
 int* shmgiorno;
 int SO_MERCI;
+int* shmfill;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -35,9 +36,9 @@ void handle_signal(int signum) {
     exit(0);
 }
 
-carico creazione_offerta();
+carico creazione_offerta(int qmerce);
 
-carico creazione_richiesta();
+carico creazione_richiesta(int qmerce);
 
 void creazione_random();
 
@@ -76,6 +77,8 @@ int main(int argc, char** argv) {
     shmmerci = shmat(atoi(argv[8]), NULL, 0);
     shmgiorno = shmat(atoi(argv[9]), NULL, 0);
     sem_avvio = atoi(argv[11]);
+    shmfill = shmat(atoi(argv[13]), NULL, 0);
+
 
 
 
@@ -147,7 +150,7 @@ void creazione_random() {
     int offerta, richiesta;
     struct timespec now;
 
-    if (idshmfill[4] != 1) {
+    if (shmfill[4] != 1) {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = now.tv_nsec % shmfill[1];
@@ -161,7 +164,7 @@ void creazione_random() {
         creazione_richiesta(richiesta);
 
 
-        idshmfill[4]--;
+        shmfill[4]--;
     } else {
         offerta = shmfill[2];
         richiesta = shmfill[3];
