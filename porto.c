@@ -27,6 +27,7 @@ sporto* shmporti; smerce* shmmerci;
 int* shmgiorno;
 int SO_MERCI;
 int* shmfill;
+int sem_fill;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -44,7 +45,6 @@ void creazione_random();
 
 void nuova_offerta(int signum);
 
-void nuova_richiesta(int signum);
 
 
 int main(int argc, char** argv) {
@@ -63,9 +63,9 @@ int main(int argc, char** argv) {
     bzero(&sa, sizeof(sa));
     sa.sa_handler = nuova_offerta;
     sigaction(SIGUSR1, &sa, NULL);
-    bzero(&sa, sizeof(sa));
+    /*bzero(&sa, sizeof(sa));
     sa.sa_handler = nuova_richiesta;
-    sigaction(SIGUSR2, &sa, NULL);
+    sigaction(SIGUSR2, &sa, NULL);*/
     TEST_ERROR;
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     sem_shmporto = atoi(argv[1]);
@@ -77,18 +77,16 @@ int main(int argc, char** argv) {
     shmmerci = shmat(atoi(argv[8]), NULL, 0);
     shmgiorno = shmat(atoi(argv[9]), NULL, 0);
     sem_avvio = atoi(argv[11]);
-    shmfill = shmat(atoi(argv[13]), NULL, 0);
+    shmfill = shmat(atoi(argv[12]), NULL, 0);
+    sem_fill = atoi(argv[13]);
 
 
 
 
 
-    sem_accesso(sem_shmporto , id);
-    shmporti[id].offerta = creazione_offerta();
-    msg_invio(msg_richiesta, shmporti[id].offerta);
-    TEST_ERROR;
+    sem_accesso(sem_shmporto, id);
+    creazione_random();
     sem_uscita(sem_shmporto, id);
-    TEST_ERROR;
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
@@ -132,13 +130,14 @@ carico creazione_richiesta(int qmerce) {
 
 void nuova_offerta(int signum) {    /*SIGUSR1*/
     sem_accesso(sem_shmporto, id);
-    shmporti[id].offerta = creazione_offerta();
+    creazione_random();
     sem_uscita(sem_shmporto, id);
 }
 
-void nuova_richiesta(int signum) {  /*SIGUSR2*/
+/*SIGUSR2*/
+/*void nuova_richiesta(int signum) {  
     msg_invio(msg_richiesta, creazione_offerta());
-}
+}*/
 
 
 void creazione_random() {
@@ -149,24 +148,26 @@ void creazione_random() {
     shmfill[4] = SO_PORTI;*/
     int offerta, richiesta;
     struct timespec now;
-
+    sem_accesso(sem_fill, 0);
     if (shmfill[4] != 1) {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[2] -= offerta;
-        creazione_offerta(offerta);
+        shmporti[id].offerta = creazione_offerta(offerta);
 
         /*gen richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
         richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[3] -= richiesta;
-        creazione_richiesta(richiesta);
+        msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
     } else {
         offerta = shmfill[2];
         richiesta = shmfill[3];
-        creazione_offerta(offerta);
-        creazione_richiesta(richiesta);
+        shmporti[id].offerta = creazione_offerta(offerta);
+        msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
     }
     shmfill[4]--;
+
+    sem_uscita(sem_fill, 0);
 }
