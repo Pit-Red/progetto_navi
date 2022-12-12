@@ -35,9 +35,11 @@ void handle_signal(int signum) {
     exit(0);
 }
 
-carico creazione_offerta();
+carico creazione_offerta(int qmerce);
 
-carico creazione_richiesta();
+carico creazione_richiesta(int qmerce);
+
+void creazione_random();
 
 void nuova_offerta(int signum);
 
@@ -71,23 +73,23 @@ int main(int argc, char** argv) {
     id = atoi(argv[4]);
     msg_richiesta = atoi(argv[6]);
     SO_MERCI = atoi(argv[7]);
-    shmmerci = shmat(atoi(argv[8]),NULL,0);
-    shmgiorno = shmat(atoi(argv[9]),NULL,0);
+    shmmerci = shmat(atoi(argv[8]), NULL, 0);
+    shmgiorno = shmat(atoi(argv[9]), NULL, 0);
     sem_avvio = atoi(argv[11]);
 
-    
-    
 
-        sem_accesso(sem_shmporto , id);
-        shmporti[id].offerta = creazione_offerta();
-        msg_invio(msg_richiesta, shmporti[id].offerta);
-        TEST_ERROR;
-        sem_uscita(sem_shmporto, id);
-        TEST_ERROR;
+
+
+    sem_accesso(sem_shmporto , id);
+    shmporti[id].offerta = creazione_offerta();
+    msg_invio(msg_richiesta, shmporti[id].offerta);
+    TEST_ERROR;
+    sem_uscita(sem_shmporto, id);
+    TEST_ERROR;
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
-    mybuf.mtype = 1; 
+    mybuf.mtype = 1;
 
 
     msg_send(q_id, &mybuf, num_bytes);*/
@@ -100,37 +102,73 @@ int main(int argc, char** argv) {
     exit(0);
 }
 
-carico creazione_offerta(){
+carico creazione_offerta(int qmerce) {
     carico c;
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     c.idmerce = now.tv_nsec % SO_MERCI;
     c.pid = getpid();
     clock_gettime(CLOCK_REALTIME, &now);
-    c.qmerce = now.tv_nsec % 100 +1;
+    c.qmerce = qmerce;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
     return c;
 }
 
-carico creazione_richiesta(){
+carico creazione_richiesta(int qmerce) {
     carico c;
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
-    do{
+    do {
         c.idmerce = now.tv_nsec % SO_MERCI;
-    }while(c.idmerce == shmporti[id].offerta.idmerce);
+    } while (c.idmerce == shmporti[id].offerta.idmerce);
     clock_gettime(CLOCK_REALTIME, &now);
-    c.qmerce = now.tv_nsec % 100 +1;
+    c.qmerce = qmerce;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
-    return c; 
+    return c;
 }
 
-void nuova_offerta(int signum){     /*SIGUSR1*/
+void nuova_offerta(int signum) {    /*SIGUSR1*/
     sem_accesso(sem_shmporto, id);
     shmporti[id].offerta = creazione_offerta();
     sem_uscita(sem_shmporto, id);
 }
 
-void nuova_richiesta(int signum){   /*SIGUSR2*/
+void nuova_richiesta(int signum) {  /*SIGUSR2*/
     msg_invio(msg_richiesta, creazione_offerta());
+}
+
+
+void creazione_random() {
+    /*shmfill[0] = MEDIA;
+    shmfill[1] = RANGE;
+    shmfill[2] = SO_FILL OFFERTA;
+    shmfill[3] = SO_FILL RICH;
+    shmfill[4] = SO_PORTI;*/
+    int offerta, richiesta;
+    struct timespec now;
+
+    if (idshmfill[4] != 1) {
+        /*gen offerta*/
+        clock_gettime(CLOCK_REALTIME, &now);
+        offerta = now.tv_nsec % shmfill[1];
+        shmfill[2] -= offerta;
+        creazione_offerta(offerta);
+
+        /*gen richiesta*/
+        clock_gettime(CLOCK_REALTIME, &now);
+        richiesta = now.tv_nsec % shmfill[1];
+        shmfill[3] -= richiesta;
+        creazione_richiesta(richiesta);
+
+
+        idshmfill[4]--;
+    } else {
+        offerta = shmfill[2];
+        richiesta = shmfill[3];
+        creazione_offerta(offerta);
+        creazione_richiesta(richiesta);
+
+
+    }
+
 }
