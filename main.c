@@ -109,8 +109,8 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 1000;    /*(n >= 1)*/
-    SO_PORTI = 100;   /*(n >= 4)*/
+    SO_NAVI = 5;    /*(n >= 1)*/
+    SO_PORTI = 5;   /*(n >= 4)*/
     SO_BANCHINE = 2;
     SO_MERCI = 2;
     SO_SIZE = 10;
@@ -136,7 +136,7 @@ int main() {
     idshmnavi = shmget(IPC_PRIVATE, sizeof(*arraynavi) * SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
     idshmmerci = shmget(IPC_PRIVATE, sizeof(arraymerci), IPC_CREAT | IPC_EXCL | 0600);
     idshmgiorno = shmget(IPC_PRIVATE, sizeof(giorno), IPC_CREAT | IPC_EXCL | 0600);
-    idshmfill = shmget(IPC_PRIVATE, 5*4, IPC_CREAT | IPC_EXCL | 0600);
+    idshmfill = shmget(IPC_PRIVATE, 6*4, IPC_CREAT | IPC_EXCL | 0600);
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600); 
     sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
     sem_avvio = semget(IPC_PRIVATE,2, IPC_CREAT | IPC_EXCL | 0600); 
@@ -286,8 +286,7 @@ int main() {
             my_op.sem_op = 1;
             semop(sem_avvio,&my_op,1);
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
-            my_op.sem_num = 1;
-            my_op.sem_op = -1;
+
             execvp("./porto", porto);
             TEST_ERROR;
             exit(EXIT_FAILURE);
@@ -433,5 +432,6 @@ void inizializzazione_fill(){
     shmfill[2] = SO_FILL;
     shmfill[3] = SO_FILL;
     shmfill[4] = SO_PORTI;
+    shmfill[5] = SO_PORTI;
 }
 
