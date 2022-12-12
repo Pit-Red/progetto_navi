@@ -153,25 +153,20 @@ void creazione_random() {
     if (shmfill[4] != 1) {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
-        offerta = now.tv_nsec % shmfill[1];
+        offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[2] -= offerta;
         creazione_offerta(offerta);
 
         /*gen richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
-        richiesta = now.tv_nsec % shmfill[1];
+        richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[3] -= richiesta;
         creazione_richiesta(richiesta);
-
-
-        shmfill[4]--;
     } else {
         offerta = shmfill[2];
         richiesta = shmfill[3];
         creazione_offerta(offerta);
         creazione_richiesta(richiesta);
-
-
     }
-
+    shmfill[4]--;
 }
