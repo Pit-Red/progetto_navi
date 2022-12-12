@@ -84,13 +84,18 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
+    printf("SUUUUCAAAA\n\n\n\n");
 
 
     nuova_richiesta();
+    printf("%d\n", id);
     nuova_offerta();
 
+    my_op.sem_num = 1;
+    my_op.sem_op = -1;
+    semop(sem_avvio, &my_op,1);
 
-    printf("SUUUUCAAAA\n\n\n\n");
+
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
@@ -143,27 +148,21 @@ void nuova_offerta(){
     int offerta;
     struct timespec now;
     int totale = 0;
-    sem_accesso(sem_fill,0);
+    sem_accesso(sem_fill,1);
+    printf("ciao\n");
     totale = shmfill[4];
-    sem_uscita(sem_fill,0);
     if (totale != 1) {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[2] -= offerta;
-        sem_accesso(sem_fill, 0);
         shmporti[id].offerta = creazione_offerta(offerta);
-        sem_uscita(sem_fill, 0);
     } else {
         offerta = shmfill[2];
-        sem_accesso(sem_fill, 0);
         shmporti[id].offerta = creazione_offerta(offerta);
-        sem_uscita(sem_fill, 0);
     }
-    sem_accesso(sem_fill,0);
     shmfill[4]--;
-    sem_uscita(sem_fill,0);
-
+    sem_uscita(sem_fill,1);
 }
 
 void nuova_richiesta(){
@@ -172,20 +171,18 @@ void nuova_richiesta(){
     int totale = 0;
     sem_accesso(sem_fill,0);
     totale = shmfill[5];
-    sem_uscita(sem_fill,0);
     if (totale != 1) {
-        /*gen richiesta*/
+        /*g        sem_uscita(sem_fill, 0);en richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
         richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
-        sem_accesso(sem_fill, 0);
         shmfill[3] -= richiesta;
         msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
-        sem_uscita(sem_fill, 0);
+        TEST_ERROR;
     } else {
         richiesta = shmfill[3];
         msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
+        TEST_ERROR;
     }
-    sem_accesso(sem_fill,0);
     shmfill[5]--;
     sem_uscita(sem_fill,0);
 
