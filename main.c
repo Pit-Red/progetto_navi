@@ -285,6 +285,9 @@ int main() {
             my_op.sem_num = 0;
             my_op.sem_op = 1;
             semop(sem_avvio,&my_op,1);
+            my_op.sem_num = 1;
+            my_op.sem_op = -1;
+            semop(sem_avvio, &my_op,1);
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
 
             execvp("./porto", porto);
@@ -361,7 +364,7 @@ int main() {
 
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for(;;){
-        alarm(1);
+        alarm(3);
         pause();
     }
     
