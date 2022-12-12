@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     nuova_offerta();
 
 
-  
+    printf("SUUUUCAAAA\n\n\n\n");
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
@@ -142,38 +142,52 @@ void nuova_offerta_handler(int signum) {    /*SIGUSR1*/
 void nuova_offerta(){
     int offerta;
     struct timespec now;
-    sem_accesso(sem_fill, 0);
-    if (shmfill[4] != 1) {
+    int totale = 0;
+    sem_accesso(sem_fill,0);
+    totale = shmfill[4];
+    sem_uscita(sem_fill,0);
+    if (totale != 1) {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[2] -= offerta;
+        sem_accesso(sem_fill, 0);
         shmporti[id].offerta = creazione_offerta(offerta);
+        sem_uscita(sem_fill, 0);
     } else {
         offerta = shmfill[2];
+        sem_accesso(sem_fill, 0);
         shmporti[id].offerta = creazione_offerta(offerta);
+        sem_uscita(sem_fill, 0);
     }
+    sem_accesso(sem_fill,0);
     shmfill[4]--;
+    sem_uscita(sem_fill,0);
 
-    sem_uscita(sem_fill, 0);
 }
 
 void nuova_richiesta(){
     int richiesta;
     struct timespec now;
-    sem_accesso(sem_fill, 0);
-    if (shmfill[4] != 1) {
+    int totale = 0;
+    sem_accesso(sem_fill,0);
+    totale = shmfill[5];
+    sem_uscita(sem_fill,0);
+    if (totale != 1) {
         /*gen richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
         richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
+        sem_accesso(sem_fill, 0);
         shmfill[3] -= richiesta;
         msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
+        sem_uscita(sem_fill, 0);
     } else {
         richiesta = shmfill[3];
         msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
     }
-    shmfill[4]--;
+    sem_accesso(sem_fill,0);
+    shmfill[5]--;
+    sem_uscita(sem_fill,0);
 
-    sem_uscita(sem_fill, 0);
 }
 
