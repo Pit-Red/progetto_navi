@@ -25,7 +25,7 @@ pid_t* po;  /*array con i Pid dei porti*/
 int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE, SO_FILL;
 int idshmnavi, idshmporti, idshmmerci, idshmgiorno,  idshmfill;
 int sem_shmporto;int sem_shmnave; int sem_avvio;/*id del semaforo che permette l'accesso alla shm*/
-int sem_porto;/*semaforo per far approdare le navi al porto*/
+int sem_porto, sem_ricoff;/*semaforo per far approdare le navi al porto*/
 snave* shmnavi; sporto* shmporti; smerce* shmmerci;int giorno;int* shmgiorno;int* shmfill;
 
 void inizializzazione_fill();
@@ -42,7 +42,7 @@ int main() {
     char stringsem_porto[3 * sizeof(sem_porto) + 1];
     char stringporti[3 * sizeof(idshmporti) + 1];
     char stringnavi[3 * sizeof(idshmnavi) + 1];
-    char stringfill[13];
+    char stringfill[13], stringsem_ricoff[13];
     char stringmerci[13];
     char stringid[13];
     char stringrichiesta[13];
@@ -140,12 +140,14 @@ int main() {
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600); 
     sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
     sem_avvio = semget(IPC_PRIVATE,2, IPC_CREAT | IPC_EXCL | 0600); 
+    sem_ricoff = semget(IPC_PRIVATE, 1, IPC_CREAT | IPC_EXCL | 0600);
     TEST_ERROR;
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
     shmmerci = shmat(idshmmerci, NULL, 0);
     shmgiorno = (int*)shmat(idshmgiorno, NULL, 0);
     shmfill = (int*)shmat(idshmfill, NULL, 0);
+    semctl(sem_ricoff, 0, SETVAL, 1);
     semctl(sem_avvio, 0 , SETVAL, 0);
     semctl(sem_avvio, 1 , SETVAL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
@@ -169,6 +171,7 @@ int main() {
     sprintf(stringgiorno, "%d", idshmgiorno);
     sprintf(stringload_speed, "%d", SO_LOADSPEED);
     sprintf(stringnum_merci, "%d", SO_MERCI);
+    sprintf(stringsem_ricoff, "%d", sem_ricoff);
     /*PORTO*/
     porto[1] = stringsem_shmporto;
     porto[2] = stringporti;
@@ -181,7 +184,8 @@ int main() {
     porto[10] = stringsem_shmnave;
     porto[11] = stringsem_avvio;
     porto[12] = stringfill;
-    porto[13] = NULL;
+    porto[13] = stringsem_ricoff;
+    porto[14] = NULL;
     /*NAVE*/
     nave[1] = stringsem_shmporto;
     nave[2] = stringporti;
@@ -424,7 +428,7 @@ void close_all(int signum) {
 
 
 void inizializzazione_fill(){
-    shmfill[0] = SO_FILL/SO_PORTI;
+    shmfill[0] = (SO_FILL/giorno)/SO_PORTI;
     shmfill[1] = shmfill[0]/(SO_PORTI - 1) -1;
     shmfill[2] = SO_FILL;
     shmfill[3] = SO_FILL;
