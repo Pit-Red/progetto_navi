@@ -110,9 +110,9 @@ int main() {
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
     SO_NAVI = 5;    /*(n >= 1)*/
-    SO_PORTI = 5;   /*(n >= 4)*/
+    SO_PORTI = 100;   /*(n >= 4)*/
     SO_BANCHINE = 2;
-    SO_MERCI = 2;
+    SO_MERCI = 5;
     SO_SIZE = 10;
     SO_CAPACITY = 10000;
     SO_VELOCITA = 20;
@@ -140,14 +140,15 @@ int main() {
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600); 
     sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
     sem_avvio = semget(IPC_PRIVATE,2, IPC_CREAT | IPC_EXCL | 0600); 
-    sem_ricoff = semget(IPC_PRIVATE, 1, IPC_CREAT | IPC_EXCL | 0600);
+    sem_ricoff = semget(IPC_PRIVATE, 2, IPC_CREAT | IPC_EXCL | 0600);
     TEST_ERROR;
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
     shmmerci = shmat(idshmmerci, NULL, 0);
     shmgiorno = (int*)shmat(idshmgiorno, NULL, 0);
     shmfill = (int*)shmat(idshmfill, NULL, 0);
-    semctl(sem_ricoff, 0, SETVAL, 1);
+    semctl(sem_ricoff, 0, SETVAL, 1);   /*richieste*/
+    semctl(sem_ricoff, 1, SETVAL, 1);   /*offerte*/
     semctl(sem_avvio, 0 , SETVAL, 0);
     semctl(sem_avvio, 1 , SETVAL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
@@ -285,9 +286,6 @@ int main() {
             my_op.sem_num = 0;
             my_op.sem_op = 1;
             semop(sem_avvio,&my_op,1);
-            my_op.sem_num = 1;
-            my_op.sem_op = -1;
-            semop(sem_avvio, &my_op,1);
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
 
             execvp("./porto", porto);
@@ -354,13 +352,13 @@ int main() {
     my_op.sem_op = -(SO_PORTI+SO_NAVI);
     semop(sem_avvio, &my_op, 1);
 
-    printf("\n\nHO PASSATO IL PRIMO SEMAFORO\n\n");
     
     my_op.sem_num = 1;
     my_op.sem_flg = 0;
     my_op.sem_op = (SO_NAVI+SO_PORTI);
     semop(sem_avvio, &my_op, 1);
 
+    printf("\n\nHO PASSATO IL PRIMO SEMAFORO\n\n");
 
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for(;;){
