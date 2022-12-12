@@ -84,9 +84,9 @@ int main(int argc, char** argv) {
 
 
 
-    sem_accesso(sem_shmporto, id);
+    
     creazione_random();
-    sem_uscita(sem_shmporto, id);
+  
 
     /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
     num_bytes++;
