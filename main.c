@@ -22,7 +22,7 @@
 /*DICHIARAZIONE DELLE VARIABILI GLOBALI DEL MASTER UTILI PER LA SIMULAZIONE*/
 pid_t* na;  /*array con i Pid delle navi*/
 pid_t* po;  /*array con i Pid dei porti*/
-int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE, SO_FILL;
+int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE, SO_FILL, SO_DAYS;
 int idshmnavi, idshmporti, idshmmerci, idshmgiorno,  idshmfill;
 int sem_shmporto;int sem_shmnave; int sem_avvio;/*id del semaforo che permette l'accesso alla shm*/
 int sem_porto, sem_ricoff;/*semaforo per far approdare le navi al porto*/
@@ -109,17 +109,18 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 5;    /*(n >= 1)*/
-    SO_PORTI = 100;   /*(n >= 4)*/
+    SO_NAVI = 10;    /*(n >= 1)*/
+    SO_PORTI = 10;   /*(n >= 4)*/
     SO_BANCHINE = 2;
-    SO_MERCI = 5;
+    SO_MERCI = 3;
     SO_SIZE = 10;
     SO_CAPACITY = 10000;
-    SO_VELOCITA = 20;
-    SO_MAX_VITA = 50;
-    SO_MIN_VITA = 50;
-    SO_LOADSPEED = 1000;
-    SO_FILL = 1000;
+    SO_VELOCITA = 2000;
+    SO_MAX_VITA = 10;
+    SO_MIN_VITA = 2;
+    SO_LOADSPEED = 100000;
+    SO_FILL = 100000000;
+    SO_DAYS = 20;
 #endif
     /*FINE INPUT*/
 
@@ -149,6 +150,7 @@ int main() {
     shmfill = (int*)shmat(idshmfill, NULL, 0);
     semctl(sem_ricoff, 0, SETVAL, 1);   /*richieste*/
     semctl(sem_ricoff, 1, SETVAL, 1);   /*offerte*/
+    STAMPA_ROSSO(printf("pid:%d, sem_fillval = %d", getpid(), semctl(sem_ricoff, 0, GETVAL, NULL)));
     semctl(sem_avvio, 0 , SETVAL, 0);
     semctl(sem_avvio, 1 , SETVAL, 0);
     /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
@@ -217,7 +219,7 @@ int main() {
         clock_gettime(CLOCK_REALTIME, &now);
         arraymerci[i].scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA +1 )) + SO_MIN_VITA ;
         clock_gettime(CLOCK_REALTIME, &now);
-        arraymerci[i].dimensione = now.tv_nsec % SO_SIZE + 1;
+        arraymerci[i].dimensione = (now.tv_nsec % (SO_SIZE*10000))/10000 + 1;
         printf("merce[%d]:\tSCADENZA:%d\tDIMENSIONE:%d\n",i, arraymerci[i].scadenza,arraymerci[i].dimensione);
         shmmerci[i] = arraymerci[i];
     }
@@ -428,7 +430,7 @@ void close_all(int signum) {
 
 
 void inizializzazione_fill(){
-    shmfill[0] = (SO_FILL/giorno)/SO_PORTI;
+    shmfill[0] = (SO_FILL/SO_DAYS)/SO_PORTI;
     shmfill[1] = shmfill[0]/(SO_PORTI - 1) -1;
     shmfill[2] = SO_FILL;
     shmfill[3] = SO_FILL;

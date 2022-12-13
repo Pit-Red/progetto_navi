@@ -84,12 +84,10 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
-    printf("SUUUUCAAAA\n\n\n\n");
-
 
     nuova_richiesta();
-    printf("%d\n", id);
     nuova_offerta();
+
 
     my_op.sem_num = 1;
     my_op.sem_op = -1;
@@ -115,12 +113,11 @@ int main(int argc, char** argv) {
 carico creazione_offerta(int qmerce) {
     carico c;
     struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
     do{
-    c.idmerce = now.tv_nsec % SO_MERCI;
+        clock_gettime(CLOCK_REALTIME, &now);
+        c.idmerce = (now.tv_nsec % (SO_MERCI*10000))/10000;
     }while(c.idmerce == id_merce_richiesta);
     c.pid = getpid();
-    clock_gettime(CLOCK_REALTIME, &now);
     c.qmerce = qmerce;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
     return c;
@@ -130,9 +127,8 @@ carico creazione_richiesta(int qmerce) {
     carico c;
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
-    c.idmerce = now.tv_nsec % SO_MERCI;
+    c.idmerce = (now.tv_nsec % (SO_MERCI*10000))/10000;
     id_merce_richiesta = c.idmerce;
-    clock_gettime(CLOCK_REALTIME, &now);
     c.qmerce = qmerce;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
     return c;
@@ -149,16 +145,13 @@ void nuova_offerta(){
     struct timespec now;
     int totale = 0;
     sem_accesso(sem_fill,1);
-    printf("ciao\n");
     totale = shmfill[4];
-    if (totale != 1) {
+    if (totale >0) {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[2] -= offerta;
-        shmporti[id].offerta = creazione_offerta(offerta);
-    } else {
-        offerta = shmfill[2];
+        clock_gettime(CLOCK_REALTIME, &now);
         shmporti[id].offerta = creazione_offerta(offerta);
     }
     shmfill[4]--;
@@ -171,15 +164,11 @@ void nuova_richiesta(){
     int totale = 0;
     sem_accesso(sem_fill,0);
     totale = shmfill[5];
-    if (totale != 1) {
+    if (totale >0) {
         /*g        sem_uscita(sem_fill, 0);en richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
         richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[3] -= richiesta;
-        msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
-        TEST_ERROR;
-    } else {
-        richiesta = shmfill[3];
         msg_invio(msg_richiesta ,creazione_richiesta(richiesta));
         TEST_ERROR;
     }
