@@ -127,6 +127,7 @@ carico creazione_richiesta(int qmerce) {
     carico c;
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
+    c.pid = getpid();
     c.idmerce = (now.tv_nsec % (SO_MERCI*10000))/10000;
     id_merce_richiesta = c.idmerce;
     c.qmerce = qmerce;

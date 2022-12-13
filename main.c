@@ -109,18 +109,18 @@ int main() {
 
 #ifdef NO_INPUT
     SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 10;    /*(n >= 1)*/
-    SO_PORTI = 10;   /*(n >= 4)*/
+    SO_NAVI = 1000;    /*(n >= 1)*/
+    SO_PORTI = 100;   /*(n >= 4)*/
     SO_BANCHINE = 2;
     SO_MERCI = 3;
     SO_SIZE = 10;
     SO_CAPACITY = 10000;
-    SO_VELOCITA = 2000;
-    SO_MAX_VITA = 10;
-    SO_MIN_VITA = 2;
-    SO_LOADSPEED = 100000;
-    SO_FILL = 100000000;
-    SO_DAYS = 20;
+    SO_VELOCITA = 20;
+    SO_MAX_VITA = 50;
+    SO_MIN_VITA = 50;
+    SO_LOADSPEED = 2000;
+    SO_FILL = 1000000;
+    SO_DAYS = 10;
 #endif
     /*FINE INPUT*/
 

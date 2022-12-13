@@ -90,7 +90,7 @@ void sem_uscita(int semid, int num_risorsa);
 
 void stampa_merci(smerce* temp_merci);
 
-int msg_invio(int id, carico r);
+void msg_invio(int id, carico r);
 
 int msg_lettura(int id, carico* r);
 

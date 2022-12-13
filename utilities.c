@@ -43,13 +43,13 @@ void stampa_merci(smerce* temp_merci) {
     }
 }
 
-int msg_invio(int id, carico r){
+void msg_invio(int id, carico r){
     msg mybuf;
     int num_bytes = sizeof(r);
     mybuf.mtype = 1; /*1 lo usiamo per le domande (n>0) */
     mybuf.mtext = r;
     msgsnd(id, &mybuf, num_bytes, 0);
-    return msg_error();
+    TEST_ERROR;
 }
 
 int msg_lettura(int id, carico* r){
@@ -166,11 +166,11 @@ int list_sum(list p, smerce* m){  /*restituisce tonnellate*/
 
 int list_sum_merce(list p, smerce* m, int tipo){        /*restituisce la quantitaa di merce i*/
     int sum=0;
-        for(;p != NULL; p = p->next){
-            if(p->elem.idmerce == tipo)
-                sum += p->elem.qmerce;
-        }
-        return sum;
+    for(;p != NULL; p = p->next){
+        if(p->elem.idmerce == tipo)
+            sum += p->elem.qmerce;
+    }
+    return sum;
 }
 
 list list_controllo_scadenza(list p, smerce* m, int giorno){
