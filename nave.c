@@ -32,10 +32,12 @@ void cerca_rotta(carico c);
 void navigazione(double x, double y);
 void scadenza(int signum);
 
+int controllo(carico c);
+
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
     printf("\033[0;31m");
-    printf("uccisa nave[%d]\n", getpid());
+    printf("uccisa nave[%d]\n", id);
     printf("\033[0m");
 
     exit(EXIT_SUCCESS);
@@ -82,6 +84,7 @@ int main(int argc, char** argv){
 
     while(1){
         cerca_rotta(temp_merce);
+        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
     }
 
 
@@ -120,17 +123,29 @@ void navigazione(double x, double y){
 }
 
 void cerca_rotta(carico c){
+    carico offerta_effettiva;
     int id_porto;
+    int op = 2;
     msg_lettura(msg_richiesta, &c);
-    if(c.qmerce > list_sum_merce(lista_carico, shmmerci, c.idmerce)){   /*la nave non contiene merci*/
-        msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta*/
+    op = controllo(c);
+    if(op >= 0){   /*la nave non contiene merci*/
         id_porto = pid_to_id_porto(c.pid, shmporti);
         navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto*/
         sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina*/
         shmnavi[id].stato_nave = 0;
         sem_accesso(sem_shmporto, id_porto);                         /*accediamo alla shmporto*/
-        lista_carico = carico_nave(shmporti[id_porto].offerta, lista_carico, SO_LOADSPEED, shmmerci, shmnavi[id]);
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno);
+        msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta*/
+        if(op>0){
+            offerta_effettiva.idmerce = shmporti[id_porto].offerta.idmerce;
+            offerta_effettiva.qmerce = op;
+            offerta_effettiva.scadenza = shmporti[id_porto].offerta.scadenza;
+        }
+        else{
+            offerta_effettiva = shmporti[id_porto].offerta;
+        }
+        lista_carico = carico_nave(offerta_effettiva, lista_carico, SO_LOADSPEED, shmmerci, shmnavi[id]);
+        TEST_ERROR;
+        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
         TEST_ERROR;
         shmnavi[id].stato_nave = 0;
         /*bisogna mandare un segnale al porto per dirgli di aggiornare la sua offerta*/
@@ -144,13 +159,14 @@ void cerca_rotta(carico c){
         TEST_ERROR;
     }
     else{
+        fprintf(stderr, "HALO:%d\n", op);
         id_porto = pid_to_id_porto(c.pid, shmporti);
         navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto*/
         sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina*/
         shmnavi[id].stato_nave = 0;
         sem_accesso(sem_shmporto, id_porto);                         /*accediamo alla shmporto*/
         lista_carico = list_rimuovi_richiesta(lista_carico, c);
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno);
+        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
         TEST_ERROR;
         /*kill(c.pid, SIGUSR2);*/       
         bzero(&c, sizeof(c));    /*azzero temp_merci*/
@@ -166,5 +182,29 @@ void cerca_rotta(carico c){
 
 void scadenza(int signum){
     if(lista_carico!=NULL)
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno);
+        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
+}
+
+int controllo(carico c){
+    int temp;
+    int id_porto = pid_to_id_porto(c.pid, shmporti);
+    if(c.qmerce > list_sum_merce(lista_carico, shmmerci, c.idmerce)){
+        sem_accesso(sem_shmporto, id_porto);
+        capacita -= (shmmerci[shmporti[id_porto].offerta.idmerce].dimensione * shmporti[id_porto].offerta.qmerce);
+        if(capacita > 0){
+            shmporti[id_porto].offerta.qmerce = 0;
+            sem_uscita(sem_shmporto, id_porto);
+            return 0;
+        }
+        else{
+            shmporti[id_porto].offerta.qmerce += (capacita/shmmerci[shmporti[id_porto].offerta.idmerce].dimensione);
+            sem_uscita(sem_shmporto, id_porto);
+            temp = (-1)*capacita;
+            capacita = 0;
+            return temp/shmmerci[shmporti[id_porto].offerta.idmerce].dimensione;
+        }
+    }
+    else{
+        return -1;
+    }
 }

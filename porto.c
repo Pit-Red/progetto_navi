@@ -33,9 +33,9 @@ int id_merce_richiesta;
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
     printf("\033[0;31m");
-    printf("ucciso porto[%d]\n", getpid());
+    printf("ucciso porto[%d]\n", id);
     printf("\033[0m");
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 void nuova_richiesta();
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     exit(0);
 }
 
-carico creazione_offerta(int qmerce) {
+carico creazione_offerta(int ton) {
     carico c;
     struct timespec now;
     if (SO_MERCI > 1) {
@@ -125,19 +125,19 @@ carico creazione_offerta(int qmerce) {
         c.idmerce = 0;
     }
     c.pid = getpid();
-    c.qmerce = qmerce;
+    c.qmerce = ton/shmmerci[c.idmerce].dimensione;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
     return c;
 }
 
-carico creazione_richiesta(int qmerce) {
+carico creazione_richiesta(int ton) {
     carico c;
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     c.pid = getpid();
     c.idmerce = (now.tv_nsec % (SO_MERCI * 10000)) / 10000;
     id_merce_richiesta = c.idmerce;
-    c.qmerce = qmerce;
+    c.qmerce = ton/shmmerci[c.idmerce].dimensione;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
     return c;
 }

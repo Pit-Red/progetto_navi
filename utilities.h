@@ -78,7 +78,7 @@ int list_sum(list p, smerce* m);
 
 int list_sum_merce(list p, smerce* m, int tipo);
 
-list list_controllo_scadenza(list p, smerce* m, int giorno);
+list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita);
 
 list list_rimuovi_richiesta(list p, carico richiesta);
 
