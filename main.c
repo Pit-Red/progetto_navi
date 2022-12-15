@@ -112,7 +112,7 @@ int main() {
     SO_NAVI = 1000;    /*(n >= 1)*/
     SO_PORTI = 100;   /*(n >= 4)*/
     SO_BANCHINE = 2;
-    SO_MERCI = 3;
+    SO_MERCI = 1;
     SO_SIZE = 10;
     SO_CAPACITY = 10000;
     SO_VELOCITA = 20;
@@ -285,9 +285,9 @@ int main() {
             sem_uscita(sem_shmporto,i);
             sprintf(stringid,"%d",i);
             porto[4] = stringid;
-            my_op.sem_num = 0;
+            /*my_op.sem_num = 0;
             my_op.sem_op = 1;
-            semop(sem_avvio,&my_op,1);
+            semop(sem_avvio,&my_op,1);*/
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
 
             execvp("./porto", porto);

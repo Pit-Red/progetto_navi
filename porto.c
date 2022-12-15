@@ -86,8 +86,10 @@ int main(int argc, char** argv) {
     sem_fill = atoi(argv[13]);
 
     nuova_richiesta();
-    nuova_offerta();
 
+    my_op.sem_num = 0;
+    my_op.sem_op = 1;
+    semop(sem_avvio, &my_op, 1);
 
     my_op.sem_num = 1;
     my_op.sem_op = -1;
@@ -180,6 +182,6 @@ void nuova_richiesta() {
     }
     shmfill[5]--;
     sem_uscita(sem_fill, 0);
-
+    nuova_offerta();
 }
 
