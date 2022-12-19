@@ -17,8 +17,9 @@ void sem_accesso(int semid, int num_risorsa) {
     my_op.sem_flg = 0;
     my_op.sem_op = -1;
     semop(semid, &my_op, 1);
-    if(errno == 27){
-        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));}
+    if (errno == 27) {
+        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));
+    }
     TEST_ERROR;
     /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
 }
@@ -29,8 +30,9 @@ void sem_uscita(int semid, int num_risorsa) {
     my_op.sem_flg = 0;
     my_op.sem_op = 1;
     semop(semid, &my_op, 1);
-    if(errno == 27){
-        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));}
+    if (errno == 27) {
+        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));
+    }
     TEST_ERROR;
     /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
 }
@@ -43,7 +45,7 @@ void stampa_merci(smerce* temp_merci) {
     }
 }
 
-void msg_invio(int id, carico r){
+void msg_invio(int id, carico r) {
     msg mybuf;
     int num_bytes = sizeof(r);
     mybuf.mtype = 1; /*1 lo usiamo per le domande (n>0) */
@@ -52,15 +54,15 @@ void msg_invio(int id, carico r){
     TEST_ERROR;
 }
 
-int msg_lettura(int id, carico* r){
+int msg_lettura(int id, carico* r) {
     msg mybuf;
     msgrcv(id, &mybuf, sizeof(*r), 1, 0);
     *r = mybuf.mtext;
     return msg_error();
 }
 
-int msg_error(){
-    
+int msg_error() {
+
     switch (errno) {
     case EAGAIN:
         dprintf(2,
@@ -96,7 +98,7 @@ Fix it by adding permissions properly\n");
         TEST_ERROR;
     }
     return 0;
-}  
+}
 
 void msg_print_stats(int fd, int q_id) {
     struct msqid_ds my_q_data;
@@ -119,118 +121,127 @@ void msg_print_stats(int fd, int q_id) {
     dprintf(fd, "----------------------- PID of last msgsnd: %d\n",
             my_q_data.msg_lspid);
     dprintf(fd, "----------------------- PID of last msgrcv: %d\n",
-            my_q_data.msg_lrpid);            
+            my_q_data.msg_lrpid);
     dprintf(fd, "--- IPC Message Queue ID: %8d, END -----\n", q_id);
 }
 
 
-list list_insert_head(list p, carico m){
+list list_insert_head(list p, carico m) {
     list new_elem;
-	new_elem = malloc(sizeof(*new_elem));
-	new_elem->elem.pid = m.pid;
+    new_elem = malloc(sizeof(*new_elem));
+    new_elem->elem.pid = m.pid;
     new_elem->elem.idmerce = m.idmerce;
     new_elem->elem.qmerce = m.qmerce;
     new_elem->elem.scadenza = m.scadenza;
-	new_elem->next = p;
-	return new_elem;
+    new_elem->next = p;
+    return new_elem;
 }
 
-void list_print(list p){  
+void list_print(list p) {
 
-	if (p == NULL) {
-		printf("Empty list\n");
-		return;
-	}
-	printf("[pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
-	for(; p->next!=NULL; p = p->next) {
-		printf(" -> [pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
-	}
-	printf("\n");
+    if (p == NULL) {
+        printf("Empty list\n");
+        return;
+    }
+    printf("[pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
+    for (; p->next != NULL; p = p->next) {
+        printf(" -> [pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
+    }
+    printf("\n");
 }
 
-void list_free(list p){
-	if (p == NULL) {
-		return;
-	}
-	list_free(p->next);
-	free(p);
+void list_free(list p) {
+    if (p == NULL) {
+        return;
+    }
+    list_free(p->next);
+    free(p);
 }
 
-int list_sum(list p, smerce* m){  /*restituisce tonnellate*/
-    int sum=0;
-    for(;p != NULL; p = p->next){
+int list_sum(list p, smerce* m) { /*restituisce tonnellate*/
+    int sum = 0;
+    for (; p != NULL; p = p->next) {
         sum += p->elem.qmerce * m[p->elem.idmerce].dimensione;
     }
     return sum;
 }
 
-int list_sum_merce(list p, smerce* m, int tipo){        /*restituisce la quantitaa di merce i*/
-    int sum=0;
-    for(;p != NULL; p = p->next){
-        if(p->elem.idmerce == tipo)
+int list_sum_merce(list p, smerce* m, int tipo) {       /*restituisce la quantitaa di merce i*/
+    int sum = 0;
+    for (; p != NULL; p = p->next) {
+        if (p->elem.idmerce == tipo)
             sum += p->elem.qmerce;
     }
     return sum;
 }
 
-list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita){
+list list_controllo_scadenza(list p, smerce* m, int giorno) {
     list temp = NULL;
-    for(;p != NULL; p = p->next){
-        if(p->elem.scadenza > giorno){
+    for (; p != NULL; p = p->next) {
+        if (p->elem.scadenza > giorno) {
             temp = list_insert_head(temp, p->elem);
-            *capacita += (p->elem.qmerce * m[p->elem.idmerce].dimensione);
         }
     }
     return temp;
 }
 
-list list_rimuovi_richiesta(list p, carico richiesta){
+list list_rimuovi_richiesta(list p, carico richiesta) {
     short scarico_completato;
     list temp = NULL;
     scarico_completato = 0;
-    for(;p != NULL &&!scarico_completato; p = p->next){
-        if(p->elem.idmerce = richiesta.idmerce){
-            if(p->elem.qmerce > richiesta.qmerce){
-                p->elem.qmerce-= richiesta.qmerce;
+    for (; p != NULL && !scarico_completato; p = p->next) {
+        if (p->elem.idmerce = richiesta.idmerce) {
+            if (p->elem.qmerce > richiesta.qmerce) {
+                p->elem.qmerce -= richiesta.qmerce;
                 temp = list_insert_head(temp, p->elem);
-                scarico_completato = 1; 
-            }    
-            else if(p->elem.qmerce < richiesta.qmerce){
+                scarico_completato = 1;
+            }
+            else if (p->elem.qmerce < richiesta.qmerce) {
                 richiesta.qmerce -= p->elem.qmerce;
             }
-            else{
+            else {
                 scarico_completato = 1;
             }
         }
-        else{
+        else {
             temp = list_insert_head(temp, p->elem);
         }
     }
     return temp;
 }
 
-list carico_nave(carico c, list p, int speed, smerce* m, snave n){
+list carico_nave(carico c, list p, int speed, smerce* m, snave n) {
     struct timespec my_time;
     double tempo;
     TEST_ERROR;
     n.stato_nave = 2;
-    tempo = (c.qmerce*m[c.idmerce].dimensione)/speed;
-    my_time.tv_sec =(time_t)tempo;
-    my_time.tv_nsec = (long)(tempo-(int)tempo)*10000;
+    tempo = (c.qmerce * m[c.idmerce].dimensione) / speed;
+    my_time.tv_sec = (time_t)tempo;
+    my_time.tv_nsec = (long)(tempo - (int)tempo) * 10000;
     TEST_ERROR;
     nanosleep(&my_time, NULL);
     TEST_ERROR;
+    kill(c.pid, SIGUSR1);
     c.pid = getpid();
     return list_insert_head(p, c);
 }
 
-int pid_to_id_porto(pid_t pid, sporto* p){
-    j=0;
-    while(1){
-        if(p[j].pid == pid)
+int pid_to_id_porto(pid_t pid, sporto* p) {
+    j = 0;
+    while (1) {
+        if (p[j].pid == pid)
             return j;
         j++;
     }
     return -1;
 }
 
+
+void rm_lines_terminal(int n) {
+    int i;
+    for (i = 0; i < n - 1; i++) {
+        printf("\33[2K\r");
+        printf("\033[A\r");
+    }
+    printf("\33[2K\r");
+}
