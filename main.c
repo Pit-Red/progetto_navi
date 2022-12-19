@@ -14,7 +14,7 @@
 #include "utilities.h"
 
 /*MACRO PER NON METTERE INPUT*/
-#define NO_INPUT
+#define NO_INPUt
 /*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 
 
@@ -36,6 +36,7 @@ void close_all(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
+    int input_type, param_config;
     char stringsem_avvio[13];
     char stringsem_shmporto[13];
     char stringsem_shmnave[13];
@@ -63,6 +64,8 @@ int main() {
     int SO_CAPACITY;
     int SO_VELOCITA;
     int SO_LOADSPEED;
+    int SO_SPEED;
+    int SO_STORM_DURATION, SO_SWELL_DURATION, SO_MAELSTROM;
     int status;
     struct sigaction ca;
     struct sigaction sa;
@@ -79,32 +82,175 @@ int main() {
 
     giorno = 0;
     /*INIZIO INPUT*/
-    printf("\033[033;34m");
     
 #ifndef NO_INPUT/*TO DO: CONTROLLO CHE I PARAMETRI SIANO POSITIVI*/
-    printf("inserisci la grandezza della mappa: ");
-    scanf("%le", &SO_LATO);
+    printf("\033[033;33m\n╔═══════════════════════════════════╗\n║ [0] Scelta Scenario               ║\n║ [1] Input Parametri Manuale       ║\n╚═══════════════════════════════════╝\n\n\n\n\033[033;0m");
     do {
-        printf("inserisci il numero di navi: ");
-        scanf("%d", &SO_NAVI);
-    } while (SO_NAVI < 1);
-    do {
-        printf("inserisci il numero di porti: ");
-        scanf("%d", &SO_PORTI);
-    } while (SO_PORTI < 4);
-    printf("inserisci il carico massimo trasportabile delle navi: ");
-    scanf("%d", &SO_CAPACITY);
-    printf("inserisci la velocita' delle navi: ");
-    scanf("%d", &SO_VELOCITA);
-    printf("inserisci la dimensione massima della merce: ");
-    scanf("%d", &SO_SIZE);
-    printf("inserisci il numero di merci utilzzabi: ");
-    scanf("%d", &SO_MERCI);
-    printf("inserisci il minimo di giorni di vita delle merci: ");
-    scanf("%d", &SO_MIN_VITA);
-    printf("inserisci il massimo di giorni di vita delle merci: ");
-    scanf("%d", &SO_MAX_VITA);
-    
+        rm_lines_terminal(4);
+        printf("\nScegliere modalità di input\n");
+        scanf("%d", &input_type);
+    } while (input_type != 0 && input_type != 1);
+    rm_lines_terminal(8);
+
+    if (input_type == 0) {
+        printf("\033[033;33m\n╔═══════════════════════════════════╗\n║              SCENARI              ║\n");
+
+        printf("╠═══════════════════════════════════╣\n║ [0] Dense, Small Ships            ║\n║ [1] Dense, Small Ships + Trashing ║\n║ [2] Born To Run                   ║\n║ [3] Cargos, Big Stuff             ║\n║ [4] Unlucky Cargos                ║\n╚═══════════════════════════════════╝\033[033;0m\n\n\n\n");
+
+        do {
+            rm_lines_terminal(4);
+            printf("\nScegliere scenario\n");
+            scanf("%d", &param_config);
+        } while (param_config != 0 && param_config != 1 && param_config != 2 && param_config != 3 && param_config != 4);
+        rm_lines_terminal(13);
+
+        switch (param_config) {
+        case 0:/*dense, small ships*/
+            printf("\033[033;33m\n SCENARIO:\033[033;32m DENSE, SMALL SHIPS\033[033;0m\n");
+            SO_NAVI = 1000;
+            SO_PORTI = 100;
+            SO_MERCI = 1;
+            SO_SIZE = 1;
+            SO_MIN_VITA = 50;
+            SO_MAX_VITA = 50;
+            SO_LATO = 1000;
+            SO_SPEED = 500;
+            SO_CAPACITY = 10;
+            SO_BANCHINE = 2;
+            SO_FILL = 500000;
+            SO_LOADSPEED = 200;
+            SO_DAYS = 10;
+            SO_STORM_DURATION = 6;
+            SO_SWELL_DURATION = 24;
+            SO_MAELSTROM = 1;
+            break;
+
+        case 1:/*as above + trashing*/
+            printf("\033[033;32m\n SCENARIO:\033[033;31m DENSE, SMALL SHIPS + TRASHING\033[033;0m\n");
+            SO_NAVI = 1000;
+            SO_PORTI = 100;
+            SO_MERCI = 10;
+            SO_SIZE = 1;
+            SO_MIN_VITA = 3;
+            SO_MAX_VITA = 10;
+            SO_LATO = 1000;
+            SO_SPEED = 500;
+            SO_CAPACITY = 10;
+            SO_BANCHINE = 2;
+            SO_FILL = 500000;
+            SO_LOADSPEED = 200;
+            SO_DAYS = 10;
+            SO_STORM_DURATION = 6;
+            SO_SWELL_DURATION = 24;
+            SO_MAELSTROM = 1;
+            break;
+
+        case 2:/*born to run*/
+            printf("\033[033;33m\n SCENARIO:\033[033;32m BORN TO RUN\033[033;0m\n");
+            SO_NAVI = 10;
+            SO_PORTI = 1000;
+            SO_MERCI = 100;
+            SO_SIZE = 100;
+            SO_MIN_VITA = 3;
+            SO_MAX_VITA = 10;
+            SO_LATO = 1000;
+            SO_SPEED = 2000;
+            SO_CAPACITY = 1000;
+            SO_BANCHINE = 10;
+            SO_FILL = 1000000;
+            SO_LOADSPEED = 500;
+            SO_DAYS = 10;
+            SO_STORM_DURATION = 6;
+            SO_SWELL_DURATION = 24;
+            SO_MAELSTROM = 60;
+            break;
+
+        case 3:/*cargos, big stuff*/
+            printf("\033[033;33m\n SCENARIO:\033[033;32m CARGOS, BIG STUFF\033[033;0m\n");
+            SO_NAVI = 100;
+            SO_PORTI = 5;
+            SO_MERCI = 10;
+            SO_SIZE = 100;
+            SO_MIN_VITA = 3;
+            SO_MAX_VITA = 10;
+            SO_LATO = 1000;
+            SO_SPEED = 500;
+            SO_CAPACITY = 1000;
+            SO_BANCHINE = 10;
+            SO_FILL = 1000000;
+            SO_LOADSPEED = 200;
+            SO_DAYS = 10;
+            SO_STORM_DURATION = 6;
+            SO_SWELL_DURATION = 24;
+            SO_MAELSTROM = 24;
+            break;
+
+        case 4:/*unlucky cargos*/
+            printf("\033[033;33m\n SCENARIO:\033[033;32m UNLUCKY CARGOS\033[033;0m\n");
+            SO_NAVI = 100;
+            SO_PORTI = 5;
+            SO_MERCI = 10;
+            SO_SIZE = 100;
+            SO_MIN_VITA = 3;
+            SO_MAX_VITA = 10;
+            SO_LATO = 1000;
+            SO_SPEED = 500;
+            SO_CAPACITY = 1000;
+            SO_BANCHINE = 10;
+            SO_FILL = 1000000;
+            SO_LOADSPEED = 200;
+            SO_DAYS = 10;
+            SO_STORM_DURATION = 12;
+            SO_SWELL_DURATION = 10;
+            SO_MAELSTROM = 1;
+            break;
+        }
+
+
+    } else if (input_type == 1) {
+        printf("\n--------------------->Input Parametri Manuale<---------------------\n");
+
+        printf("inserisci la grandezza della mappa: ");
+        scanf("%le", &SO_LATO);
+        do {
+            printf("inserisci il numero di navi: ");
+            scanf("%d", &SO_NAVI);
+        } while (SO_NAVI < 1);
+        do {
+            printf("inserisci il numero di porti: ");
+            scanf("%d", &SO_PORTI);
+        } while (SO_PORTI < 4);
+        printf("inserisci il carico massimo trasportabile delle navi: ");
+        scanf("%d", &SO_CAPACITY);
+        printf("inserisci la velocita' delle navi: ");
+        scanf("%d", &SO_VELOCITA);
+        printf("inserisci la dimensione massima della merce: ");
+        scanf("%d", &SO_SIZE);
+        printf("inserisci il numero di merci utilzzabi: ");
+        scanf("%d", &SO_MERCI);
+        printf("inserisci il minimo di giorni di vita delle merci: ");
+        scanf("%d", &SO_MIN_VITA);
+        printf("inserisci il massimo di giorni di vita delle merci: ");
+        scanf("%d", &SO_MAX_VITA);
+    }
+    sleep(3);/*WARNING USATA UNA SLEEP*/
+#endif
+
+#ifdef NO_INPUT
+    SO_LATO = 100;   /*(n > 0) !di tipo double!*/
+    SO_NAVI = 1000;    /*(n >= 1)*/
+    SO_PORTI = 100;   /*(n >= 4)*/
+    SO_BANCHINE = 2;
+    SO_MERCI = 1;
+    SO_SIZE = 10;
+    SO_CAPACITY = 10000;
+    SO_VELOCITA = 20;
+    SO_MAX_VITA = 50;
+    SO_MIN_VITA = 50;
+    SO_LOADSPEED = 2000;
+    SO_FILL = 1000000;
+    SO_DAYS = 10;
+
 #endif
 
 #ifdef NO_INPUT

@@ -234,3 +234,11 @@ int pid_to_id_porto(pid_t pid, sporto* p){
     return -1;
 }
 
+void rm_lines_terminal(int n) {
+    int i;
+    for (i = 0; i < n - 1; i++) {
+        printf("\33[2K\r");
+        printf("\033[A\r");
+    }
+    printf("\33[2K\r");
+}
