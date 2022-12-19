@@ -56,7 +56,7 @@ int main() {
     sporto* arrayporti;
     snave* arraynavi;
     smerce* arraymerci;
-    int i, j, c, banchine_effettive;
+    int i, j, c, banchine_effettive, d;
     double SO_LATO;
     int SO_MERCI;
     int SO_MIN_VITA, SO_MAX_VITA; 
@@ -77,7 +77,7 @@ int main() {
 
     srand(time(NULL));
 
-    giorno = 1;
+    giorno = 0;
     /*INIZIO INPUT*/
     printf("\033[033;34m");
     
@@ -108,18 +108,18 @@ int main() {
 #endif
 
 #ifdef NO_INPUT
-    SO_LATO = 100;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 1000;    /*(n >= 1)*/
-    SO_PORTI = 100;   /*(n >= 4)*/
+    SO_LATO = 1000;   /*(n > 0) !di tipo double!*/
+    SO_NAVI = 10;    /*(n >= 1)*/
+    SO_PORTI = 10;   /*(n >= 4)*/
     SO_BANCHINE = 2;
     SO_MERCI = 1;
-    SO_SIZE = 10;
-    SO_CAPACITY = 10000;
-    SO_VELOCITA = 20;
+    SO_SIZE = 1;
+    SO_CAPACITY = 10;
+    SO_VELOCITA = 500;
     SO_MAX_VITA = 50;
     SO_MIN_VITA = 50;
-    SO_LOADSPEED = 2000;
-    SO_FILL = 1000000;
+    SO_LOADSPEED = 200;
+    SO_FILL = 500000;
     SO_DAYS = 10;
 #endif
     /*FINE INPUT*/
@@ -130,7 +130,7 @@ int main() {
     printf("\nSO_PORTI = %d", SO_PORTI);
     
     /*CREO LE CODE DI MESSAGGI, I SEMAFORI E LE MEMORIE CONDIVISE*/
-    msg_richiesta = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
+    msg_richiesta = msgget(IPC_PRIVATE, IPC_NOWAIT| IPC_CREAT | IPC_EXCL | 0666);
     msg_offerta = msgget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL | 0666);
     sem_porto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     idshmporti = shmget(IPC_PRIVATE, sizeof(*arrayporti) * SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
@@ -212,14 +212,14 @@ int main() {
     inizializzazione_fill();
 
     *shmgiorno = giorno;
-    /*ALLOCAZIONE DELLA MEMOIRA E CREAZIONE DELLE MERCI*/
+    /*ALLOCAZIONE DELLA MEMOIRA E CREAZIONE DELLE MERCI*//*ALLOCAZIONE DELLA MEMOIRA E CREAZIONE DELLE MERCI*/
     arraymerci = calloc(SO_MERCI, sizeof(*arraymerci));
     for(i=0; i<SO_MERCI; i++){
         arraymerci[i].id = i;
         clock_gettime(CLOCK_REALTIME, &now);
         arraymerci[i].scadenza = (now.tv_nsec % (SO_MAX_VITA-SO_MIN_VITA +1 )) + SO_MIN_VITA ;
+        arraymerci[i].dimensione = (now.tv_nsec % (SO_SIZE*100000))/100000 + 1;
         clock_gettime(CLOCK_REALTIME, &now);
-        arraymerci[i].dimensione = (now.tv_nsec % (SO_SIZE*10000))/10000 + 1;
         printf("merce[%d]:\tSCADENZA:%d\tDIMENSIONE:%d\n",i, arraymerci[i].scadenza,arraymerci[i].dimensione);
         shmmerci[i] = arraymerci[i];
     }
@@ -243,6 +243,7 @@ int main() {
             /* CHILD */
             semctl(sem_shmporto, i , SETVAL, 1);
             arrayporti[i].pid = getpid();
+            arrayporti[i].richiesta_soddisfatta = 0;
             switch (i) {
             case 0:
                 arrayporti[i].x = 0;
@@ -354,21 +355,34 @@ int main() {
     my_op.sem_op = -(SO_PORTI+SO_NAVI);
     semop(sem_avvio, &my_op, 1);
 
+
+    kill(getpid(), SIGALRM);        /*print del giorno 0*/
     
     my_op.sem_num = 1;
     my_op.sem_flg = 0;
     my_op.sem_op = (SO_NAVI+SO_PORTI);
     semop(sem_avvio, &my_op, 1);
 
-    printf("\n\nHO PASSATO IL PRIMO SEMAFORO\n\n");
+    /*printf("\n\nHO PASSATO IL PRIMO SEMAFORO\n\n");*/
 
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
-    for(;;){
-        alarm(3);
+    for(d= SO_DAYS; d; d--){
+        alarm(5);
         pause();
     }
+
+    close_all(1);
+
+    /*for(i=0;i < SO_PORTI;i++){
+        kill(arrayporti[i].pid, SIGINT);
+        wait(&status);
+    }
+
+    for(i=0;i < SO_NAVI ;i++){
+        kill(arraynavi[i].pid, SIGINT);
+        wait(&status);
+    }
     
-    pause();
     msgctl(msg_richiesta,IPC_RMID,NULL);
     msgctl(msg_offerta,IPC_RMID,NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
@@ -380,9 +394,10 @@ int main() {
     semctl(sem_shmnave, 1, IPC_RMID);
     semctl(sem_porto,1,IPC_RMID);
     semctl(sem_avvio, 1, IPC_RMID);
-    printf("\n\nFine del programma\n");
+    semctl(sem_ricoff, 1, IPC_RMID);*/
 
-    exit(EXIT_SUCCESS);
+    printf("\n\nFine del programma\n");
+    exit(0);
 }
 
 void handle_alarm(int signum) {
@@ -391,9 +406,13 @@ void handle_alarm(int signum) {
     inizializzazione_fill();
     printf("giorno:%d\n",giorno);
     for(i = 0; i<SO_PORTI; i++){
-        if(shmporti[i].offerta.scadenza <= giorno&&shmporti[i].offerta.qmerce!=0)
+        if(giorno > 1){
             kill(shmporti[i].offerta.pid, SIGUSR1);
-        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
+        }
+        if(shmporti[i].richiesta_soddisfatta==0)
+            printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
+        else
+            printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\tRICHIESTA SODDISFATTA\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
     }
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)
@@ -409,6 +428,15 @@ void handle_alarm(int signum) {
 }
 void close_all(int signum) {
     int i, status;
+
+    for(i=0;i < SO_PORTI;i++){
+        kill(shmporti[i].pid, SIGINT);
+    }
+
+    for(i=0;i < SO_NAVI ;i++){
+        kill(shmnavi[i].pid, SIGINT);
+    }
+
     msgctl(msg_richiesta,IPC_RMID,NULL);
     msgctl(msg_offerta,IPC_RMID,NULL);
     shmctl(idshmporti, IPC_RMID, NULL);
@@ -420,6 +448,7 @@ void close_all(int signum) {
     semctl(sem_shmnave, 1, IPC_RMID);
     semctl(sem_porto,1,IPC_RMID);
     semctl(sem_avvio, 1, IPC_RMID);
+    semctl(sem_ricoff, 1, IPC_RMID);
     for(i=0;i <SO_NAVI + SO_PORTI;i++){
         wait(&status);
     }

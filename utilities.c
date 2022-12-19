@@ -173,11 +173,12 @@ int list_sum_merce(list p, smerce* m, int tipo){        /*restituisce la quantit
     return sum;
 }
 
-list list_controllo_scadenza(list p, smerce* m, int giorno){
+list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita){
     list temp = NULL;
     for(;p != NULL; p = p->next){
         if(p->elem.scadenza > giorno){
             temp = list_insert_head(temp, p->elem);
+            *capacita += (p->elem.qmerce * m[p->elem.idmerce].dimensione);
         }
     }
     return temp;
@@ -219,7 +220,6 @@ list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     TEST_ERROR;
     nanosleep(&my_time, NULL);
     TEST_ERROR;
-    kill(c.pid, SIGUSR1);
     c.pid = getpid();
     return list_insert_head(p, c);
 }
