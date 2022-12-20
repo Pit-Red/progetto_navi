@@ -320,7 +320,7 @@ int main() {
     sprintf(stringmerci, "%d", idshmmerci);
     sprintf(stringfill, "%d", idshmfill);
     sprintf(stringrichiesta, "%d", msg_richiesta);
-    sprintf(stringofferta, "%d", msg_offerta);
+    sprintf(stringofferta, "%d", SO_PORTI);
     sprintf(stringcapacity, "%d", SO_CAPACITY);
     sprintf(stringvelocita, "%d", SO_SPEED);
     sprintf(stringgiorno, "%d", idshmgiorno);
@@ -396,6 +396,7 @@ int main() {
             semctl(sem_shmporto, i , SETVAL, 1);
             arrayporti[i].pid = getpid();
             arrayporti[i].richiesta_soddisfatta = 0;
+            arrayporti[i].destinazione = 0;
             switch (i) {
             case 0:
                 arrayporti[i].x = 0;
