@@ -95,7 +95,7 @@ int main() {
     if (input_type == 0) {
         printf("\033[033;33m\n╔═══════════════════════════════════╗\n║              SCENARI              ║\n");
 
-        printf("╠═══════════════════════════════════╣\n║ [0] Dense, Small Ships            ║\n║ [1] Dense, Small Ships + Trashing ║\n║ [2] Born To Run                   ║\n║ [3] Cargos, Big Stuff             ║\n║ [4] Unlucky Cargos                ║\n╚═══════════════════════════════════╝\033[033;0m\n\n\n\n");
+        printf("╠═══════════════════════════════════╣\n║ [0] Dense, Small Ships            ║\n║ [1] Dense, Small Ships + Trashing ║\n║ [2] Born To Run                   ║\n║ [3] Cargos, Big Stuff             ║\n║ [4] Unlucky Cargos                ║\n║ [5] Test                          ║\n╚═══════════════════════════════════╝\033[033;0m\n\n\n\n");
 
         do {
             rm_lines_terminal(4);
@@ -199,6 +199,26 @@ int main() {
             SO_BANCHINE = 10;
             SO_FILL = 1000000;
             SO_LOADSPEED = 200;
+            SO_DAYS = 10;
+            SO_STORM_DURATION = 12;
+            SO_SWELL_DURATION = 10;
+            SO_MAELSTROM = 1;
+            break;
+
+            case 5:/*test*/
+            printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
+            SO_NAVI = 10;
+            SO_PORTI = 5;
+            SO_MERCI = 10;
+            SO_SIZE = 10;
+            SO_MIN_VITA = 3;
+            SO_MAX_VITA = 10;
+            SO_LATO = 100;
+            SO_SPEED = 50;
+            SO_CAPACITY = 100;
+            SO_BANCHINE = 10;
+            SO_FILL = 1000;
+            SO_LOADSPEED = 20;
             SO_DAYS = 10;
             SO_STORM_DURATION = 12;
             SO_SWELL_DURATION = 10;
