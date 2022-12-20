@@ -3,34 +3,35 @@ FLAGS= -std=c89 -pedantic -D_GNU_SOURCE
 
 all: compile avvia
 
-compile: touch utilities.o nave porto main 
+compile: touch utilities.o nave porto main
+	@bash loading.sh
 	
 avvia:
-	rm -f *.o
-	./main
+	@rm -f *.o
+	@./main
 	
 main: main.c
-	gcc $(FLAGS) -c main.c -o main.o
-	gcc $(FLAGS) main.o utilities.o -o main
+	@gcc $(FLAGS) -c main.c -o main.o
+	@gcc $(FLAGS) main.o utilities.o -o main
 	
 nave: nave.c
-	gcc $(FLAGS) -c	nave.c -o nave.o -lm
-	gcc $(FLAGS) nave.c utilities.o -o nave -lm
+	@gcc $(FLAGS) -c	nave.c -o nave.o -lm
+	@gcc $(FLAGS) nave.c utilities.o -o nave -lm
 
 porto: porto.c
-	gcc $(FLAGS) -c porto.c -o porto.o
-	gcc $(FLAGS) porto.c utilities.o -o porto
+	@gcc $(FLAGS) -c porto.c -o porto.o
+	@gcc $(FLAGS) porto.c utilities.o -o porto
 
 utilities.o : utilities.c utilities.h
-	gcc $(FLAGS) -c utilities.c -o utilities.o
+	@gcc $(FLAGS) -c utilities.c -o utilities.o
 
 clean:
 	rm -f *.o main nave porto
 	
 touch:
-	touch main.c
-	touch nave.c
-	touch porto.c
+	@touch main.c
+	@touch nave.c
+	@touch porto.c
 
 rm: 
 	ipcrm -a
