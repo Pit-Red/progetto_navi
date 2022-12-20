@@ -101,7 +101,7 @@ int main() {
             rm_lines_terminal(4);
             printf("\nScegliere scenario\n");
             scanf("%d", &param_config);
-        } while (param_config != 0 && param_config != 1 && param_config != 2 && param_config != 3 && param_config != 4);
+        } while (param_config != 0 && param_config != 1 && param_config != 2 && param_config != 3 && param_config != 4 && param_config != 5);
         rm_lines_terminal(13);
 
         switch (param_config) {
