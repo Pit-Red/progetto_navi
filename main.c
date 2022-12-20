@@ -102,7 +102,7 @@ int main() {
             printf("\nScegliere scenario\n");
             scanf("%d", &param_config);
         } while (param_config != 0 && param_config != 1 && param_config != 2 && param_config != 3 && param_config != 4 && param_config != 5);
-        rm_lines_terminal(13);
+        rm_lines_terminal(14);
 
         switch (param_config) {
         case 0:/*dense, small ships*/
