@@ -27,6 +27,7 @@ int idshmnavi, idshmporti, idshmmerci, idshmgiorno,  idshmfill;
 int sem_shmporto; int sem_shmnave; int sem_avvio; /*id del semaforo che permette l'accesso alla shm*/
 int sem_porto, sem_ricoff;/*semaforo per far approdare le navi al porto*/
 snave* shmnavi; sporto* shmporti; smerce* shmmerci; int giorno; int* shmgiorno; int* shmfill;
+int SO_CAPACITY;
 
 void inizializzazione_fill();
 int isRequestEmpty();
@@ -62,7 +63,6 @@ int main() {
     double SO_LATO;
     int SO_MERCI;
     int SO_MIN_VITA, SO_MAX_VITA;
-    int SO_CAPACITY;
     int SO_VELOCITA;
     int SO_LOADSPEED;
     int SO_SPEED;
@@ -571,9 +571,9 @@ void handle_alarm(int signum) {
     }
     for (i = 0; i < SO_NAVI; i++) {
         if (shmnavi[i].stato_nave == 0)
-            printf("nave[%d]\tSTATO: in porto\tCARICO TOT: %d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, shmnavi[i].x, shmnavi[i].y);
+            printf("nave[%d]\tSTATO: in porto\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
         else if (shmnavi[i].stato_nave == 1)
-            printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, shmnavi[i].x, shmnavi[i].y);
+            printf("nave[%d]\tSTATO: in mare\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
         else
             printf("nave[%d]\tSTATO: carico/scarico\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
     }
