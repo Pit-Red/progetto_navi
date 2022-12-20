@@ -208,8 +208,8 @@ int main() {
 
         case 5:/*test*/
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
-            SO_NAVI = 20;
-            SO_PORTI = 4;
+            SO_NAVI = 10;
+            SO_PORTI = 5;
             SO_MERCI = 4;
             SO_SIZE = 10;
             SO_MIN_VITA = 3;
