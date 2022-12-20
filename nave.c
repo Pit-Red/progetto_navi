@@ -14,7 +14,6 @@
 #include <sys/sem.h>
 #include "utilities.h"
 
-
 int capacita, velocita;
 double xdest,ydest;
 double xnave,ynave;
@@ -129,6 +128,7 @@ void cerca_rotta(carico c){
     /*carico offerta_effettiva;
     int id_porto;
     int op = 2;*/
+    int temp;
     struct timespec now;
     double tempo;
     id_dest = cerca_richiesta();
@@ -143,9 +143,16 @@ void cerca_rotta(carico c){
             nanosleep(&now, NULL);
             sem_accesso(sem_shmporto, id_dest);
             sem_accesso(sem_shmnave, id);
+            temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
             lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
             capacita = SO_CAPACITY - list_sum(lista_carico,shmmerci);
             shmnavi[id].carico_tot = SO_CAPACITY - capacita;
+            if(temp < 0){
+                shmporti[id_dest].richiesta.qmerce = 0;
+                shmporti[id_dest].richiesta_soddisfatta = 1;
+            }
+            else
+                shmporti[id_dest].richiesta.qmerce = temp;
             sem_uscita(sem_shmnave, id);
             sem_uscita(sem_shmporto, id_dest);
     }
@@ -154,61 +161,6 @@ void cerca_rotta(carico c){
     }
     shmnavi[id].stato_nave = 0;
     sem_uscita(sem_porto,id_dest);
-    /*lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
-    msg_lettura(msg_richiesta, &c);
-    op = controllo(c);
-    if(op >= 0){   /*la nave non contiene merci
-        id_porto = pid_to_id_porto(c.pid, shmporti);
-        navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto
-        sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina
-        shmnavi[id].stato_nave = 0;
-        sem_accesso(sem_shmporto, id_porto);                         /*accediamo alla shmporto
-        /*msg_invio(msg_richiesta, c);               /*rimando la richiesta in coda in quanto non potevo soddisfare la richiesta
-        if(op>0){
-            offerta_effettiva.idmerce = shmporti[id_porto].offerta.idmerce;
-            offerta_effettiva.qmerce = op;
-            offerta_effettiva.scadenza = shmporti[id_porto].offerta.scadenza;
-        }
-        else{
-            offerta_effettiva = shmporti[id_porto].offerta;
-        }
-        lista_carico = carico_nave(offerta_effettiva, lista_carico, SO_LOADSPEED, shmmerci, shmnavi[id]);
-        TEST_ERROR;
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
-        TEST_ERROR;
-        shmnavi[id].stato_nave = 0;
-        /*bisogna mandare un segnale al porto per dirgli di aggiornare la sua offerta
-        bzero(&c, sizeof(c));    /*azzero temp_merci
-        sem_uscita(sem_porto, id_porto);
-        sem_uscita(sem_shmporto, id_porto);  
-        sem_accesso(sem_shmnave, id);
-        shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
-        shmnavi[id].stato_nave = 1;
-        sem_uscita(sem_shmnave, id);
-        TEST_ERROR;
-    }
-    else{
-        fprintf(stderr, "HALO:%d\n", op);
-        id_porto = pid_to_id_porto(c.pid, shmporti);
-        navigazione(shmporti[id_porto].x, shmporti[id_porto].y);      /*arriviamo al porto
-        sem_accesso(sem_porto, id_porto);              /*siamo entrati in una banchina
-        shmnavi[id].stato_nave = 0;
-        sem_accesso(sem_shmporto, id_porto);                         /*accediamo alla shmporto
-        lista_carico = list_rimuovi_richiesta(lista_carico, c);
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
-        TEST_ERROR;
-        shmporti[id_porto].richiesta_soddisfatta = 1;
-        /*kill(c.pid, SIGUSR2);      
-        bzero(&c, sizeof(c));    /*azzero temp_merci
-        sem_uscita(sem_shmporto, id_porto);  
-        sem_uscita(sem_porto, id_porto);
-        sem_accesso(sem_shmnave, id);
-        shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
-        shmnavi[id].stato_nave = 1;
-        sem_uscita(sem_shmnave, id);
-        TEST_ERROR;
-    }
-        */
 }
 
 void carica_offerta(int id_porto, double tempo){
@@ -237,38 +189,7 @@ void carica_offerta(int id_porto, double tempo){
     sem_uscita(sem_shmporto, id_dest);
 }
 
-void scadenza(int signum){
-    if(lista_carico!=NULL)
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
-}
 
-/*int controllo(carico c){
-    int temp = capacita;
-    int temp1;
-    int id_porto = pid_to_id_porto(c.pid, shmporti);
-    if(c.qmerce > list_sum_merce(lista_carico, shmmerci, c.idmerce)){
-        sem_accesso(sem_shmporto, id_porto);
-        temp -= (shmmerci[shmporti[id_porto].offerta.idmerce].dimensione * shmporti[id_porto].offerta.qmerce);
-        if(temp > 0){
-            shmporti[id_porto].offerta.qmerce = 0;
-            sem_uscita(sem_shmporto, id_porto);
-            capacita = temp;
-            return 0;
-        }
-        else{
-            temp1 = shmporti[id_porto].offerta.qmerce + (temp/shmmerci[shmporti[id_porto].offerta.idmerce].dimensione);
-            shmporti[id_porto].offerta.qmerce -= temp1;
-            sem_uscita(sem_shmporto, id_porto);
-            capacita = 0;
-            printf("porto:%d, return:%d\n",id_porto,temp1);
-            return temp1;
-        }
-    }
-    else{
-        return -1;
-    }
-}
-*/
 int cerca_richiesta(){
     int i;
     struct timespec now;
@@ -281,4 +202,9 @@ int cerca_richiesta(){
         clock_gettime(CLOCK_REALTIME , &now);
         return now.tv_nsec % SO_PORTI;
     }
+}
+
+void scadenza(int signum){
+    if(lista_carico!=NULL)
+        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
 }
