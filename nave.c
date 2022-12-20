@@ -25,7 +25,7 @@ int msg_richiesta;
 int msg_offerta;
 snave* shmnavi; sporto*shmporti;smerce* shmmerci; int* shmgiorno;
 int SO_LOADSPEED, SO_PORTI;
-list lista_carico = NULL, rich_temp;
+list lista_carico = NULL;
 struct timespec rimanente;
 
 void cerca_rotta(carico c);
@@ -132,33 +132,23 @@ void cerca_rotta(carico c){
     struct timespec now;
     double tempo;
     id_dest = cerca_richiesta();
-    tempo = (rich_temp->elem.qmerce * shmmerci[rich_temp->elem.idmerce].dimensione) / SO_LOADSPEED;
-    now.tv_sec =(time_t)tempo;
-    now.tv_nsec = (long)(tempo-(int)tempo)*10000;
-    /*QUI SODDISFO LA RICHIESTA*/
-    if(id_dest >= 0)
-        sem_uscita(sem_porto, id_dest);
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
     shmnavi[id].stato_nave = 0;
-    if(id_merce >= 0){
-        if(rich_temp->elem.qmerce < shmporti[id_dest].richiesta.qmerce){ /*la nave non riesce a soddisfare per intero la richiesta*/
+    tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce)*shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione)/SO_LOADSPEED;
+    now.tv_sec =(time_t)tempo;
+    now.tv_nsec = (long)(tempo-(int)tempo)*10000;
+    if(id_merce >= 0){/*la nave non riesce a soddisfare per intero la richiesta*/
             nanosleep(&now, NULL);
             sem_accesso(sem_shmporto, id_dest);
-            capacita += shmporti[id_dest].richiesta.qmerce;
-            shmporti[id_dest].richiesta.qmerce -= rich_temp->elem.qmerce;
-            lista_carico = list_remove(lista_carico, indirizzo_merce);
+            sem_accesso(sem_shmnave, id);
+            shmporti[id_dest].richiesta.qmerce -= list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
+            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
+            capacita = list_sum(lista_carico,shmmerci);
+            shmnavi[id].carico_tot = capacita;
+            sem_accesso(sem_shmnave, id);
             sem_uscita(sem_shmporto, id_dest);
-        }
-        else{
-            nanosleep(&now, NULL);
-            sem_accesso(sem_shmporto, id_dest);
-            lista_carico = list_diminuisci(lista_carico, indirizzo_merce, shmporti[id_dest].richiesta.qmerce);
-            bzero(&shmporti[id_dest].richiesta, sizeof(shmporti[id_dest].richiesta));
-        }
-        sem_uscita(sem_shmporto, id_dest);
     }
-    capacita = list_sum(lista_carico,shmmerci);
     carica_offerta(id_dest, tempo);
     /*lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
     msg_lettura(msg_richiesta, &c);
@@ -277,27 +267,16 @@ void scadenza(int signum){
 int cerca_richiesta(){
     int i;
     struct timespec now;
-    rich_temp = lista_carico;
-    if(rich_temp != NULL){       /*SE IL CARICO DELLA NAVE E' >0*/
-        for(i=0; i < SO_PORTI; i++){
-        sem_accesso(sem_shmporto, i);
-        indirizzo_merce = 0;
-        while(rich_temp != NULL){
-            if(rich_temp->elem.qmerce == shmporti[i].richiesta.idmerce){
-                id_merce = shmporti[i].richiesta.idmerce;
-                id_dest = i;
+    while(1){
+        for(i=0;i<SO_PORTI;i++){
+            if(shmporti[i].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) > 0){
                 return i;
             }
-            indirizzo_merce = 1;
-            rich_temp = rich_temp->next;
         }
-        sem_uscita(sem_shmporto, i);
+        for(i=0;i<SO_PORTI;i++){
+            if(shmporti[i].offerta.qmerce > 0 && shmporti[i].destinazione == 0)
+                shmporti[i].destinazione = 1;
+                return i;
+        }
     }
-    }
-    /*SE LA NAVE E' VUOTA O NON RIESCE A SODDISFARE NESSUNA RICHIESTA*/
-    indirizzo_merce = -1;
-    id_merce = -1;
-    clock_gettime(CLOCK_REALTIME,&now);
-    i = now.tv_nsec % SO_PORTI;
-    return i;
 }
