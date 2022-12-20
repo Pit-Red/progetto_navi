@@ -146,7 +146,7 @@ void cerca_rotta(carico c){
             temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
             lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
             capacita = SO_CAPACITY - list_sum(lista_carico,shmmerci);
-            shmnavi[id].carico_tot = SO_CAPACITY - capacita;
+            shmnavi[id].carico_tot = list_sum(lista_carico,shmmerci);
             if(temp < 0){
                 shmporti[id_dest].richiesta.qmerce = 0;
                 shmporti[id_dest].richiesta_soddisfatta = 1;

@@ -575,7 +575,7 @@ void handle_alarm(int signum) {
         else if (shmnavi[i].stato_nave == 1)
             printf("nave[%d]\tSTATO: in mare\tCARICO TOT: %d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, shmnavi[i].x, shmnavi[i].y);
         else
-            printf("nave[%d]\tSTATO: carico/scarico\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
+            printf("nave[%d]\tSTATO: carico/scarico\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
     }
     giorno++;
     /*msg_print_stats(1, msg_richiesta);*/
