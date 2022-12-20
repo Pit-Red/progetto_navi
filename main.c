@@ -250,24 +250,10 @@ int main() {
     SO_LOADSPEED = 2000;
     SO_FILL = 1000000;
     SO_DAYS = 10;
+    SO_SPEED = 200;
 
 #endif
 
-#ifdef NO_INPUT
-    SO_LATO = 1000;   /*(n > 0) !di tipo double!*/
-    SO_NAVI = 10;    /*(n >= 1)*/
-    SO_PORTI = 10;   /*(n >= 4)*/
-    SO_BANCHINE = 2;
-    SO_MERCI = 1;
-    SO_SIZE = 1;
-    SO_CAPACITY = 10;
-    SO_VELOCITA = 500;
-    SO_MAX_VITA = 50;
-    SO_MIN_VITA = 50;
-    SO_LOADSPEED = 200;
-    SO_FILL = 500000;
-    SO_DAYS = 10;
-#endif
     /*FINE INPUT*/
 
     /*INIZIO MENU*/
@@ -316,7 +302,7 @@ int main() {
     sprintf(stringrichiesta, "%d", msg_richiesta);
     sprintf(stringofferta, "%d", msg_offerta);
     sprintf(stringcapacity, "%d", SO_CAPACITY);
-    sprintf(stringvelocita, "%d", SO_VELOCITA);
+    sprintf(stringvelocita, "%d", SO_SPEED);
     sprintf(stringgiorno, "%d", idshmgiorno);
     sprintf(stringload_speed, "%d", SO_LOADSPEED);
     sprintf(stringnum_merci, "%d", SO_MERCI);
