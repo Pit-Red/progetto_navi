@@ -37,6 +37,7 @@ rm:
 	killall -SIGKILL porto nave
 
 download:
+	@bash press-enter.sh
 	rm -f *
 	rm -rf .git
 	git init
