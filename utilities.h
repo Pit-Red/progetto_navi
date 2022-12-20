@@ -49,6 +49,7 @@ typedef struct {
     carico offerta;
     carico richiesta;
     int richiesta_soddisfatta;
+    int destinazione;
 }sporto;
 
 
@@ -77,7 +78,9 @@ void list_print(list p);
 void list_free(list p);
 
 int list_sum(list p, smerce* m);
+
 list list_remove(list s, int p);
+
 list list_diminuisci(list s, int n, int quant);
 
 int list_sum_merce(list p, smerce* m, int tipo);

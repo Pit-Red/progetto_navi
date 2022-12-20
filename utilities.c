@@ -209,7 +209,7 @@ list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita){
     return temp;
 }
 
-/*list list_rimuovi_richiesta(list p, carico richiesta){
+list list_rimuovi_richiesta(list p, carico richiesta){
     short scarico_completato;
     list temp = NULL;
     scarico_completato = 0;
@@ -232,7 +232,7 @@ list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita){
         }
     }
     return temp;
-}*/
+}
 
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     struct timespec my_time;

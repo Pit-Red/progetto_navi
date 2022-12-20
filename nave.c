@@ -132,6 +132,7 @@ void cerca_rotta(carico c){
     struct timespec now;
     double tempo;
     id_dest = cerca_richiesta();
+    fprintf(stderr, "id_dest: %d\n", id_dest);
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
     shmnavi[id].stato_nave = 0;
@@ -149,7 +150,8 @@ void cerca_rotta(carico c){
             sem_accesso(sem_shmnave, id);
             sem_uscita(sem_shmporto, id_dest);
     }
-    carica_offerta(id_dest, tempo);
+    if(capacita > 0)
+        carica_offerta(id_dest, tempo);
     /*lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
     msg_lettura(msg_richiesta, &c);
     op = controllo(c);
@@ -273,10 +275,7 @@ int cerca_richiesta(){
                 return i;
             }
         }
-        for(i=0;i<SO_PORTI;i++){
-            if(shmporti[i].offerta.qmerce > 0 && shmporti[i].destinazione == 0)
-                shmporti[i].destinazione = 1;
-                return i;
-        }
+        clock_gettime(CLOCK_REALTIME , &now);
+        return now.tv_nsec % SO_PORTI;
     }
 }
