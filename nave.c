@@ -24,7 +24,7 @@ int sem_porto;
 int msg_richiesta;
 int msg_offerta;
 snave* shmnavi; sporto*shmporti;smerce* shmmerci; int* shmgiorno;
-int SO_LOADSPEED, SO_PORTI;
+int SO_LOADSPEED, SO_PORTI, SO_CAPACITY;
 list lista_carico = NULL;
 struct timespec rimanente;
 
@@ -63,6 +63,7 @@ int main(int argc, char** argv){
     sigaction(SIGUSR1,&sa,NULL);
     srand(time(NULL));
     capacita = atoi(argv[4]);
+    SO_CAPACITY = atoi(argv[4]);
     velocita = atoi(argv[5]);
     shmporti = shmat(atoi(argv[2]), NULL, 0);
     shmnavi = shmat(atoi(argv[3]), NULL, 0);
@@ -122,7 +123,6 @@ void navigazione(double x, double y){
     shmnavi[id].x = x;
     shmnavi[id].y = y;
     sem_uscita(sem_shmnave, id);
-    shmnavi[id].stato_nave = 0;
 }
 
 void cerca_rotta(carico c){
@@ -132,26 +132,28 @@ void cerca_rotta(carico c){
     struct timespec now;
     double tempo;
     id_dest = cerca_richiesta();
-    fprintf(stderr, "id_dest: %d\n", id_dest);
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
     shmnavi[id].stato_nave = 0;
     tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce)*shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione)/SO_LOADSPEED;
     now.tv_sec =(time_t)tempo;
     now.tv_nsec = (long)(tempo-(int)tempo)*10000;
+    shmnavi[id].stato_nave = 2;
     if(id_merce >= 0){/*la nave non riesce a soddisfare per intero la richiesta*/
             nanosleep(&now, NULL);
             sem_accesso(sem_shmporto, id_dest);
             sem_accesso(sem_shmnave, id);
-            shmporti[id_dest].richiesta.qmerce -= list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
             lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
-            capacita = list_sum(lista_carico,shmmerci);
-            shmnavi[id].carico_tot = capacita;
-            sem_accesso(sem_shmnave, id);
+            capacita = SO_CAPACITY - list_sum(lista_carico,shmmerci);
+            shmnavi[id].carico_tot = SO_CAPACITY - capacita;
+            sem_uscita(sem_shmnave, id);
             sem_uscita(sem_shmporto, id_dest);
     }
-    if(capacita > 0)
+    if(capacita > 0){
         carica_offerta(id_dest, tempo);
+    }
+    shmnavi[id].stato_nave = 0;
+    sem_uscita(sem_porto,id_dest);
     /*lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
     msg_lettura(msg_richiesta, &c);
     op = controllo(c);
@@ -222,7 +224,7 @@ void carica_offerta(int id_porto, double tempo){
         temp = shmporti[id_dest].offerta.qmerce;
         shmporti[id_dest].offerta.qmerce = capacita;
         lista_carico = list_insert_head(lista_carico, shmporti[id_dest].offerta);
-        shmporti[id_dest].offerta.qmerce = temp - capacita;
+        shmporti[id_dest].offerta.qmerce = temp - (capacita/shmmerci[shmporti[id_dest].offerta.idmerce].dimensione);
         capacita = 0;
     }
     else{
@@ -231,6 +233,7 @@ void carica_offerta(int id_porto, double tempo){
         capacita -= shmporti[id_dest].offerta.qmerce * shmmerci[shmporti[id_dest].offerta.idmerce].dimensione;
         shmporti[id_dest].offerta.qmerce = 0;
     }
+    shmnavi[id].carico_tot = SO_CAPACITY - capacita;
     sem_uscita(sem_shmporto, id_dest);
 }
 
