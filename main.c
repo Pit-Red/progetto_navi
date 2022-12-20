@@ -555,10 +555,11 @@ void handle_alarm(int signum) {
         if(giorno > 1){
             kill(shmporti[i].offerta.pid, SIGUSR1);
         }
-        if(shmporti[i].richiesta_soddisfatta==0)
-            printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
-        else
-            printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\tRICHIESTA SODDISFATTA\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
+        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\n",shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
+        printf("porto[%d]\tRICHIESTA->merce[%d]:qmerce:%d", shmporti[i].pid, shmporti[i].richiesta.idmerce, shmporti[i].richiesta.qmerce);
+        if(shmporti[i].richiesta_soddisfatta==1)
+            printf("RICHIESTA SODDISFATTA");
+        printf("\n\n");
     }
     for(i = 0; i<SO_NAVI; i++){
         if(shmnavi[i].stato_nave == 0)

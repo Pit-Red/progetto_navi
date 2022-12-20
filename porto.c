@@ -138,7 +138,7 @@ carico creazione_richiesta(int ton) {
     c.idmerce = (now.tv_nsec % (SO_MERCI * 10000)) / 10000;
     id_merce_richiesta = c.idmerce;
     c.qmerce = ton/shmmerci[c.idmerce].dimensione;
-    c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
+    c.scadenza = -1;                        /*SETTO LA SCADENZA A -1 PERCHE' LA RICHIESTA NON HA SCADENZA*/
     return c;
 }
 
@@ -177,7 +177,7 @@ void nuova_richiesta() {
         clock_gettime(CLOCK_REALTIME, &now);
         richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
         shmfill[3] -= richiesta;
-        msg_invio(msg_richiesta , creazione_richiesta(richiesta));
+        shmporti[id].richiesta = creazione_richiesta(richiesta);
         TEST_ERROR;
     }
     shmfill[5]--;
