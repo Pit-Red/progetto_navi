@@ -1,4 +1,3 @@
-
 #include "utilities.h"
 #include <unistd.h>
 #include <errno.h>
@@ -135,6 +134,32 @@ list list_insert_head(list p, carico m){
 	return new_elem;
 }
 
+list list_remove(list s, int p){
+    list temp = NULL;
+    i=0;
+    while(s != NULL){
+        if(i != p)
+            temp = list_insert_head(temp, s->elem);
+        s = s->next;
+        i++;
+    }
+    return temp;
+}
+
+list list_diminuisci(list s, int n, int quant){
+    list temp = NULL;
+    i = 0;
+    while(s != NULL){
+        if(i == n){
+            s->elem.qmerce -= quant;
+        }
+        temp = list_insert_head(temp, s->elem);
+        s = s->next;
+        i++;
+    }
+    return temp;
+}
+
 void list_print(list p){  
 
 	if (p == NULL) {
@@ -184,7 +209,7 @@ list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita){
     return temp;
 }
 
-list list_rimuovi_richiesta(list p, carico richiesta){
+/*list list_rimuovi_richiesta(list p, carico richiesta){
     short scarico_completato;
     list temp = NULL;
     scarico_completato = 0;
@@ -207,7 +232,7 @@ list list_rimuovi_richiesta(list p, carico richiesta){
         }
     }
     return temp;
-}
+}*/
 
 list carico_nave(carico c, list p, int speed, smerce* m, snave n){
     struct timespec my_time;
@@ -234,11 +259,3 @@ int pid_to_id_porto(pid_t pid, sporto* p){
     return -1;
 }
 
-void rm_lines_terminal(int n) {
-    int i;
-    for (i = 0; i < n - 1; i++) {
-        printf("\33[2K\r");
-        printf("\033[A\r");
-    }
-    printf("\33[2K\r");
-}

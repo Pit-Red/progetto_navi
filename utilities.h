@@ -47,6 +47,7 @@ typedef struct {
     double x;
     double y;
     carico offerta;
+    carico richiesta;
     int richiesta_soddisfatta;
 }sporto;
 
@@ -76,6 +77,8 @@ void list_print(list p);
 void list_free(list p);
 
 int list_sum(list p, smerce* m);
+list list_remove(list s, int p);
+list list_diminuisci(list s, int n, int quant);
 
 int list_sum_merce(list p, smerce* m, int tipo);
 
@@ -102,5 +105,3 @@ void msg_print_stats(int fd, int q_id);
 list carico_nave(carico c, list p, int speed, smerce* m, snave n);
 
 int pid_to_id_porto(pid_t pid, sporto* p);
-
-void rm_lines_terminal(int n);
