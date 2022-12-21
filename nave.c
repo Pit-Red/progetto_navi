@@ -211,7 +211,7 @@ int cerca_richiesta() {
                 return i;
             }
         }
-        return closestPort();
+        return closestAvailablePort();
     }
 }
 
@@ -246,7 +246,7 @@ int closestAvailablePort() {
     for (; semctl(sem_porto, i, GETVAL) == 0 && i < SO_PORTI; i++);
     id = i;
 
-    for (; i < SO_PORTI; i++) {
+    for (min = dist(xnave, shmporti[i].x, ynave, shmporti[i].y); i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
         if (d < min && semctl(sem_porto, i, GETVAL) > 0) {
             min = d;
