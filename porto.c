@@ -136,7 +136,6 @@ carico creazione_offerta(int ton) {
 carico creazione_richiesta(int ton) {
     carico c;
     struct timespec now;
-    fprintf(stderr, "\nporto[%d]: pass %d\n", id, semctl(sem_fill, 0, GETVAL, NULL));
     clock_gettime(CLOCK_REALTIME, &now);
     c.pid = getpid();
     c.idmerce = (now.tv_nsec % (SO_MERCI * 10000)) / 10000;

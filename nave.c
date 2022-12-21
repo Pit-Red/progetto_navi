@@ -37,14 +37,17 @@ void carica_offerta(int id_porto, double tempo);
 int controllo(carico c);
 int closestPort();
 int closestAvailablePort();
+
+
 void tempesta(int signum) {
     struct timespec now;
     int t = (shmgiorno[1] * SO_STORM_DURATION) / 24;
     shmnavi[id].stato_nave = 3;
-    now.tv_sec = rimanente.tv_sec;
-    now.tv_nsec = rimanente.tv_nsec + t;
+    now.tv_sec = rimanente.tv_sec + (time_t)t;
+    now.tv_nsec = rimanente.tv_nsec;
     printf("sono stata colpita da una tempesta [%d]\n\n", getpid());
     nanosleep(&now, NULL);
+    TEST_ERROR;
     shmnavi[id].stato_nave = 1;
 }
 
@@ -144,7 +147,7 @@ void cerca_rotta(carico c) {
     now.tv_sec = (time_t)tempo;
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
     shmnavi[id].stato_nave = 2;
-    if (id_merce >= 0) { /*la nave non riesce a soddisfare per intero la richiesta*/
+    if (id_merce >= 0) { 
         nanosleep(&now, NULL);
         sem_accesso(sem_shmporto, id_dest);
         sem_accesso(sem_shmnave, id);
@@ -174,6 +177,7 @@ void carica_offerta(int id_porto, double tempo) {
     int temp = 0;
     now.tv_sec = (time_t)tempo;
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
+    shmnavi[id].stato_nave = 3;
     nanosleep(&now, &rimanente);
     bzero(&rimanente, sizeof(rimanente));
     sem_accesso(sem_shmporto, id_dest);
@@ -198,6 +202,7 @@ void carica_offerta(int id_porto, double tempo) {
         }
     }
     shmnavi[id].carico_tot = SO_CAPACITY - capacita;
+    shmnavi[id].stato_nave = 0;
     sem_uscita(sem_shmporto, id_dest);
 }
 
@@ -211,7 +216,9 @@ int cerca_richiesta() {
                 return i;
             }
         }
-        return closestAvailablePort();
+        clock_gettime(CLOCK_REALTIME, &now);
+        return now.tv_nsec % SO_PORTI;
+        /*return closestAvailablePort();*/
     }
 }
 
@@ -222,18 +229,20 @@ void scadenza(int signum) {
 
 /*RITORNA ID PORTO MENO DISTANTE DA NAVE*/
 int closestPort() {
-    double min = dist(xnave, shmporti[0].x, ynave, shmporti[0].y); /*distanza min*/
+    double min = dist(xnave, ynave, shmporti[0].x, shmporti[0].y); /*distanza min*/
     double d;
     int i = 1;
-    int id = 0;
+    int return_id = 0;
     for (; i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
+        if(id==2)
+            printf("pid:%d, id:%d, min:%f, d:%f\n",getpid(), return_id, min, d);
         if (d < min) {
             min = d;
-            id = i;
+            return_id = i;
         }
     }
-    return id;
+    return return_id;
 }
 
 /*RITORNA ID PORTO MENO DISTANTE DA NAVE CON BANCHINE LIBERE*/
@@ -246,7 +255,7 @@ int closestAvailablePort() {
     for (; semctl(sem_porto, i, GETVAL) == 0 && i < SO_PORTI; i++);
     id = i;
 
-    for (min = dist(xnave, shmporti[i].x, ynave, shmporti[i].y); i < SO_PORTI; i++) {
+    for (; i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
         if (d < min && semctl(sem_porto, i, GETVAL) > 0) {
             min = d;

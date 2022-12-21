@@ -16,6 +16,8 @@
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUt
 
+#define STAMPA_MINIMA
+
 
 
 /*DICHIARAZIONE DELLE VARIABILI GLOBALI DEL MASTER UTILI PER LA SIMULAZIONE*/
@@ -32,6 +34,9 @@ int durata_giorno;
 void inizializzazione_fill();
 int isRequestEmpty();
 void tempesta();
+
+void accessoPortiNavi();
+void uscitaPortiNavi();
 
 /*HANDLER DEI VARI SEGNALI*/
 void handle_alarm(int signal);
@@ -83,7 +88,7 @@ int main() {
     srand(time(NULL));
 
     giorno = 0;
-    durata_giorno = 5;
+    durata_giorno = 1;
     /*INIZIO INPUT*/
 
 #ifndef NO_INPUT/*TO DO: CONTROLLO CHE I PARAMETRI SIANO POSITIVI*/
@@ -210,15 +215,15 @@ int main() {
 
         case 5:/*test*/
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
-            SO_NAVI = 100;
+            SO_NAVI = 15;
             SO_PORTI = 5;
-            SO_MERCI = 10;
+            SO_MERCI = 4;
             SO_SIZE = 1;
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;
             SO_LATO = 10;
-            SO_SPEED = 10;
-            SO_CAPACITY = 1000;
+            SO_SPEED = 20;
+            SO_CAPACITY = 30;
             SO_BANCHINE = 10;
             SO_FILL = 1000;
             SO_LOADSPEED = 20;
@@ -534,9 +539,36 @@ int main() {
 
 void handle_alarm(int signum) {
     int i;
+    int richieste_soddisfatte = 0, num_navi_mare = 0, num_navi_porto = 0, num_navi_scarico = 0, num_navi_carico = 0, carico_tot_navi = 0, carico_da_scaricare = 0;
     *shmgiorno = giorno;
     inizializzazione_fill();
+    accessoPortiNavi();
+    for(i=0; i<SO_PORTI; i++){
+        carico_da_scaricare += shmporti[i].richiesta.qmerce * shmmerci[shmporti[i].richiesta.idmerce].dimensione; 
+        if(shmporti[i].richiesta_soddisfatta == 1)
+            richieste_soddisfatte++;
+    }
+    for(i=0; i<SO_NAVI; i++){
+        carico_tot_navi += shmnavi[i].carico_tot;
+        switch(shmnavi[i].stato_nave){
+            case 0:
+                num_navi_porto++;
+                break;
+            case 1:
+                num_navi_mare++;
+                break;
+            case 2:
+                num_navi_porto++;
+                num_navi_scarico++;
+                break;
+            case 3:
+                num_navi_porto++;
+                num_navi_carico++;
+                break;
+        }
+    }
     printf("giorno:%d\n", giorno);
+    #ifndef STAMPA_MINIMA
     for (i = 0; i < SO_PORTI; i++) {
         if (giorno > 1) {
             kill(shmporti[i].offerta.pid, SIGUSR1);
@@ -544,7 +576,7 @@ void handle_alarm(int signum) {
         printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\n", shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL));
         printf("porto[%d]\tRICHIESTA->merce[%d]:qmerce:%d", shmporti[i].pid, shmporti[i].richiesta.idmerce, shmporti[i].richiesta.qmerce);
         if (shmporti[i].richiesta_soddisfatta == 1)
-            printf("RICHIESTA SODDISFATTA");
+            printf("\tRICHIESTA SODDISFATTA");
         printf("\n\n");
     }
     for (i = 0; i < SO_NAVI; i++) {
@@ -553,13 +585,18 @@ void handle_alarm(int signum) {
         else if (shmnavi[i].stato_nave == 1)
             printf("nave[%d]\tSTATO: in mare\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
         else if (shmnavi[i].stato_nave == 2)
-            printf("nave[%d]\tSTATO: carico/scarico\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
+            printf("nave[%d]\tSTATO: scarico merce\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
         else if (shmnavi[i].stato_nave == 3)
-            printf("nave[%d]\tSTATO: colpita da tempesta\t\t\t\n", shmnavi[i].pid);
+            printf("nave[%d]\tSTATO: carico merce\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
     }
+    #else
+        printf("RICHIESTE SODDISFATTE:%d\n",richieste_soddisfatte);
+        printf("NAVI IN MARE:%d\nNAVI IN PORTO:%d\nNAVI SCARICO:%d\nNAVI CARICO:%d\nCARICO TOT NAVI:%d\tCARICO DA SODDISFARE:%d\n", num_navi_mare, num_navi_porto, num_navi_scarico, num_navi_carico, carico_tot_navi, carico_da_scaricare);
+    #endif
     giorno++;
-    tempesta();
+    /*tempesta();*/
     printf("\n\n");
+    uscitaPortiNavi();
 }
 void close_all(int signum) {
     int i, status;
@@ -623,3 +660,24 @@ void tempesta(){
     } while (shmnavi[id].stato_nave != 1);
     kill(shmnavi[id].pid, SIGUSR2);
 }
+
+void accessoPortiNavi(){
+    int i;
+    for(i=0;i<SO_PORTI; i++){
+        sem_accesso(sem_shmporto, i);
+    }
+    for(i=0;i<SO_NAVI; i++){
+        sem_accesso(sem_shmnave, i);
+    }
+}
+
+void uscitaPortiNavi(){
+    int i;
+    for(i=0;i<SO_PORTI; i++){
+        sem_uscita(sem_shmporto, i);
+    }
+    for(i=0;i<SO_NAVI; i++){
+        sem_uscita(sem_shmnave, i);
+    }
+}
+
