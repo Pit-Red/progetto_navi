@@ -38,6 +38,7 @@ void carica_offerta(int id_porto, double tempo);
 int controllo(carico c);
 int closestPort();
 int closestAvailablePort();
+int algoritmoAleV1();
 
 
 void tempesta(int signum) {
