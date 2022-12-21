@@ -84,12 +84,15 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
+    
 
     nuova_richiesta();
+
 
     my_op.sem_num = 0;
     my_op.sem_op = 1;
     semop(sem_avvio, &my_op, 1);
+
 
     my_op.sem_num = 1;
     my_op.sem_op = -1;
@@ -133,6 +136,7 @@ carico creazione_offerta(int ton) {
 carico creazione_richiesta(int ton) {
     carico c;
     struct timespec now;
+    fprintf(stderr, "\nporto[%d]: pass %d\n", id, semctl(sem_fill, 0, GETVAL, NULL));
     clock_gettime(CLOCK_REALTIME, &now);
     c.pid = getpid();
     c.idmerce = (now.tv_nsec % (SO_MERCI * 10000)) / 10000;
@@ -174,7 +178,9 @@ void nuova_richiesta() {
     if (totale > 0) {
         /*g        sem_uscita(sem_fill, 0);en richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
-        richiesta = shmfill[2] + (now.tv_nsec % (shmfill[3] * 2)) - shmfill[1];
+        if(shmfill[3]<=0)
+            shmfill[3] = 5;
+        richiesta = shmfill[2] + (now.tv_nsec % (shmfill[3] * 2)) - shmfill[3];
         shmporti[id].richiesta = creazione_richiesta(richiesta);
         TEST_ERROR;
     }
