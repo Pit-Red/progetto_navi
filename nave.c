@@ -125,6 +125,9 @@ void navigazione(double x, double y){
 }
 
 void cerca_rotta(carico c){
+    /*carico offerta_effettiva;
+    int id_porto;
+    int op = 2;*/
     int temp;
     struct timespec now;
     double tempo;
@@ -161,6 +164,7 @@ void cerca_rotta(carico c){
 }
 
 void carica_offerta(int id_porto, double tempo){
+    carico c;
     struct timespec now;
     int temp = 0;
     now.tv_sec =(time_t)tempo;
@@ -168,19 +172,25 @@ void carica_offerta(int id_porto, double tempo){
     nanosleep(&now, &rimanente);
     bzero(&rimanente, sizeof(rimanente));
     sem_accesso(sem_shmporto, id_dest);
-    if((capacita-(shmporti[id_dest].richiesta.qmerce* shmmerci[shmporti[id_dest].offerta.idmerce].dimensione))<=0){
+    c.idmerce = shmporti[id_dest].offerta.idmerce;
+    c.qmerce = shmporti[id_dest].offerta.qmerce;
+    c.pid = shmporti[id_dest].offerta.pid;
+    c.scadenza = shmporti[id_dest].offerta.scadenza;
+    if((capacita-(c.qmerce* shmmerci[c.idmerce].dimensione))<0){
         /*SE NON C'E' ABBASTANZA SPAZIO SULLA NAVE*/
-        temp = shmporti[id_dest].offerta.qmerce;
-        shmporti[id_dest].offerta.qmerce = capacita/shmmerci[shmporti[id_dest].offerta.idmerce].dimensione;
-        lista_carico = list_insert_head(lista_carico, shmporti[id_dest].offerta);
-        shmporti[id_dest].offerta.qmerce = temp - (capacita/shmmerci[shmporti[id_dest].offerta.idmerce].dimensione);
+        c.qmerce = capacita / shmmerci[c.idmerce].dimensione;
+        lista_carico = list_insert_head(lista_carico, c);
+        shmporti[id_dest].offerta.qmerce -= c.qmerce;
         capacita = 0;
     }
     else{
         /*SE C'E' ABBASTANZA SPAZIO SULLA NAVE*/
-        lista_carico = list_insert_head(lista_carico, shmporti[id_dest].offerta);
-        capacita -= shmporti[id_dest].offerta.qmerce * shmmerci[shmporti[id_dest].offerta.idmerce].dimensione;
+        lista_carico = list_insert_head(lista_carico, c);
+        capacita -= c.qmerce * shmmerci[c.idmerce].dimensione;
         shmporti[id_dest].offerta.qmerce = 0;
+        if(capacita<0){
+            printf("diocaneeeeeee\n\n");
+        }
     }
     shmnavi[id].carico_tot = SO_CAPACITY - capacita;
     sem_uscita(sem_shmporto, id_dest);

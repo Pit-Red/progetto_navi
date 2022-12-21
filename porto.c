@@ -158,7 +158,6 @@ void nuova_offerta() {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
-        shmfill[2] -= offerta;
         clock_gettime(CLOCK_REALTIME, &now);
         shmporti[id].offerta = creazione_offerta(offerta);
     }
@@ -175,8 +174,7 @@ void nuova_richiesta() {
     if (totale > 0) {
         /*g        sem_uscita(sem_fill, 0);en richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
-        richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
-        shmfill[3] -= richiesta;
+        richiesta = shmfill[2] + (now.tv_nsec % (shmfill[3] * 2)) - shmfill[1];
         shmporti[id].richiesta = creazione_richiesta(richiesta);
         TEST_ERROR;
     }
