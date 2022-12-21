@@ -28,6 +28,7 @@ int sem_shmporto; int sem_shmnave; int sem_avvio; /*id del semaforo che permette
 int sem_porto, sem_ricoff;/*semaforo per far approdare le navi al porto*/
 snave* shmnavi; sporto* shmporti; smerce* shmmerci; int giorno; int* shmgiorno; int* shmfill;
 int SO_CAPACITY;
+int durata_giorno;
 
 void inizializzazione_fill();
 int isRequestEmpty();
@@ -82,6 +83,7 @@ int main() {
     srand(time(NULL));
 
     giorno = 0;
+    durata_giorno = 5;
     /*INIZIO INPUT*/
 
 #ifndef NO_INPUT/*TO DO: CONTROLLO CHE I PARAMETRI SIANO POSITIVI*/
@@ -208,15 +210,15 @@ int main() {
 
         case 5:/*test*/
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
-            SO_NAVI = 10;
+            SO_NAVI = 1;
             SO_PORTI = 5;
-            SO_MERCI = 4;
-            SO_SIZE = 10;
+            SO_MERCI = 10;
+            SO_SIZE = 1;
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;
-            SO_LATO = 100;
-            SO_SPEED = 100;
-            SO_CAPACITY = 100;
+            SO_LATO = 10;
+            SO_SPEED = 1;
+            SO_CAPACITY = 1000;
             SO_BANCHINE = 10;
             SO_FILL = 1000;
             SO_LOADSPEED = 20;
@@ -311,6 +313,8 @@ int main() {
     po = calloc(SO_PORTI, sizeof(*po));
     printf("\nidshmporti: %d\n\n", idshmporti);
     printf("\033[0m");
+    SO_LOADSPEED /= durata_giorno;
+    SO_SPEED /= durata_giorno;
     /*FINE MENU*/
     sprintf(stringsem_avvio, "%d", sem_avvio);
     sprintf(stringsem_porto, "%d", sem_porto);
@@ -521,7 +525,7 @@ int main() {
 
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for (d = SO_DAYS; d && !isRequestEmpty(); d--) {
-        alarm(5);
+        alarm(durata_giorno);
         pause();
     }
 
@@ -616,8 +620,8 @@ void close_all(int signum) {
 void inizializzazione_fill() {
     shmfill[0] = (SO_FILL / SO_DAYS) / SO_PORTI;
     shmfill[1] = shmfill[0] / (SO_PORTI - 1) - 1;
-    shmfill[2] = SO_FILL;
-    shmfill[3] = SO_FILL;
+    shmfill[2] = SO_FILL / SO_PORTI;
+    shmfill[3] = shmfill[2] / (SO_PORTI - 1) - 1;
     shmfill[4] = SO_PORTI;
     shmfill[5] = SO_PORTI;
 }
