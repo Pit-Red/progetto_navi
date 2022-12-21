@@ -125,9 +125,6 @@ void navigazione(double x, double y){
 }
 
 void cerca_rotta(carico c){
-    /*carico offerta_effettiva;
-    int id_porto;
-    int op = 2;*/
     int temp;
     struct timespec now;
     double tempo;
@@ -171,10 +168,10 @@ void carica_offerta(int id_porto, double tempo){
     nanosleep(&now, &rimanente);
     bzero(&rimanente, sizeof(rimanente));
     sem_accesso(sem_shmporto, id_dest);
-    if((capacita-(shmporti[id_dest].richiesta.qmerce* shmmerci[shmporti[id_dest].offerta.idmerce].dimensione))<0){
+    if((capacita-(shmporti[id_dest].richiesta.qmerce* shmmerci[shmporti[id_dest].offerta.idmerce].dimensione))<=0){
         /*SE NON C'E' ABBASTANZA SPAZIO SULLA NAVE*/
         temp = shmporti[id_dest].offerta.qmerce;
-        shmporti[id_dest].offerta.qmerce = capacita;
+        shmporti[id_dest].offerta.qmerce = capacita/shmmerci[shmporti[id_dest].offerta.idmerce].dimensione;
         lista_carico = list_insert_head(lista_carico, shmporti[id_dest].offerta);
         shmporti[id_dest].offerta.qmerce = temp - (capacita/shmmerci[shmporti[id_dest].offerta.idmerce].dimensione);
         capacita = 0;
