@@ -218,10 +218,10 @@ void scadenza(int signum) {
 }
 
 int closestPort() { /*RITORNA ID PORTO*/
-    double min = dist(xnave, shmporti[i].x, ynave, shmporti[i].y); /*distanza min*/
+    double min = dist(xnave, shmporti[0].x, ynave, shmporti[0].y); /*distanza min*/
     double d;
-    int id = 0;
     int i = 1;
+    int id = 0;
     for (; i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
         if (d < min) {
