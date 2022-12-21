@@ -147,7 +147,7 @@ void cerca_rotta(carico c) {
     now.tv_sec = (time_t)tempo;
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
     shmnavi[id].stato_nave = 2;
-    if (id_merce >= 0) { 
+    if (id_merce >= 0) {
         nanosleep(&now, NULL);
         sem_accesso(sem_shmporto, id_dest);
         sem_accesso(sem_shmnave, id);
@@ -235,8 +235,8 @@ int closestPort() {
     int return_id = 0;
     for (; i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
-        if(id==2)
-            printf("pid:%d, id:%d, min:%f, d:%f\n",getpid(), return_id, min, d);
+        if (id == 2)
+            printf("pid:%d, id:%d, min:%f, d:%f\n", getpid(), return_id, min, d);
         if (d < min) {
             min = d;
             return_id = i;
@@ -255,7 +255,7 @@ int closestAvailablePort() {
     for (; semctl(sem_porto, i, GETVAL) == 0 && i < SO_PORTI; i++);
     id = i;
 
-    for (; i < SO_PORTI; i++) {
+    for (min = dist(xnave, shmporti[i].x, ynave, shmporti[i].y); i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
         if (d < min && semctl(sem_porto, i, GETVAL) > 0) {
             min = d;
