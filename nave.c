@@ -23,7 +23,7 @@ int sem_porto;
 int msg_richiesta;
 int msg_offerta;
 snave* shmnavi; sporto*shmporti;smerce* shmmerci; int* shmgiorno;
-int SO_LOADSPEED, SO_PORTI, SO_CAPACITY;
+int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION;
 list lista_carico = NULL;
 struct timespec rimanente;
 
@@ -36,6 +36,16 @@ void carica_offerta(int id_porto, double tempo);
 
 int controllo(carico c);
 int closestPort();
+void tempesta(int signum){
+    struct timespec now;
+    int t = (shmgiorno[1] * SO_STORM_DURATION) / 24;
+    shmnavi[id].stato_nave = 3;
+    now.tv_sec = rimanente.tv_sec;
+    now.tv_nsec = rimanente.tv_nsec + t;
+    printf("sono stata colpita da una tempesta [%d]\n\n", getpid());
+    nanosleep(&now, NULL);
+    shmnavi[id].stato_nave = 1;
+}
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
@@ -61,6 +71,9 @@ int main(int argc, char** argv){
     bzero(&sa, sizeof(sa));
     sa.sa_handler = scadenza;
     sigaction(SIGUSR1,&sa,NULL);
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = tempesta;
+    sigaction(SIGUSR2, &sa, NULL);
     srand(time(NULL));
     capacita = atoi(argv[4]);
     SO_CAPACITY = atoi(argv[4]);
@@ -77,6 +90,7 @@ int main(int argc, char** argv){
     shmmerci = shmat(atoi(argv[12]),NULL,0);
     SO_LOADSPEED = atoi(argv[11]);
     sem_avvio = atoi(argv[14]);
+    SO_STORM_DURATION = atoi(argv[15]);
     TEST_ERROR;
 
     
@@ -90,17 +104,6 @@ int main(int argc, char** argv){
         cerca_rotta(temp_merce);
         lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
     }
-
-
-    
-
-    /*prova carico*/
-
-
-
-    /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
-    VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
-    for(;;){}
     exit(0);
 }
 
@@ -118,6 +121,9 @@ void navigazione(double x, double y){
     my_time.tv_nsec = (short)((tempo-(int)tempo) * 10000);
     /*my_time.tv_nsec = 0;*/
     nanosleep(&my_time, &rimanente);
+    bzero(&rimanente, sizeof(rimanente));
+    if(errno = 4)
+        errno = 0; 
     TEST_ERROR;
     sem_accesso(sem_shmnave, id);
     shmnavi[id].x = x;
@@ -126,9 +132,6 @@ void navigazione(double x, double y){
 }
 
 void cerca_rotta(carico c){
-    /*carico offerta_effettiva;
-    int id_porto;
-    int op = 2;*/
     int temp;
     struct timespec now;
     double tempo;
@@ -207,8 +210,7 @@ int cerca_richiesta(){
                 return i;
             }
         }
-        clock_gettime(CLOCK_REALTIME , &now);
-        return now.tv_nsec % SO_PORTI;
+        return closestPort();
     }
 }
 

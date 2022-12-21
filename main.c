@@ -15,7 +15,6 @@
 
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUt
-/*MACRO PER LA VELOCITA DELLE NAVI E LA CAPACITA*/
 
 
 
@@ -32,6 +31,7 @@ int durata_giorno;
 
 void inizializzazione_fill();
 int isRequestEmpty();
+void tempesta();
 
 /*HANDLER DEI VARI SEGNALI*/
 void handle_alarm(int signal);
@@ -51,7 +51,7 @@ int main() {
     char stringid[13];
     char stringrichiesta[13];
     char stringofferta[13];
-    char stringvelocita[13], stringcapacity[13], stringgiorno[13], stringload_speed[13], stringnum_merci[13];
+    char stringvelocita[13], stringcapacity[13], stringgiorno[13], stringload_speed[13], stringnum_merci[13], stringore[13];
     char* nave[20] = {""};
     char* porto[20] = {""};
     short uguali;
@@ -197,11 +197,11 @@ int main() {
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;
             SO_LATO = 1000;
-            SO_SPEED = 500;
+            SO_SPEED = 5;
             SO_CAPACITY = 1000;
             SO_BANCHINE = 10;
             SO_FILL = 1000000;
-            SO_LOADSPEED = 200;
+            SO_LOADSPEED = 20;
             SO_DAYS = 10;
             SO_STORM_DURATION = 12;
             SO_SWELL_DURATION = 10;
@@ -210,21 +210,21 @@ int main() {
 
         case 5:/*test*/
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
-            SO_NAVI = 1;
+            SO_NAVI = 100;
             SO_PORTI = 5;
             SO_MERCI = 10;
             SO_SIZE = 1;
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;
             SO_LATO = 10;
-            SO_SPEED = 1;
+            SO_SPEED = 10;
             SO_CAPACITY = 1000;
             SO_BANCHINE = 10;
             SO_FILL = 1000;
             SO_LOADSPEED = 20;
             SO_DAYS = 10;
-            SO_STORM_DURATION = 12;
-            SO_SWELL_DURATION = 10;
+            SO_STORM_DURATION = 30000;
+            SO_SWELL_DURATION = 30;
             SO_MAELSTROM = 1;
             break;
         }
@@ -332,6 +332,7 @@ int main() {
     sprintf(stringload_speed, "%d", SO_LOADSPEED);
     sprintf(stringnum_merci, "%d", SO_MERCI);
     sprintf(stringsem_ricoff, "%d", sem_ricoff);
+    sprintf(stringore, "%d", durata_giorno);
     /*PORTO*/
     porto[1] = stringsem_shmporto;
     porto[2] = stringporti;
@@ -360,7 +361,7 @@ int main() {
     nave[12] = stringmerci;
     nave[13] = stringsem_shmnave;
     nave[14] = stringsem_avvio;
-    nave[15] = stringfill;
+    nave[15] = stringore;
     nave[16] = NULL;
 
     /*INIZIALIZZAZIONE SEMAFORO FIRST*/
@@ -381,8 +382,6 @@ int main() {
         shmmerci[i] = arraymerci[i];
     }
 
-
-    /*sinfo = semctl(sem_shmporto, 0, SEM_INFO);*/
 
     printf("\n\n\nsem_shmporti:%d\tsem_shmnavi:%d\tsem_avvio:%d\tsem_banchine:%d\n\n\n", sem_shmporto, sem_shmnave, sem_avvio, sem_porto);
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
@@ -444,9 +443,9 @@ int main() {
             sem_uscita(sem_shmporto, i);
             sprintf(stringid, "%d", i);
             porto[4] = stringid;
-            /*my_op.sem_num = 0;
+            my_op.sem_num = 0;
             my_op.sem_op = 1;
-            semop(sem_avvio,&my_op,1);*/
+            semop(sem_avvio,&my_op,1);
             printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
 
             execvp("./porto", porto);
@@ -521,8 +520,6 @@ int main() {
     my_op.sem_op = (SO_NAVI + SO_PORTI);
     semop(sem_avvio, &my_op, 1);
 
-    /*printf("\n\nHO PASSATO IL PRIMO SEMAFORO\n\n");*/
-
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for (d = SO_DAYS; d && !isRequestEmpty(); d--) {
         alarm(durata_giorno);
@@ -530,29 +527,6 @@ int main() {
     }
 
     close_all(1);
-
-    /*for(i=0;i < SO_PORTI;i++){
-        kill(arrayporti[i].pid, SIGINT);
-        wait(&status);
-    }
-
-    for(i=0;i < SO_NAVI ;i++){
-        kill(arraynavi[i].pid, SIGINT);
-        wait(&status);
-    }
-
-    msgctl(msg_richiesta,IPC_RMID,NULL);
-    msgctl(msg_offerta,IPC_RMID,NULL);
-    shmctl(idshmporti, IPC_RMID, NULL);
-    shmctl(idshmnavi,IPC_RMID,NULL);
-    shmctl(idshmgiorno, IPC_RMID, NULL);
-    shmctl(idshmmerci, IPC_RMID, NULL);
-    shmctl(idshmfill, IPC_RMID, NULL);
-    semctl(sem_shmporto,1,IPC_RMID);
-    semctl(sem_shmnave, 1, IPC_RMID);
-    semctl(sem_porto,1,IPC_RMID);
-    semctl(sem_avvio, 1, IPC_RMID);
-    semctl(sem_ricoff, 1, IPC_RMID);*/
 
     printf("\n\nFine del programma\n");
     exit(0);
@@ -578,11 +552,13 @@ void handle_alarm(int signum) {
             printf("nave[%d]\tSTATO: in porto\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
         else if (shmnavi[i].stato_nave == 1)
             printf("nave[%d]\tSTATO: in mare\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
-        else
+        else if (shmnavi[i].stato_nave == 2)
             printf("nave[%d]\tSTATO: carico/scarico\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
+        else if (shmnavi[i].stato_nave == 3)
+            printf("nave[%d]\tSTATO: colpita da tempesta\t\t\t\n", shmnavi[i].pid);
     }
     giorno++;
-    /*msg_print_stats(1, msg_richiesta);*/
+    tempesta();
     printf("\n\n");
 }
 void close_all(int signum) {
@@ -635,4 +611,15 @@ int isRequestEmpty() {
         id++;
     }
     return 1;
+}
+
+void tempesta(){
+    int id;
+    struct timespec now;
+    do
+    {
+        clock_gettime(CLOCK_REALTIME, &now);
+        id = now.tv_nsec % SO_NAVI;
+    } while (shmnavi[id].stato_nave != 1);
+    kill(shmnavi[id].pid, SIGUSR2);
 }
