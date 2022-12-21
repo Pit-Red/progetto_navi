@@ -14,6 +14,7 @@
 #include <sys/sem.h>
 #include "utilities.h"
 
+int id_algo;
 int capacita, velocita;
 double xdest, ydest;
 double xnave, ynave;
@@ -97,7 +98,7 @@ int main(int argc, char** argv) {
     SO_STORM_DURATION = atoi(argv[15]);
     TEST_ERROR;
 
-
+    id_algo = now.tv_nsec % SO_PORTI;
 
     sem_accesso(sem_shmnave, id);
     xnave = shmnavi[id].x;
@@ -217,8 +218,8 @@ int cerca_richiesta() {
             }
         }
         clock_gettime(CLOCK_REALTIME, &now);
-        return now.tv_nsec % SO_PORTI;
-        /*return closestAvailablePort();*/
+        /*return now.tv_nsec % SO_PORTI;*/
+        return closestAvailablePort();
     }
 }
 
@@ -263,4 +264,10 @@ int closestAvailablePort() {
         }
     }
     return id;
+}
+
+/*ALGORITMO SUPREMO*/
+int algoritmoAleV1() {
+    id_algo = (id_algo + 1) % SO_PORTI;
+    return id_algo;
 }
