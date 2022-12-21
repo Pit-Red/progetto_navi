@@ -1,12 +1,12 @@
 count=0
-total=8
+total=15
 pstr="[==================================================================]"
 
 echo "[                                                                         ]"
 echo -e "\033[2A"
 
 while [ $count -lt $total ]; do
-  sleep 0.5 # this is work
+  sleep 0.05 # this is work
   count=$(( $count + 1 ))
   pd=$(( $count * 73 / $total ))
   printf "\r%3d.%1d%% %.${pd}s" $(( $count * 100 / $total )) $(( ($count * 1000 / $total) % 10 )) $pstr
