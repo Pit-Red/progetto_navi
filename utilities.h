@@ -110,3 +110,5 @@ list carico_nave(carico c, list p, int speed, smerce* m, snave n);
 int pid_to_id_porto(pid_t pid, sporto* p);
 
 void rmLinesTerminal(int n);
+
+double dist(double x1, double y1, double x2, double y2);

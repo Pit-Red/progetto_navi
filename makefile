@@ -11,19 +11,19 @@ avvia:
 	@./main
 	
 main: main.c
-	@gcc $(FLAGS) -c main.c -o main.o
-	@gcc $(FLAGS) main.o utilities.o -o main
+	@gcc $(FLAGS) -c main.c -o main.o -lm
+	@gcc $(FLAGS) main.o utilities.o -o main -lm
 	
 nave: nave.c
 	@gcc $(FLAGS) -c	nave.c -o nave.o -lm
 	@gcc $(FLAGS) nave.c utilities.o -o nave -lm
 
 porto: porto.c
-	@gcc $(FLAGS) -c porto.c -o porto.o
-	@gcc $(FLAGS) porto.c utilities.o -o porto
+	@gcc $(FLAGS) -c porto.c -o porto.o -lm
+	@gcc $(FLAGS) porto.c utilities.o -o porto -lm
 
 utilities.o : utilities.c utilities.h
-	@gcc $(FLAGS) -c utilities.c -o utilities.o
+	@gcc $(FLAGS) -c utilities.c -o utilities.o -lm
 
 clean:
 	rm -f *.o main nave porto
