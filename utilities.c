@@ -16,8 +16,8 @@ void sem_accesso(int semid, int num_risorsa) {
     my_op.sem_flg = 0;
     my_op.sem_op = -1;
     semop(semid, &my_op, 1);
-    if (errno == 27) {
-        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));
+    if (errno == 4) {
+        errno = 0;
     }
     TEST_ERROR;
     /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
