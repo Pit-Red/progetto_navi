@@ -1,4 +1,3 @@
-
 FLAGS= -std=c89 -pedantic -D_GNU_SOURCE
 
 all: compile avvia

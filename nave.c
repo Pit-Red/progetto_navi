@@ -35,6 +35,7 @@ int cerca_richiesta();
 void carica_offerta(int id_porto, double tempo);
 
 int controllo(carico c);
+int closestPort();
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum){
@@ -214,4 +215,19 @@ int cerca_richiesta(){
 void scadenza(int signum){
     if(lista_carico!=NULL)
         lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
+}
+
+int closestPort() { /*RITORNA ID PORTO*/
+    double min = dist(xnave, shmporti[0].x, ynave, shmporti[0].y); /*distanza min*/
+    double d;
+    int i = 1;
+    int id = 0;
+    for (; i < SO_PORTI; i++) {
+        d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
+        if (d < min) {
+            min = d;
+            id = i;
+        }
+    }
+    return id;
 }
