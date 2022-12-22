@@ -32,9 +32,9 @@ int id_merce_richiesta;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
-    printf("\033[0;31m");
+    /*printf("\033[0;31m");
     printf("ucciso porto[%d]\n", id);
-    printf("\033[0m");
+    printf("\033[0m");*/
     exit(EXIT_SUCCESS);
 }
 
@@ -84,12 +84,15 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
+    
 
     nuova_richiesta();
+
 
     my_op.sem_num = 0;
     my_op.sem_op = 1;
     semop(sem_avvio, &my_op, 1);
+
 
     my_op.sem_num = 1;
     my_op.sem_op = -1;
@@ -138,7 +141,7 @@ carico creazione_richiesta(int ton) {
     c.idmerce = (now.tv_nsec % (SO_MERCI * 10000)) / 10000;
     id_merce_richiesta = c.idmerce;
     c.qmerce = ton/shmmerci[c.idmerce].dimensione;
-    c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
+    c.scadenza = -1;                        /*SETTO LA SCADENZA A -1 PERCHE' LA RICHIESTA NON HA SCADENZA*/
     return c;
 }
 
@@ -158,7 +161,6 @@ void nuova_offerta() {
         /*gen offerta*/
         clock_gettime(CLOCK_REALTIME, &now);
         offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
-        shmfill[2] -= offerta;
         clock_gettime(CLOCK_REALTIME, &now);
         shmporti[id].offerta = creazione_offerta(offerta);
     }
@@ -175,9 +177,10 @@ void nuova_richiesta() {
     if (totale > 0) {
         /*g        sem_uscita(sem_fill, 0);en richiesta*/
         clock_gettime(CLOCK_REALTIME, &now);
-        richiesta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
-        shmfill[3] -= richiesta;
-        msg_invio(msg_richiesta , creazione_richiesta(richiesta));
+        if(shmfill[3]<=0)
+            shmfill[3] = 5;
+        richiesta = shmfill[2] + (now.tv_nsec % (shmfill[3] * 2)) - shmfill[3];
+        shmporti[id].richiesta = creazione_richiesta(richiesta);
         TEST_ERROR;
     }
     shmfill[5]--;
