@@ -15,6 +15,7 @@
 #include "utilities.h"
 
 int id_algo;
+int n_algo = 0;
 int capacita, velocita;
 double xdest, ydest;
 double xnave, ynave;
@@ -27,6 +28,7 @@ snave* shmnavi; sporto*shmporti; smerce* shmmerci; int* shmgiorno;
 int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION;
 list lista_carico = NULL;
 struct timespec rimanente;
+struct timespec now;
 
 void cerca_rotta(carico c);
 
@@ -55,9 +57,9 @@ void tempesta(int signum) {
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
-    printf("\033[0;31m");
+    /*printf("\033[0;31m");
     printf("uccisa nave[%d]\n", id);
-    printf("\033[0m");
+    printf("\033[0m");*/
 
     exit(EXIT_SUCCESS);
 }
@@ -220,7 +222,7 @@ int cerca_richiesta() {
         }
         clock_gettime(CLOCK_REALTIME, &now);
         /*return now.tv_nsec % SO_PORTI;*/
-        return closestAvailablePort();
+        return algoritmoAleV1();
     }
 }
 
@@ -254,12 +256,12 @@ int closestAvailablePort() {
     int i = 0;
     int id = 0;
 
-    for (; semctl(sem_porto, i, GETVAL) == 0 && i < SO_PORTI; i++);
+    for (; semctl(sem_porto, i, GETVAL) == 0 && i < SO_PORTI && dist(xnave, shmporti[i].x, ynave, shmporti[i].y) != 0; i++);
     id = i;
 
     for (min = dist(xnave, shmporti[i].x, ynave, shmporti[i].y); i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
-        if (d < min && semctl(sem_porto, i, GETVAL) > 0) {
+        if (d < min && semctl(sem_porto, i, GETVAL) > 0 && d != 0) {
             min = d;
             id = i;
         }
@@ -267,8 +269,28 @@ int closestAvailablePort() {
     return id;
 }
 
+int algoritmoAleV001() {
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    n_algo++;
+    if (n_algo % 2) {
+        id_algo = now.tv_nsec % SO_PORTI;
+    } else {
+        id_algo = (id_algo + 1) % SO_PORTI;
+    }
+    return id_algo;
+}
+
 /*ALGORITMO SUPREMO*/
 int algoritmoAleV1() {
-    id_algo = (id_algo + 1) % SO_PORTI;
+    struct timespec now;
+    int id_temp;
+    clock_gettime(CLOCK_REALTIME, &now);
+    n_algo++;
+    if (n_algo % 2) {
+        id_algo = now.tv_nsec % SO_PORTI;
+    } else {
+        id_algo = closestAvailablePort();
+    }
     return id_algo;
 }

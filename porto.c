@@ -32,9 +32,9 @@ int id_merce_richiesta;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
-    printf("\033[0;31m");
+    /*printf("\033[0;31m");
     printf("ucciso porto[%d]\n", id);
-    printf("\033[0m");
+    printf("\033[0m");*/
     exit(EXIT_SUCCESS);
 }
 
