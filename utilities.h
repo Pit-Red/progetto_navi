@@ -34,6 +34,14 @@ typedef struct node {
 
 typedef node* list;
 
+/*STATO NAVE:
+0:IN PORTO
+1:IN MARE
+2:IN PORTO CHE EFFETTUA UNO SCARICO
+3:IN PORTO CHE EFFETTUA UN CARICO
+4:IN MARE FERMA A CAUSA DI UNA TEMPESTA
+5:IN PORTO FERMA A CAUSA DI UNA MAREGGIATA
+*/
 typedef struct {
     pid_t pid;
     double x;

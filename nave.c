@@ -25,7 +25,7 @@ int sem_porto;
 int msg_richiesta;
 int msg_offerta;
 snave* shmnavi; sporto*shmporti; smerce* shmmerci; int* shmgiorno;
-int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION;
+int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION, SO_SWELL_DURATION;
 list lista_carico = NULL;
 struct timespec rimanente;
 struct timespec now;
@@ -33,7 +33,6 @@ struct timespec now;
 void cerca_rotta(carico c);
 
 void navigazione(double x, double y);
-void scadenza(int signum);
 int cerca_richiesta();
 void carica_offerta(int id_porto, double tempo);
 
@@ -42,19 +41,9 @@ int closestPort();
 int closestAvailablePort();
 int algoritmoAleV1();
 
+void mareggiata(int signum);
+void tempesta(int signum);
 
-void tempesta(int signum) {
-    struct timespec now;
-    double t1 = (shmgiorno[1] * SO_STORM_DURATION) / 24;
-    int t = (shmgiorno[1] * SO_STORM_DURATION) / 24;
-    printf("sono stata colpita da una tempesta [%d], devo aspettare %ld sec\n\n", getpid(), rimanente.tv_sec);
-    shmnavi[id].stato_nave = 4;
-    now.tv_sec = rimanente.tv_sec + (time_t)t;
-    now.tv_nsec = rimanente.tv_nsec + (long)((double)(t1-t)*1000000);
-    nanosleep(&now, NULL);
-    TEST_ERROR;
-    shmnavi[id].stato_nave = 1;
-}
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -74,11 +63,13 @@ int main(int argc, char** argv) {
     struct sigaction sa;
     struct sembuf sops;
     int temp;
+    bzero(&now, sizeof(now));
+    bzero(&rimanente, sizeof(rimanente));
     bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
     sigaction(SIGINT, &sa, NULL);
     bzero(&sa, sizeof(sa));
-    sa.sa_handler = scadenza;
+    sa.sa_handler = mareggiata;
     sigaction(SIGUSR1, &sa, NULL);
     bzero(&sa, sizeof(sa));
     sa.sa_handler = tempesta;
@@ -93,13 +84,13 @@ int main(int argc, char** argv) {
     sem_porto = atoi(argv[7]);
     sem_shmporto = atoi(argv[1]);
     id = atoi(argv[6]);
-    msg_richiesta = atoi(argv[8]);
     SO_PORTI = atoi(argv[9]);
     shmgiorno = shmat(atoi(argv[10]), NULL, 0);
     shmmerci = shmat(atoi(argv[12]), NULL, 0);
     SO_LOADSPEED = atoi(argv[11]);
     sem_avvio = atoi(argv[14]);
     SO_STORM_DURATION = atoi(argv[15]);
+    SO_SWELL_DURATION = atoi(argv[16]);
     TEST_ERROR;
 
     id_algo = now.tv_nsec % SO_PORTI;
@@ -127,7 +118,7 @@ void navigazione(double x, double y) {
     tempo = dist / velocita;
     shmnavi[id].stato_nave = 1;
     my_time.tv_sec = (time_t)tempo;
-    my_time.tv_nsec = (short)((tempo - (int)tempo) * 10000);
+    my_time.tv_nsec = (short)((tempo - (int)tempo) * 1000000000);
     /*my_time.tv_nsec = 0;*/
     nanosleep(&my_time, &rimanente);
     bzero(&rimanente, sizeof(rimanente));
@@ -154,7 +145,8 @@ void cerca_rotta(carico c) {
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
     shmnavi[id].stato_nave = 2;
     if (id_merce >= 0) {
-            nanosleep(&now, NULL);
+            nanosleep(&now, &rimanente);
+            bzero(&rimanente, sizeof(rimanente));
             sem_accesso(sem_shmporto, id_dest);
             sem_accesso(sem_shmnave, id);
             temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
@@ -228,10 +220,28 @@ int cerca_richiesta() {
         return algoritmoAleV1();
     }
 }
-
-void scadenza(int signum) {
-    if (lista_carico != NULL)
-        lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
+/*SIGUSR1*/
+void mareggiata(int signum) {
+    double t1 = (shmgiorno[1] * SO_SWELL_DURATION) / 24;
+    int t = (shmgiorno[1] * SO_SWELL_DURATION) / 24;
+    shmnavi[id].stato_nave = 5;
+    now.tv_sec = rimanente.tv_sec + (time_t)t;
+    now.tv_nsec = rimanente.tv_nsec + (long)((double)(t1-t)*1000000000);
+    nanosleep(&now, NULL);
+    TEST_ERROR;
+    shmnavi[id].stato_nave = 1;
+}
+/*SIGUSR2*/
+void tempesta(int signum) {
+    struct timespec now;
+    double t1 = (shmgiorno[1] * SO_STORM_DURATION) / 24;
+    int t = (shmgiorno[1] * SO_STORM_DURATION) / 24;
+    shmnavi[id].stato_nave = 4;
+    now.tv_sec = rimanente.tv_sec + (time_t)t;
+    now.tv_nsec = rimanente.tv_nsec + (long)((double)(t1-t)*1000000000);
+    nanosleep(&now, NULL);
+    TEST_ERROR;
+    shmnavi[id].stato_nave = 1;
 }
 
 /*RITORNA ID PORTO MENO DISTANTE DA NAVE*/

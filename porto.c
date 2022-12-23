@@ -13,7 +13,6 @@
 #include <sys/shm.h>
 #include <math.h>
 #include "utilities.h"
-#define REQUEST_MAX_SIZE 128
 
 
 
@@ -23,12 +22,13 @@ int id;
 int sem_shmporto, sem_shmnave;
 int msg_richiesta;
 int msg_offerta;
-sporto* shmporti; smerce* shmmerci;
+sporto* shmporti; smerce* shmmerci; snave* shmnavi;
 int* shmgiorno;
 int SO_MERCI;
 int* shmfill;
 int sem_fill;
 int id_merce_richiesta;
+int SO_NAVI;
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -50,6 +50,8 @@ void creazione_random();
 
 void nuova_offerta_handler(int signum);
 
+void handler_mareggiata(int sigunum);
+
 
 
 int main(int argc, char** argv) {
@@ -57,7 +59,6 @@ int main(int argc, char** argv) {
     /*DEFINIZIONE VAR CODA MEX*/
     int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
     int sem_avvio;
-    size_t msgsize_user, msgesize_max;
     int status, num_bytes;
     struct sembuf sops;
     struct sigaction sa;
@@ -68,16 +69,17 @@ int main(int argc, char** argv) {
     bzero(&sa, sizeof(sa));
     sa.sa_handler = nuova_offerta_handler;
     sigaction(SIGUSR1, &sa, NULL);
-    /*bzero(&sa, sizeof(sa));
-    sa.sa_handler = nuova_richiesta;
-    sigaction(SIGUSR2, &sa, NULL);*/
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = handler_mareggiata;
+    sigaction(SIGUSR2, &sa, NULL);
     TEST_ERROR;
     shmporti = shmat(atoi(argv[2]), NULL, 0);
+    shmnavi = shmat(atoi(argv[3]), NULL, 0);
     sem_shmporto = atoi(argv[1]);
     sem_shmnave = atoi(argv[10]);
     sem_porto = atoi(argv[5]);
     id = atoi(argv[4]);
-    msg_richiesta = atoi(argv[6]);
+    SO_NAVI = atoi(argv[6]);
     SO_MERCI = atoi(argv[7]);
     shmmerci = shmat(atoi(argv[8]), NULL, 0);
     shmgiorno = shmat(atoi(argv[9]), NULL, 0);
@@ -178,3 +180,13 @@ void nuova_richiesta() {
     nuova_offerta();
 }
 
+void handler_mareggiata(int signum){
+    int i;
+    for(i=0; i< SO_NAVI; i++){
+        sem_accesso(sem_shmnave, i);
+        if(shmnavi[i].x == shmporti[id].x && shmnavi[i].y == shmporti[id].y && shmnavi[i].stato_nave != 1 && shmnavi[i].stato_nave != 4){
+            kill(shmnavi[i].pid, SIGUSR1);
+        }
+        sem_uscita(sem_shmnave, i);
+    }
+}
