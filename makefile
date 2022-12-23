@@ -43,6 +43,34 @@ download:
 	git init
 	git pull https://github.com/Pit-Red/progetto_navi.git
 
+down:
+	@bash press-enter.sh
+	
+
+down-main.c:
+	@bash press-enter.sh
+	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/main.c
+
+down-makefile.c:
+	@bash press-enter.sh
+	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/makefile
+
+down-nave.c:
+	@bash press-enter.sh
+	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/nave.c
+
+down-porto.c:
+	@bash press-enter.sh
+	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/porto.c
+
+down-utilities.c:
+	@bash press-enter.sh
+	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.c
+
+down-utilities.c:
+	@bash press-enter.sh
+	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.h
+
 #attualmente l'upload non funge sorry
 upload:
 	git add .
