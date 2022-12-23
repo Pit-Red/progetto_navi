@@ -45,13 +45,13 @@ download:
 
 down:
 	@bash press-enter.sh
-	
+
 
 down-main.c:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/main.c
 
-down-makefile.c:
+down-makefile:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/makefile
 
@@ -67,7 +67,7 @@ down-utilities.c:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.c
 
-down-utilities.c:
+down-utilities.h:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.h
 
