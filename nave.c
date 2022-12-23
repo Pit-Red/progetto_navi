@@ -45,11 +45,12 @@ int algoritmoAleV1();
 
 void tempesta(int signum) {
     struct timespec now;
+    double t1 = (shmgiorno[1] * SO_STORM_DURATION) / 24;
     int t = (shmgiorno[1] * SO_STORM_DURATION) / 24;
-    shmnavi[id].stato_nave = 3;
+    printf("sono stata colpita da una tempesta [%d], devo aspettare %ld sec\n\n", getpid(), rimanente.tv_sec);
+    shmnavi[id].stato_nave = 4;
     now.tv_sec = rimanente.tv_sec + (time_t)t;
-    now.tv_nsec = rimanente.tv_nsec;
-    printf("sono stata colpita da una tempesta [%d]\n\n", getpid());
+    now.tv_nsec = rimanente.tv_nsec + (long)((double)(t1-t)*1000000);
     nanosleep(&now, NULL);
     TEST_ERROR;
     shmnavi[id].stato_nave = 1;
@@ -146,27 +147,29 @@ void cerca_rotta(carico c) {
     id_dest = cerca_richiesta();
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
+    if(list_sum(lista_carico, shmmerci)>0){
     shmnavi[id].stato_nave = 0;
     tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce) * shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione) / SO_LOADSPEED;
     now.tv_sec = (time_t)tempo;
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
     shmnavi[id].stato_nave = 2;
     if (id_merce >= 0) {
-        nanosleep(&now, NULL);
-        sem_accesso(sem_shmporto, id_dest);
-        sem_accesso(sem_shmnave, id);
-        temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
-        lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
-        capacita = SO_CAPACITY - list_sum(lista_carico, shmmerci);
-        shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
-        if (temp < 0) {
-            shmporti[id_dest].richiesta.qmerce = 0;
-            shmporti[id_dest].richiesta_soddisfatta = 1;
-        }
-        else
-            shmporti[id_dest].richiesta.qmerce = temp;
-        sem_uscita(sem_shmnave, id);
-        sem_uscita(sem_shmporto, id_dest);
+            nanosleep(&now, NULL);
+            sem_accesso(sem_shmporto, id_dest);
+            sem_accesso(sem_shmnave, id);
+            temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
+            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
+            capacita = SO_CAPACITY - list_sum(lista_carico, shmmerci);
+            shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
+            if (temp < 0) {
+                shmporti[id_dest].richiesta.qmerce = 0;
+                shmporti[id_dest].richiesta_soddisfatta = 1;
+            }
+            else
+                shmporti[id_dest].richiesta.qmerce = temp;
+            sem_uscita(sem_shmnave, id);
+            sem_uscita(sem_shmporto, id_dest);
+    }
     }
     if (capacita > 0) {
         carica_offerta(id_dest, tempo);

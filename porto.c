@@ -99,16 +99,6 @@ int main(int argc, char** argv) {
     semop(sem_avvio, &my_op, 1);
 
 
-
-    /*num_bytes = sprintf(mybuf.mtext,"porto[%5d]: %dx%d\n", getpid(), tmerce, qmerce);
-    num_bytes++;
-    mybuf.mtype = 1;
-
-
-    msg_send(q_id, &mybuf, num_bytes);*/
-
-
-
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
     for (;;) {}
