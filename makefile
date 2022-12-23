@@ -47,7 +47,7 @@ down:
 	@bash press-enter.sh
 
 
-down-main.c:
+down-main:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/main.c
 
@@ -55,20 +55,17 @@ down-makefile:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/makefile
 
-down-nave.c:
+down-nave:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/nave.c
 
-down-porto.c:
+down-porto:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/porto.c
 
-down-utilities.c:
+down-utilities:
 	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.c
-
-down-utilities.h:
-	@bash press-enter.sh
 	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.h
 
 #attualmente l'upload non funge sorry
