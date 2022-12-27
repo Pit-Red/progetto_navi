@@ -1,3 +1,4 @@
+#!/bin/bash
 echo -e "Press [ENTER] to continue\n"
 	answer=x
 	until [ -z "$answer" ]; do
