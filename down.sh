@@ -6,7 +6,6 @@ then
 	mkdir .old
 fi
 
-
 case $1 in
 
 	main)

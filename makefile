@@ -45,28 +45,7 @@ download:
 
 down:
 	@bash press-enter.sh
-
-
-down-main:
-	@bash press-enter.sh
-	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/main.c
-
-down-makefile:
-	@bash press-enter.sh
-	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/makefile
-
-down-nave:
-	@bash press-enter.sh
-	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/nave.c
-
-down-porto:
-	@bash press-enter.sh
-	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/porto.c
-
-down-utilities:
-	@bash press-enter.sh
-	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.c
-	curl -LJO https://raw.githubusercontent.com/Pit-Red/progetto_navi/main/utilities.h
+	@bash down.sh $(filter-out $@, $(MAKECMDGOALS))
 
 #attualmente l'upload non funge sorry
 upload:
