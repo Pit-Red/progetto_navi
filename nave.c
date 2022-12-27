@@ -14,6 +14,7 @@
 #include <sys/sem.h>
 #include "utilities.h"
 
+
 int id_algo;
 int n_algo = 0;
 int capacita, velocita;
@@ -222,24 +223,30 @@ int cerca_richiesta() {
 }
 /*SIGUSR1*/
 void mareggiata(int signum) {
-    double t1 = (shmgiorno[1] * SO_SWELL_DURATION) / 24;
-    int t = (shmgiorno[1] * SO_SWELL_DURATION) / 24;
+    double t1 = (shmgiorno[1] * SO_SWELL_DURATION / 24.0);
+    double t = (shmgiorno[1] * SO_SWELL_DURATION / 24);
     shmnavi[id].stato_nave = 5;
     now.tv_sec = rimanente.tv_sec + (time_t)t;
-    now.tv_nsec = rimanente.tv_nsec + (long)((double)(t1-t)*1000000000);
+    now.tv_nsec = rimanente.tv_nsec + (long)((t1-t)*1000000000);
     nanosleep(&now, NULL);
+    if(errno == 22){
+        fprintf(stderr, "sed:%ld, nsec:%ld\n",now.tv_sec, now.tv_nsec);
+    }
     TEST_ERROR;
     shmnavi[id].stato_nave = 1;
 }
 /*SIGUSR2*/
 void tempesta(int signum) {
     struct timespec now;
-    double t1 = (shmgiorno[1] * SO_STORM_DURATION) / 24;
-    int t = (shmgiorno[1] * SO_STORM_DURATION) / 24;
+    double t1 = (shmgiorno[1] * SO_STORM_DURATION / 24.0);
+    double t = (shmgiorno[1] * SO_STORM_DURATION / 24);
     shmnavi[id].stato_nave = 4;
     now.tv_sec = rimanente.tv_sec + (time_t)t;
-    now.tv_nsec = rimanente.tv_nsec + (long)((double)(t1-t)*1000000000);
+    now.tv_nsec = rimanente.tv_nsec + (long)((t1-t)*1000000000);
     nanosleep(&now, NULL);
+    if(errno == 22){
+        fprintf(stderr, "sed:%ld, nsec:%ld\n",now.tv_sec, now.tv_nsec);
+    }
     TEST_ERROR;
     shmnavi[id].stato_nave = 1;
 }

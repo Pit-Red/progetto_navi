@@ -21,6 +21,7 @@
 
 int num_tempesta, num_mareggiata;
 /*DICHIARAZIONE DELLE VARIABILI GLOBALI DEL MASTER UTILI PER LA SIMULAZIONE*/
+pid_t pid_maelstorm;
 pid_t* na;  /*array con i Pid delle navi*/
 pid_t* po;  /*array con i Pid dei porti*/
 int SO_NAVI, SO_PORTI, msg_richiesta, msg_offerta, SO_BANCHINE, SO_SIZE, SO_FILL, SO_DAYS;
@@ -235,7 +236,7 @@ int main() {
             SO_DAYS = 10;
             SO_STORM_DURATION = 12;
             SO_SWELL_DURATION = 30;
-            SO_MAELSTROM = 1;
+            SO_MAELSTROM = 24;
             break;
         }
 
@@ -533,8 +534,32 @@ int main() {
     my_op.sem_op = (SO_NAVI + SO_PORTI);
     semop(sem_avvio, &my_op, 1);
     
+
+
     kill(getpid(), SIGALRM);        /*print del giorno 0*/
 
+    if((pid_maelstorm = fork()) == 0){
+        struct timespec uragano;
+        int id;
+        double t1 = (durata_giorno * SO_MAELSTROM / 24.0);
+        int t = ((durata_giorno * SO_MAELSTROM) / 24);
+        printf("nano sec:%f\n\n", t1);
+        uragano.tv_sec = (time_t)t;
+        uragano.tv_nsec = (long)((double)(t1-t)*1000000000);
+        while(1){
+            nanosleep(&uragano, NULL);
+            do{
+                clock_gettime(CLOCK_REALTIME , &now);
+                id = now.tv_nsec % SO_NAVI;
+            }while(shmnavi[id].stato_nave ==-1);
+            kill(shmnavi[id].pid, SIGINT);
+            TEST_ERROR;
+            shmnavi[id].stato_nave = -1;
+
+        }
+        exit(0);
+    }
+    
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for (d = SO_DAYS; d && !isRequestEmpty(); d--) {
         alarm(durata_giorno);
@@ -549,7 +574,7 @@ int main() {
 
 void handle_alarm(int signum) {
     int i;
-    int richieste_soddisfatte = 0, num_navi_mare = 0, num_navi_porto = 0, num_navi_scarico = 0, num_navi_carico = 0, carico_tot_navi = 0, carico_da_scaricare = 0, num_navi_tempesta = 0, num_navi_mareggiata = 0;
+    int richieste_soddisfatte = 0, num_navi_mare = 0, num_navi_porto = 0, num_navi_scarico = 0, num_navi_carico = 0, carico_tot_navi = 0, carico_da_scaricare = 0, num_navi_tempesta = 0, num_navi_mareggiata = 0, num_navi_affondate = 0;
     *shmgiorno = giorno;
     inizializzazione_fill();
     if(giorno>0){
@@ -565,6 +590,9 @@ void handle_alarm(int signum) {
     for(i=0; i<SO_NAVI; i++){
         carico_tot_navi += shmnavi[i].carico_tot;
         switch(shmnavi[i].stato_nave){
+            case -1:
+                num_navi_affondate++;
+                break;
             case 0:
                 num_navi_porto++;
                 break;
@@ -605,7 +633,9 @@ void handle_alarm(int signum) {
         printf("\n\n");
     }
     for (i = 0; i < SO_NAVI; i++) {
-        if (shmnavi[i].stato_nave == 0)
+        if (shmnavi[i].stato_nave == -1)
+            printf("nave[%d]\tSTATO: affondata\n", shmnavi[i].pid);
+        else if (shmnavi[i].stato_nave == 0)
             printf("nave[%d]\tSTATO: in porto\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
         else if (shmnavi[i].stato_nave == 1)
             printf("nave[%d]\tSTATO: in mare\tCARICO: %d/%d\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].carico_tot, SO_CAPACITY, shmnavi[i].x, shmnavi[i].y);
@@ -620,7 +650,7 @@ void handle_alarm(int signum) {
     }
     #else
         printf("RICHIESTE SODDISFATTE:%d/%d\n",richieste_soddisfatte, SO_PORTI);
-        printf("NAVI IN MARE:%d\nNAVI IN PORTO:%d\nNAVI SCARICO:%d\nNAVI CARICO:%d\nCARICO TOT NAVI:%d\tCARICO DA SODDISFARE:%d\nNAVI FERME CAUSA TEMPESTA:%d\nNAVI FERME CAUSA MAREGGIATA:%d\n", num_navi_mare, num_navi_porto, num_navi_scarico, num_navi_carico, carico_tot_navi, carico_da_scaricare, num_navi_tempesta, num_navi_mareggiata);
+        printf("NAVI IN MARE:%d\nNAVI IN PORTO:%d\nNAVI SCARICO:%d\nNAVI CARICO:%d\nCARICO TOT NAVI:%d\tCARICO DA SODDISFARE:%d\nNAVI FERME CAUSA TEMPESTA:%d\nNAVI FERME CAUSA MAREGGIATA:%d\nNAVI AFFONDATE:%d\n", num_navi_mare, num_navi_porto, num_navi_scarico, num_navi_carico, carico_tot_navi, carico_da_scaricare, num_navi_tempesta, num_navi_mareggiata, num_navi_affondate);
     #endif
     giorno++;
     printf("\n\n");
@@ -635,6 +665,8 @@ void close_all(int signum) {
     for (i = 0; i < SO_NAVI ; i++) {
         kill(shmnavi[i].pid, SIGINT);
     }
+
+    kill(pid_maelstorm, SIGINT);
 
     msgctl(msg_richiesta, IPC_RMID, NULL);
     msgctl(msg_offerta, IPC_RMID, NULL);
@@ -715,4 +747,3 @@ void uscitaPortiNavi(){
         sem_uscita(sem_shmnave, i);
     }
 }
-
