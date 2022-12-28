@@ -16,7 +16,7 @@
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUt
 
-#define STAMPA_MINIMA
+#define STAMPA_MINIMA_
 
 
 int num_tempesta, num_mareggiata;
@@ -225,20 +225,20 @@ int main() {
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
             SO_NAVI = 15;
             SO_PORTI = 5;
-            SO_MERCI = 4;
+            SO_MERCI = 1;
             SO_SIZE = 1;
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;
             SO_LATO = 10;
             SO_SPEED = 20;
-            SO_CAPACITY = 30;
+            SO_CAPACITY = 300;
             SO_BANCHINE = 10;
             SO_FILL = 1000;
             SO_LOADSPEED = 20;
             SO_DAYS = 10;
             SO_STORM_DURATION = 12;
             SO_SWELL_DURATION = 30;
-            SO_MAELSTROM = 24;
+            SO_MAELSTROM = 36;
             break;
         }
 
@@ -251,23 +251,64 @@ int main() {
         do {
             printf("inserisci il numero di navi: ");
             scanf("%d", &SO_NAVI);
-        } while (SO_NAVI < 1);
+        } while (SO_NAVI < 1 && SO_NAVI <= 0);
         do {
             printf("inserisci il numero di porti: ");
             scanf("%d", &SO_PORTI);
-        } while (SO_PORTI < 4);
-        printf("inserisci il carico massimo trasportabile delle navi: ");
-        scanf("%d", &SO_CAPACITY);
-        printf("inserisci la velocita' delle navi: ");
-        scanf("%d", &SO_VELOCITA);
-        printf("inserisci la dimensione massima della merce: ");
-        scanf("%d", &SO_SIZE);
-        printf("inserisci il numero di merci utilzzabi: ");
-        scanf("%d", &SO_MERCI);
-        printf("inserisci il minimo di giorni di vita delle merci: ");
-        scanf("%d", &SO_MIN_VITA);
-        printf("inserisci il massimo di giorni di vita delle merci: ");
-        scanf("%d", &SO_MAX_VITA);
+        } while (SO_PORTI < 4 && SO_PORTI <= 0);
+        do {
+            printf("inserisci il numero di merci utilzzabi: ");
+            scanf("%d", &SO_MERCI);
+        } while (SO_MERCI <= 0);
+        do {
+            printf("inserisci la dimensione massima della merce: ");
+            scanf("%d", &SO_SIZE);
+        } while (SO_SIZE <= 0);
+        do {
+            printf("inserisci il minimo di giorni di vita delle merci: ");
+            scanf("%d", &SO_MIN_VITA);
+        } while (SO_MIN_VITA <= 0);
+        do {
+            printf("inserisci il massimo di giorni di vita delle merci: ");
+            scanf("%d", &SO_MAX_VITA);
+        } while (SO_MAX_VITA <= 0 && SO_MAX_VITA < SO_MIN_VITA);
+        do {
+            printf("inserisci la velocita' delle navi: ");
+            scanf("%d", &SO_SPEED);
+        } while (SO_SPEED <= 0);
+        do {
+            printf("inserisci la velocita' di carico e scarico delle navi: ");
+            scanf("%d", &SO_LOADSPEED);
+        } while (SO_LOADSPEED <= 0);
+        do {
+            printf("inserisci il carico massimo trasportabile delle navi: ");
+            scanf("%d", &SO_CAPACITY);
+        } while (SO_CAPACITY <= 0);
+        do {
+            printf("inserisci il numero massimo di banchine in un porto: ");
+            scanf("%d", &SO_BANCHINE);
+        } while (SO_BANCHINE <= 0);
+        do {
+            printf("inserisci numero massimo di tonnelate genereabile da offerte/richieste: ");
+            scanf("%d", &SO_FILL);
+        } while (SO_FILL <= 0);
+        do {
+            printf("inserisci la durata della simulazione(in giorni): ");
+            scanf("%d", &SO_DAYS);
+        } while (SO_DAYS <= 0);
+        do {
+            printf("inserisci la durata della tempesta(in ore): ");
+            scanf("%d", &SO_STORM_DURATION);
+        } while (SO_STORM_DURATION <= 0);
+        do {
+            printf("inserisci la durata della mareggiata(in ore): ");
+            scanf("%d", &SO_SWELL_DURATION);
+        } while (SO_SWELL_DURATION <= 0);
+        do {
+            printf("inserisci l' intervallo di tempo tra gli uragani(in ore): ");
+            scanf("%d", &SO_MAELSTROM);
+        } while (SO_MAELSTROM <= 0);
+
     }
     sleep(3);/*WARNING USATA UNA SLEEP*/
 #endif
@@ -530,6 +571,7 @@ int main() {
     semop(sem_avvio, &my_op, 1);
 
 
+    kill(getpid(), SIGALRM);        /*print del giorno 0*/
 
     my_op.sem_num = 1;
     my_op.sem_flg = 0;
@@ -538,7 +580,6 @@ int main() {
     
 
 
-    kill(getpid(), SIGALRM);        /*print del giorno 0*/
 
     if((pid_maelstorm = fork()) == 0){
         struct timespec uragano;
