@@ -336,7 +336,6 @@ int main() {
 #endif
 
     /*FINE INPUT*/
-
     /*INIZIO MENU*/
     printf("\nSO_LATO = %.2f", SO_LATO);
     printf("\nSO_NAVI = %d", SO_NAVI);
@@ -588,7 +587,7 @@ int main() {
     if((pid_maelstorm = fork()) == 0){
         struct timespec uragano;
         struct sigaction ma;
-        int id;
+        int id, status;
         double t1 = (durata_giorno * SO_MAELSTROM / 24.0);
         int t = ((durata_giorno * SO_MAELSTROM) / 24);
         bzero(&sa,sizeof(ma));
@@ -610,8 +609,10 @@ int main() {
                 shmnavi[id].stato_nave = -1;
             }
             else{
+                printf("Simulazione terminata perchè non ci sono più navi\n");
                 close_all(1);
                 kill(getppid(), SIGTERM);
+                waitpid(getppid(), &status, WEXITED);
                 exit(0);
                 /*break;*/
             }
