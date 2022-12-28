@@ -47,6 +47,7 @@ void uscitaPortiNavi();
 /*HANDLER DEI VARI SEGNALI*/
 void handle_alarm(int signal);
 void close_all(int signum);
+void chiudi_maelstorm();
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
@@ -462,7 +463,7 @@ int main() {
             my_op.sem_num = 0;
             my_op.sem_op = 1;
             semop(sem_avvio,&my_op,1);
-            printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);
+            /*printf("creazione porto[%d], di pid:%d con coordinate x=%.2f, y=%.2f, con %d banchine\n\n", i, arrayporti[i].pid, arrayporti[i].x, arrayporti[i].y, banchine_effettive);*/
 
             execvp("./porto", porto);
             TEST_ERROR;
@@ -509,7 +510,7 @@ int main() {
             my_op.sem_num = 0;
             my_op.sem_op = 1;
             semop(sem_avvio, &my_op, 1);
-            printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);
+            /*printf("creazione nave[%d], di pid:%d con coordinate x=%.2f, y=%.2f\n\n", i, arraynavi[i].pid, arraynavi[i].x, arraynavi[i].y);*/
             my_op.sem_num = 1;
             my_op.sem_op = -1;
             semop(sem_avvio, &my_op, 1);
@@ -560,6 +561,8 @@ int main() {
             }
             else{
                 close_all(1);
+                kill(getppid(), SIGKILL);
+                exit(EXIT_SUCCESS);
             }
         }
     }
@@ -570,6 +573,7 @@ int main() {
         pause();
     }
 
+    chiudi_maelstorm();
     close_all(1);
     /*printf("NUMERO DI NAVI CHE SI SONO FERMATE CAUSA TEMPESTA:%d\nNUMERO DI NAVI CHE SI SONO FERMATE CAUSA MAREGGIATA:%d\n", num_tempesta, num_mareggiata);*/
     printf("\n\nFine del programma\n");
@@ -662,8 +666,6 @@ void handle_alarm(int signum) {
 }
 void close_all(int signum) {
     int i, status;
-    kill(pid_maelstorm, SIGINT);
-    waitpid(pid_maelstorm, &status, WEXITED);
     for (i = 0; i < SO_NAVI ; i++) {
         if(shmnavi[i].stato_nave != -1){
             kill(shmnavi[i].pid, SIGINT);
@@ -689,6 +691,11 @@ void close_all(int signum) {
     semctl(sem_avvio, 1, IPC_RMID);
     semctl(sem_ricoff, 1, IPC_RMID);
 
+}
+void chiudi_maelstorm(){
+    int status;
+    kill(pid_maelstorm, SIGKILL);
+    waitpid(pid_maelstorm, &status, WEXITED);
 }
 
 
