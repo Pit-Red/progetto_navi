@@ -228,15 +228,7 @@ void mareggiata(int signum) {
     shmnavi[id].stato_nave = 5;
     now.tv_sec = rimanente.tv_sec + (time_t)t;
     now.tv_nsec = rimanente.tv_nsec + (long)((t1-t)*1000000000);
-    if(now.tv_nsec > 1000000000){
-        now.tv_nsec -= 1000000000;
-        now.tv_sec++;
-    }
-    nanosleep(&now, NULL);
-    if(errno == 22){
-        fprintf(stderr, "sec:%ld, nsec:%ld\n",now.tv_sec, now.tv_nsec);
-    }
-    TEST_ERROR;
+    nanosleep(&now, &rimanente);
     shmnavi[id].stato_nave = 1;
 }
 /*SIGUSR2*/
@@ -247,15 +239,7 @@ void tempesta(int signum) {
     shmnavi[id].stato_nave = 4;
     now.tv_sec = rimanente.tv_sec + (time_t)t;
     now.tv_nsec = rimanente.tv_nsec + (long)((t1-t)*1000000000);
-    if(now.tv_nsec > 1000000000){
-        now.tv_nsec -= 1000000000;
-        now.tv_sec++;
-    }
     nanosleep(&now, NULL);
-    if(errno == 22){
-        fprintf(stderr, "sed:%ld, nsec:%ld\n",now.tv_sec, now.tv_nsec);
-    }
-    TEST_ERROR;
     shmnavi[id].stato_nave = 1;
 }
 

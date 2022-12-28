@@ -63,9 +63,9 @@ int main(int argc, char** argv) {
     struct sembuf sops;
     struct sigaction sa;
     struct timespec now;
-    bzero(&sa, sizeof(sa));
+    /*bzero(&sa, sizeof(sa));
     sa.sa_handler = handle_signal;
-    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);*/
     bzero(&sa, sizeof(sa));
     sa.sa_handler = nuova_offerta_handler;
     sigaction(SIGUSR1, &sa, NULL);
@@ -184,8 +184,10 @@ void handler_mareggiata(int signum){
     int i;
     for(i=0; i< SO_NAVI; i++){
         sem_accesso(sem_shmnave, i);
-        if(shmnavi[i].x == shmporti[id].x && shmnavi[i].y == shmporti[id].y && shmnavi[i].stato_nave != 1 && shmnavi[i].stato_nave != 4){
-            kill(shmnavi[i].pid, SIGUSR1);
+        if(shmnavi[i].stato_nave != -1){
+            if(shmnavi[i].x == shmporti[id].x && shmnavi[i].y == shmporti[id].y && shmnavi[i].stato_nave != 1 && shmnavi[i].stato_nave != 4){
+                kill(shmnavi[i].pid, SIGUSR1);
+            }
         }
         sem_uscita(sem_shmnave, i);
     }

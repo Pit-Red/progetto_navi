@@ -39,6 +39,7 @@ int isRequestEmpty();
 void tempesta();
 
 void mareggiata();
+int conta_quante();
 
 void accessoPortiNavi();
 void uscitaPortiNavi();
@@ -547,17 +548,20 @@ int main() {
         uragano.tv_sec = (time_t)t;
         uragano.tv_nsec = (long)((double)(t1-t)*1000000000);
         while(1){
-            nanosleep(&uragano, NULL);
-            do{
-                clock_gettime(CLOCK_REALTIME , &now);
-                id = now.tv_nsec % SO_NAVI;
-            }while(shmnavi[id].stato_nave ==-1);
-            kill(shmnavi[id].pid, SIGINT);
-            TEST_ERROR;
-            shmnavi[id].stato_nave = -1;
-
+            if(conta_quante() != 0){
+                nanosleep(&uragano, NULL);
+                do{
+                    clock_gettime(CLOCK_REALTIME , &now);
+                    id = now.tv_nsec % SO_NAVI;
+                }while(shmnavi[id].stato_nave ==-1);
+                kill(shmnavi[id].pid, SIGINT);
+                TEST_ERROR;
+                shmnavi[id].stato_nave = -1;
+            }
+            else{
+                close_all(1);
+            }
         }
-        exit(0);
     }
     
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
@@ -658,15 +662,19 @@ void handle_alarm(int signum) {
 }
 void close_all(int signum) {
     int i, status;
+    kill(pid_maelstorm, SIGINT);
+    waitpid(pid_maelstorm, &status, WEXITED);
+    for (i = 0; i < SO_NAVI ; i++) {
+        if(shmnavi[i].stato_nave != -1){
+            kill(shmnavi[i].pid, SIGINT);
+            waitpid(shmnavi[i].pid, &status, WEXITED);
+        }
+    }
     for (i = 0; i < SO_PORTI; i++) {
         kill(shmporti[i].pid, SIGINT);
+        waitpid(shmporti[i].pid, &status, WEXITED);
     }
 
-    for (i = 0; i < SO_NAVI ; i++) {
-        kill(shmnavi[i].pid, SIGINT);
-    }
-
-    kill(pid_maelstorm, SIGINT);
 
     msgctl(msg_richiesta, IPC_RMID, NULL);
     msgctl(msg_offerta, IPC_RMID, NULL);
@@ -680,11 +688,6 @@ void close_all(int signum) {
     semctl(sem_porto, 1, IPC_RMID);
     semctl(sem_avvio, 1, IPC_RMID);
     semctl(sem_ricoff, 1, IPC_RMID);
-    for (i = 0; i < SO_NAVI + SO_PORTI; i++) {
-        wait(&status);
-    }
-    printf("\n\nFine del programma\n");
-    exit(0);
 
 }
 
@@ -726,6 +729,15 @@ void mareggiata(){
     clock_gettime(CLOCK_REALTIME, &now);
     id = now.tv_nsec % SO_PORTI;
     kill(shmporti[id].pid, SIGUSR2);
+}
+
+int conta_quante(){
+    int k = 0, i;
+    for(i=0; i<SO_NAVI; i++){
+        if(shmnavi[i].stato_nave != -1)
+            k++;
+    }
+    return k;
 }
 
 void accessoPortiNavi(){
