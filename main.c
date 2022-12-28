@@ -47,7 +47,7 @@ void uscitaPortiNavi();
 /*HANDLER DEI VARI SEGNALI*/
 void handle_alarm(int signal);
 void close_all(int signum);
-void chiudi_maelstorm();
+void chiudi_maelstorm(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
@@ -542,15 +542,20 @@ int main() {
 
     if((pid_maelstorm = fork()) == 0){
         struct timespec uragano;
+        struct sigaction ma;
         int id;
         double t1 = (durata_giorno * SO_MAELSTROM / 24.0);
         int t = ((durata_giorno * SO_MAELSTROM) / 24);
-        printf("nano sec:%f\n\n", t1);
+        bzero(&sa,sizeof(ma));
+        ma.sa_handler = chiudi_maelstorm;
+        sigaction(SIGINT, &ma, NULL);
         uragano.tv_sec = (time_t)t;
         uragano.tv_nsec = (long)((double)(t1-t)*1000000000);
         while(1){
             if(conta_quante() != 0){
                 nanosleep(&uragano, NULL);
+                if(errno == 4)
+                    errno = 0;
                 do{
                     clock_gettime(CLOCK_REALTIME , &now);
                     id = now.tv_nsec % SO_NAVI;
@@ -560,11 +565,10 @@ int main() {
                 shmnavi[id].stato_nave = -1;
             }
             else{
-                close_all(1);
-                kill(getppid(), SIGKILL);
-                exit(EXIT_SUCCESS);
+                break;
             }
         }
+        exit(0);
     }
     
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
@@ -573,10 +577,8 @@ int main() {
         pause();
     }
 
-    chiudi_maelstorm();
     close_all(1);
     /*printf("NUMERO DI NAVI CHE SI SONO FERMATE CAUSA TEMPESTA:%d\nNUMERO DI NAVI CHE SI SONO FERMATE CAUSA MAREGGIATA:%d\n", num_tempesta, num_mareggiata);*/
-    printf("\n\nFine del programma\n");
     exit(0);
 }
 
@@ -666,8 +668,10 @@ void handle_alarm(int signum) {
 }
 void close_all(int signum) {
     int i, status;
+
     for (i = 0; i < SO_NAVI ; i++) {
         if(shmnavi[i].stato_nave != -1){
+            shmnavi[i].stato_nave = -1;
             kill(shmnavi[i].pid, SIGINT);
             waitpid(shmnavi[i].pid, &status, WEXITED);
         }
@@ -676,6 +680,10 @@ void close_all(int signum) {
         kill(shmporti[i].pid, SIGINT);
         waitpid(shmporti[i].pid, &status, WEXITED);
     }
+
+    kill(pid_maelstorm, SIGINT);
+    waitpid(shmnavi[i].pid, &status, WEXITED);
+
 
 
     msgctl(msg_richiesta, IPC_RMID, NULL);
@@ -691,11 +699,14 @@ void close_all(int signum) {
     semctl(sem_avvio, 1, IPC_RMID);
     semctl(sem_ricoff, 1, IPC_RMID);
 
+    printf("\n\nFine del programma\n");
+    exit(0);
+
 }
-void chiudi_maelstorm(){
-    int status;
-    kill(pid_maelstorm, SIGKILL);
-    waitpid(pid_maelstorm, &status, WEXITED);
+
+void chiudi_maelstorm(int signum){
+    /*printf("chiusura processo malestorm\n");*/
+    exit(0);
 }
 
 

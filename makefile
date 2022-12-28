@@ -34,7 +34,7 @@ touch:
 
 rm: 
 	ipcrm -a
-	killall -SIGKILL porto nave
+	killall -SIGKILL porto nave main
 
 download:
 	@bash press-enter.sh
