@@ -16,7 +16,7 @@
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUt
 
-#define STAMPA_MINIMA_
+#define STAMPA_MINIMA
 
 
 int num_tempesta, num_mareggiata;
@@ -48,6 +48,7 @@ void uscitaPortiNavi();
 void handle_alarm(int signal);
 void close_all(int signum);
 void chiudi_maelstorm(int signum);
+void chiudi_maelstorm1();
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
@@ -91,6 +92,9 @@ int main() {
     sa.sa_handler = handle_alarm;
     sigaction(SIGALRM, &sa, NULL);
     TEST_ERROR;
+    bzero(&sa, sizeof(sa));
+    sa.sa_handler = chiudi_maelstorm;
+    sigaction(SIGTERM, &sa, NULL);
 
     srand(time(NULL));
     num_tempesta = 0;
@@ -606,10 +610,12 @@ int main() {
                 shmnavi[id].stato_nave = -1;
             }
             else{
-                break;
+                close_all(1);
+                kill(getppid(), SIGTERM);
+                exit(0);
+                /*break;*/
             }
         }
-        exit(0);
     }
     
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
@@ -619,6 +625,7 @@ int main() {
     }
 
     close_all(1);
+    chiudi_maelstorm1();
     /*printf("NUMERO DI NAVI CHE SI SONO FERMATE CAUSA TEMPESTA:%d\nNUMERO DI NAVI CHE SI SONO FERMATE CAUSA MAREGGIATA:%d\n", num_tempesta, num_mareggiata);*/
     exit(0);
 }
@@ -721,9 +728,9 @@ void close_all(int signum) {
         kill(shmporti[i].pid, SIGINT);
         waitpid(shmporti[i].pid, &status, WEXITED);
     }
-
+/*
     kill(pid_maelstorm, SIGINT);
-    waitpid(shmnavi[i].pid, &status, WEXITED);
+    waitpid(shmnavi[i].pid, &status, WEXITED);*/
 
 
 
@@ -741,13 +748,19 @@ void close_all(int signum) {
     semctl(sem_ricoff, 1, IPC_RMID);
 
     printf("\n\nFine del programma\n");
-    exit(0);
+    /*exit(0);*/
 
 }
 
 void chiudi_maelstorm(int signum){
-    /*printf("chiusura processo malestorm\n");*/
     exit(0);
+}
+
+void chiudi_maelstorm1(){
+    /*printf("chiusura processo malestorm\n");*/
+    int status;
+    kill(pid_maelstorm, SIGKILL);
+    waitpid(pid_maelstorm, &status, WEXITED);
 }
 
 
