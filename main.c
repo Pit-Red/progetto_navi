@@ -720,16 +720,18 @@ void close_all(int signum) {
     for (i = 0; i < SO_NAVI ; i++) {
         if(shmnavi[i].stato_nave != -1){
             shmnavi[i].stato_nave = -1;
-            /*kill(shmnavi[i].pid, SIGINT);*/
+            if(signum == 1)
+                kill(shmnavi[i].pid, SIGINT);
             waitpid(shmnavi[i].pid, &status, WEXITED);
         }
     }
     for (i = 0; i < SO_PORTI; i++) {
-        /*kill(shmporti[i].pid, SIGINT);*/
+        if(signum == 1)
+            kill(shmporti[i].pid, SIGINT);
         waitpid(shmporti[i].pid, &status, WEXITED);
     }
-
-    /*kill(pid_maelstorm, SIGINT);*/
+    if(signum == 1)
+        kill(pid_maelstorm, SIGINT);
     waitpid(shmnavi[i].pid, &status, WEXITED);
 
 
