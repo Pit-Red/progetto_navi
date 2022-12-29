@@ -40,14 +40,14 @@ case $1 in
 	mv ./porto.c ./.old/porto-old.c
 	mv ./utilities.c ./.old/utilities-old.c
 	mv ./utilities.h ./.old/utilities-old.h
-	
+
 	mv ./makefile ./.old/makefile-old
 
 	mv ./down.sh ./.old/down-old.sh
 	mv ./loading.sh ./.old/loading-old.sh
 	mv ./press-enter.sh ./.old/press-enter-old.sh
 
-	rm -rf .old
+	rm -rf .git
 	git init
 	git pull https://github.com/Pit-Red/progetto_navi.git
 	;;
