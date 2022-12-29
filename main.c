@@ -229,11 +229,11 @@ int main() {
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
             SO_NAVI = 15;
             SO_PORTI = 5;
-            SO_MERCI = 1;
+            SO_MERCI = 3;
             SO_SIZE = 1;
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;
-            SO_LATO = 10;
+            SO_LATO = 100;
             SO_SPEED = 20;
             SO_CAPACITY = 300;
             SO_BANCHINE = 10;
@@ -241,8 +241,8 @@ int main() {
             SO_LOADSPEED = 20;
             SO_DAYS = 10;
             SO_STORM_DURATION = 12;
-            SO_SWELL_DURATION = 30;
-            SO_MAELSTROM = 36;
+            SO_SWELL_DURATION = 12;
+            SO_MAELSTROM = 100000;
             break;
         }
 
@@ -626,7 +626,6 @@ int main() {
     }
 
     close_all(1);
-    chiudi_maelstorm1();
     /*printf("NUMERO DI NAVI CHE SI SONO FERMATE CAUSA TEMPESTA:%d\nNUMERO DI NAVI CHE SI SONO FERMATE CAUSA MAREGGIATA:%d\n", num_tempesta, num_mareggiata);*/
     exit(0);
 }
@@ -721,17 +720,17 @@ void close_all(int signum) {
     for (i = 0; i < SO_NAVI ; i++) {
         if(shmnavi[i].stato_nave != -1){
             shmnavi[i].stato_nave = -1;
-            kill(shmnavi[i].pid, SIGINT);
+            /*kill(shmnavi[i].pid, SIGINT);*/
             waitpid(shmnavi[i].pid, &status, WEXITED);
         }
     }
     for (i = 0; i < SO_PORTI; i++) {
-        kill(shmporti[i].pid, SIGINT);
+        /*kill(shmporti[i].pid, SIGINT);*/
         waitpid(shmporti[i].pid, &status, WEXITED);
     }
-/*
-    kill(pid_maelstorm, SIGINT);
-    waitpid(shmnavi[i].pid, &status, WEXITED);*/
+
+    /*kill(pid_maelstorm, SIGINT);*/
+    waitpid(shmnavi[i].pid, &status, WEXITED);
 
 
 
@@ -749,17 +748,18 @@ void close_all(int signum) {
     semctl(sem_ricoff, 1, IPC_RMID);
 
     printf("\n\nFine del programma\n");
-    /*exit(0);*/
+    exit(0);
 
 }
 
 void chiudi_maelstorm(int signum){
+    printf("chiusura processo malestorm\n");
     exit(0);
 }
 
 void chiudi_maelstorm1(){
-    /*printf("chiusura processo malestorm\n");*/
     int status;
+    printf("chiusura processo malestorm\n");
     kill(pid_maelstorm, SIGKILL);
     waitpid(pid_maelstorm, &status, WEXITED);
 }
