@@ -30,6 +30,7 @@ int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION, SO_SWELL_DURATION;
 list lista_carico = NULL;
 struct timespec rimanente;
 struct timespec now;
+int* array_porti;
 
 void cerca_rotta(carico c);
 
@@ -44,6 +45,9 @@ int algoritmoAleV1();
 
 void mareggiata(int signum);
 void tempesta(int signum);
+
+void portiOrdianti();
+int numInserito(int n);
 
 
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
@@ -92,6 +96,7 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[14]);
     SO_STORM_DURATION = atoi(argv[15]);
     SO_SWELL_DURATION = atoi(argv[16]);
+    array_porti = calloc(SO_PORTI, 4);
     TEST_ERROR;
 
     id_algo = now.tv_nsec % SO_PORTI;
@@ -208,13 +213,21 @@ void carica_offerta(int id_porto, double tempo) {
 
 
 int cerca_richiesta() {
-    int i;
+    int i, id_temp;
     struct timespec now;
+
+    portiOrdianti();
+
     while (1) {
         for (i = 0; i < SO_PORTI; i++) {
+            /*id_temp = array_porti[i];
+            if (shmporti[id_temp].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[id_temp].richiesta.idmerce) > 0) {
+                return id_temp;
+            }*/
             if (shmporti[i].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) > 0) {
                 return i;
             }
+
         }
         clock_gettime(CLOCK_REALTIME, &now);
         /*return now.tv_nsec % SO_PORTI;*/
@@ -305,4 +318,33 @@ int algoritmoAleV1() {
         id_algo = closestAvailablePort();
     }
     return id_algo;
+}
+
+
+void portiOrdianti(){
+    int i, j, id_temp;
+    double min = -1, distanza;
+    for(i = 0; i<SO_PORTI; i++){
+        array_porti[i] = -1;
+    }
+    for(i = 0; i<SO_PORTI; i++){
+        for(j = 0; j<SO_PORTI; j++){
+            distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
+            if(!numInserito(j) && (distanza < min || min == -1)){
+                min = distanza;
+                id_temp = j;
+            }
+        }
+        min = -1;
+        array_porti[i] = id_temp;
+    }
+}
+
+int numInserito(int n){
+    int i;
+    for(i = 0; i<SO_PORTI; i++){
+        if(array_porti[i] == n)
+            return 1;
+    }
+    return 0;
 }
