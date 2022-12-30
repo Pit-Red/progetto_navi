@@ -51,12 +51,6 @@ case $1 in
 	git init
 	git pull https://github.com/Pit-Red/progetto_navi.git
 	;;
-	
-
-	rm -r .git
-	git init
-	git pull https://github.com/Pit-Red/progetto_navi.git
-
 
 	*)
 	echo -e "\nFile non esistente o scritto incorrettamente\n"
