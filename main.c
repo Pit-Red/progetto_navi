@@ -16,7 +16,7 @@
 /*MACRO PER NON METTERE INPUT*/
 #define NO_INPUt
 
-#define STAMPA_MINIMA
+#define STAMPA_MINIMA_
 
 
 int num_tempesta, num_mareggiata;
@@ -683,7 +683,7 @@ void handle_alarm(int signum) {
         tempesta();
         mareggiata();
     }
-    accessoPortiNavi();
+    /*accessoPortiNavi();*/
     for(i=0; i<SO_PORTI; i++){
         carico_da_scaricare += shmporti[i].richiesta.qmerce * shmmerci[shmporti[i].richiesta.idmerce].dimensione; 
         if(shmporti[i].richiesta_soddisfatta == 1)
@@ -758,7 +758,7 @@ void handle_alarm(int signum) {
     #endif
     giorno++;
     printf("\n\n");
-    uscitaPortiNavi();
+    /*uscitaPortiNavi();*/
 }
 void close_all(int signum) {
     int i, status;
