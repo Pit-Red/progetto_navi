@@ -35,6 +35,7 @@ typedef struct node {
 typedef node* list;
 
 /*STATO NAVE:
+-1: DISTRUTTA DA MAELSTORM
 0:IN PORTO
 1:IN MARE
 2:IN PORTO CHE EFFETTUA UNO SCARICO
@@ -61,13 +62,6 @@ typedef struct {
 }sporto;
 
 
-typedef struct{
-	long mtype;            
-	carico mtext;    
-}msg;
-
-
-
 #define TEST_ERROR    if (errno) {fprintf(stderr,           \
                       "%s:%d: PID=%5d: Error %d (%s)\n", \
                       __FILE__,         \
@@ -89,13 +83,11 @@ int list_sum(list p, smerce* m);
 
 list list_remove(list s, int p);
 
-list list_diminuisci(list s, int n, int quant);
-
 int list_sum_merce(list p, smerce* m, int tipo);
 
 list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita);
 
-list list_rimuovi_richiesta(list p, carico richiesta);
+list list_rimuovi_richiesta(list p, carico richiesta, sporto* shmporti, int id);
 
 
 
@@ -104,14 +96,6 @@ void sem_accesso(int semid, int num_risorsa);
 void sem_uscita(int semid, int num_risorsa);
 
 void stampa_merci(smerce* temp_merci);
-
-void msg_invio(int id, carico r);
-
-int msg_lettura(int id, carico* r);
-
-int msg_error();
-
-void msg_print_stats(int fd, int q_id);
 
 list carico_nave(carico c, list p, int speed, smerce* m, snave n);
 

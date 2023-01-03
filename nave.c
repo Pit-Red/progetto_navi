@@ -15,48 +15,37 @@
 #include "utilities.h"
 
 
-int id_algo;
+/*int id_algo;*/
 int n_algo = 0;
 int capacita, velocita;
-double xdest, ydest;
 double xnave, ynave;
-int id, id_dest = -1, id_merce, indirizzo_merce = -1;
-int sem_shmnave, sem_shmporto;
-int sem_porto;
-int msg_richiesta;
-int msg_offerta;
+int id, id_dest = -1, id_merce, indirizzo_merce = -1, numero_porti_ricerca;
+int sem_shmnave, sem_shmporto, sem_porto;
 snave* shmnavi; sporto*shmporti; smerce* shmmerci; int* shmgiorno;
 int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION, SO_SWELL_DURATION;
 list lista_carico = NULL;
-struct timespec rimanente;
+struct timespec rimanente;  /*SI USA NEL CASO IN CUI UNA NANOSLEEP VENGA BLOCCATA DA UN SEGNALE*/
 struct timespec now;
 int* array_porti;
-int numero_porti_ricerca; 
 
+
+/*FUNZIONI PER LA RIUSCITA DELLA SIMULAZIONE*/
 void cerca_rotta(carico c);
-
 void navigazione(double x, double y);
 int cerca_richiesta();
 void carica_offerta(int id_porto);
-
-int controllo(carico c);
-int closestPort();
+void portiOrdianti();
+int numInserito(int n);
+/*int closestPort();
 int closestAvailablePort();
-int algoritmoAleV1();
+int algoritmoAleV1();*/
 
+/*FUNZIONI PER LA GESTIONE DEI DISASTRI*/
 void mareggiata(int signum);
 void tempesta(int signum);
 
-void portiOrdianti();
-int numInserito(int n);
-
-
 /*HANDLER PER GESTIRE IL SEGNALE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
-    /*printf("\033[0;31m");
-    printf("uccisa nave[%d]\n", id);
-    printf("\033[0m");*/
-
     exit(EXIT_SUCCESS);
 }
 
@@ -107,8 +96,18 @@ int main(int argc, char** argv) {
         numero_porti_ricerca = 100;     
     array_porti = calloc(numero_porti_ricerca, 4);
     TEST_ERROR;
+    /*SEMAFORO PER AVVISARE IL PADRE MASTER CHE LA NAVE E' PRONTA*/
+    sops.sem_num = 0;
+    sops.sem_flg = 0;
+    sops.sem_op = 1;
+    semop(sem_avvio, &sops, 1);
+    /*SEMAFORO CON CUI IL PADRE DA' IL VIA ALLA SIMULAZIONE*/
+    sops.sem_num = 1;
+    sops.sem_flg = 0;
+    sops.sem_op = -1;
+    semop(sem_avvio, &sops, 1);
 
-    id_algo = now.tv_nsec % SO_PORTI;
+    /*id_algo = now.tv_nsec % SO_PORTI;*/
 
     sem_accesso(sem_shmnave, id);
     xnave = shmnavi[id].x;
@@ -134,7 +133,6 @@ void navigazione(double x, double y) {
     shmnavi[id].stato_nave = 1;
     my_time.tv_sec = (time_t)tempo;
     my_time.tv_nsec = (short)((tempo - (int)tempo) * 1000000000);
-    /*my_time.tv_nsec = 0;*/
     nanosleep(&my_time, &rimanente);
     bzero(&rimanente, sizeof(rimanente));
     if (errno = 4)
@@ -147,56 +145,58 @@ void navigazione(double x, double y) {
 }
 
 void cerca_rotta(carico c) {
-    int temp;
+    int temp, i;
     struct timespec now;
     double tempo;
+    int quantita = 0;
     id_dest = cerca_richiesta();
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
-    if(list_sum(lista_carico, shmmerci)>0){
     shmnavi[id].stato_nave = 0;
-    tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce) * shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione) / SO_LOADSPEED;
-    now.tv_sec = (time_t)tempo;
-    now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
-    shmnavi[id].stato_nave = 2;
-    if (id_merce >= 0) {
-            nanosleep(&now, &rimanente);
-            bzero(&rimanente, sizeof(rimanente));
+    if(shmnavi[id].carico_tot>0){
+        quantita = list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
+        if(quantita < shmporti[id_dest].richiesta.qmerce)
+            tempo = (quantita * shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione) / SO_LOADSPEED;
+        else
+            tempo = (shmporti[id_dest].richiesta.qmerce * shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione) / SO_LOADSPEED;
+        now.tv_sec = (time_t)tempo;
+        now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
+        if (id_merce >= 0) {
+            shmnavi[id].stato_nave = 2;
             sem_accesso(sem_shmporto, id_dest);
             sem_accesso(sem_shmnave, id);
             temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
-            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta);
+            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta, shmporti, id_dest);
             capacita = SO_CAPACITY - list_sum(lista_carico, shmmerci);
             shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
             if (temp < 0) {
                 shmporti[id_dest].richiesta.qmerce = 0;
                 shmporti[id_dest].richiesta_soddisfatta = 1;
             }
-            else
-                shmporti[id_dest].richiesta.qmerce = temp;
             sem_uscita(sem_shmnave, id);
             sem_uscita(sem_shmporto, id_dest);
-    }
+            nanosleep(&now, &rimanente);
+            bzero(&rimanente, sizeof(rimanente));
+            shmnavi[id].stato_nave = 0;
+        }
     }
     if (capacita > 0) {
-        sem_accesso(sem_shmporto, id_dest);
         carica_offerta(id_dest);
-        sem_uscita(sem_shmporto, id_dest);
     }
-    shmnavi[id].stato_nave = 0;
     sem_uscita(sem_porto, id_dest);
+    shmnavi[id].stato_nave = 1;
 }
 
 void carica_offerta(int id_porto) {
     carico c;
     struct timespec now;
     int temp = 0;
-    double tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].offerta.idmerce) * shmmerci[shmporti[id_dest].offerta.idmerce].dimensione) / SO_LOADSPEED;
+    double tempo;
+    shmnavi[id].stato_nave = 3;
+    sem_accesso(sem_shmporto, id_dest);
+    tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].offerta.idmerce) * shmmerci[shmporti[id_dest].offerta.idmerce].dimensione) / SO_LOADSPEED;
     now.tv_sec = (time_t)tempo;
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
-    shmnavi[id].stato_nave = 3;
-    nanosleep(&now, &rimanente);
-    bzero(&rimanente, sizeof(rimanente));
     c.idmerce = shmporti[id_dest].offerta.idmerce;
     c.qmerce = shmporti[id_dest].offerta.qmerce;
     c.pid = shmporti[id_dest].offerta.pid;
@@ -213,11 +213,12 @@ void carica_offerta(int id_porto) {
         lista_carico = list_insert_head(lista_carico, c);
         capacita -= c.qmerce * shmmerci[c.idmerce].dimensione;
         shmporti[id_dest].offerta.qmerce = 0;
-        if (capacita < 0) {
-            printf("diocaneeeeeee\n\n");
-        }
     }
+
+    sem_uscita(sem_shmporto, id_dest);
     shmnavi[id].carico_tot = SO_CAPACITY - capacita;
+    nanosleep(&now, &rimanente);
+    bzero(&rimanente, sizeof(rimanente));
     shmnavi[id].stato_nave = 0;
 }
 
@@ -232,16 +233,13 @@ int cerca_richiesta() {
         for (i = 0; i < numero_porti_ricerca; i++) {
             id_temp = array_porti[i];
             if (shmporti[id_temp].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[id_temp].richiesta.idmerce) > 0) {
-                return id_temp;
+                if(semctl(sem_porto, i, GETVAL))
+                    return id_temp;
             }
-            /*if (shmporti[i].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) > 0) {
-                return i;
-            }*/
-
         }
         clock_gettime(CLOCK_REALTIME, &now);
-        /*return now.tv_nsec % SO_PORTI;*/
-        return algoritmoAleV1();
+        id_temp = now.tv_nsec % numero_porti_ricerca;
+        return array_porti[id_temp];
     }
 }
 /*SIGUSR1*/
@@ -266,9 +264,9 @@ void tempesta(int signum) {
     shmnavi[id].stato_nave = 1;
 }
 
-/*RITORNA ID PORTO MENO DISTANTE DA NAVE*/
+/*RITORNA ID PORTO MENO DISTANTE DA NAVE
 int closestPort() {
-    double min = dist(xnave, ynave, shmporti[0].x, shmporti[0].y); /*distanza min*/
+    double min = dist(xnave, ynave, shmporti[0].x, shmporti[0].y); /*distanza min
     double d;
     int i = 1;
     int return_id = 0;
@@ -284,7 +282,7 @@ int closestPort() {
     return return_id;
 }
 
-/*RITORNA ID PORTO MENO DISTANTE DA NAVE CON BANCHINE LIBERE*/
+/*RITORNA ID PORTO MENO DISTANTE DA NAVE CON BANCHINE LIBERE
 int closestAvailablePort() {
     double min;
     double d;
@@ -316,7 +314,7 @@ int algoritmoAleV001() {
     return id_algo;
 }
 
-/*ALGORITMO SUPREMO*/
+/*ALGORITMO SUPREMO
 int algoritmoAleV1() {
     struct timespec now;
     int id_temp;
@@ -329,6 +327,7 @@ int algoritmoAleV1() {
     }
     return id_algo;
 }
+*/
 
 
 void portiOrdianti(){
@@ -340,7 +339,7 @@ void portiOrdianti(){
     for(i = 0; i<numero_porti_ricerca; i++){
         for(j = 0; j<SO_PORTI; j++){
             distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
-            if(!numInserito(j) && (distanza < min || min == -1)){
+            if(!numInserito(j) && (distanza < min || min == -1) && j != id_dest){
                 min = distanza;
                 id_temp = j;
             }

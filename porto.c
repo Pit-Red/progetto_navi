@@ -15,20 +15,21 @@
 #include "utilities.h"
 
 
-
-struct sembuf my_op;
-int sem_porto;
 int id;
-int sem_shmporto, sem_shmnave;
-int msg_richiesta;
-int msg_offerta;
+int sem_shmporto, sem_shmnave, sem_fill, sem_porto;
 sporto* shmporti; smerce* shmmerci; snave* shmnavi;
 int* shmgiorno;
-int SO_MERCI;
+int SO_MERCI, SO_NAVI, id_merce_richiesta;
 int* shmfill;
-int sem_fill;
-int id_merce_richiesta;
-int SO_NAVI;
+
+
+void nuova_richiesta();
+void nuova_offerta();
+carico creazione_offerta(int qmerce);
+carico creazione_richiesta(int qmerce);
+void nuova_offerta_handler(int signum);
+
+void handler_mareggiata(int sigunum);
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
@@ -38,21 +39,6 @@ void handle_signal(int signum) {
     exit(EXIT_SUCCESS);
 }
 
-void nuova_richiesta();
-
-void nuova_offerta();
-
-carico creazione_offerta(int qmerce);
-
-carico creazione_richiesta(int qmerce);
-
-void creazione_random();
-
-void nuova_offerta_handler(int signum);
-
-void handler_mareggiata(int sigunum);
-
-
 
 int main(int argc, char** argv) {
     /*DICHIARAZIONE DELLE VARIABILI*/
@@ -60,7 +46,7 @@ int main(int argc, char** argv) {
     int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
     int sem_avvio;
     int status, num_bytes;
-    struct sembuf sops;
+    struct sembuf my_op;
     struct sigaction sa;
     struct timespec now;
     /*bzero(&sa, sizeof(sa));
@@ -87,15 +73,12 @@ int main(int argc, char** argv) {
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
     
-
     nuova_richiesta();
-
-
+    /*SEMAFORO PER AVVISARE IL PADRE CHE IL PORTO E' PRONTO*/
     my_op.sem_num = 0;
     my_op.sem_op = 1;
     semop(sem_avvio, &my_op, 1);
-
-
+    /*SEMAFORO CON CUI IL PADRE DA' IL VIA ALLA SIMULAZIONE*/
     my_op.sem_num = 1;
     my_op.sem_op = -1;
     semop(sem_avvio, &my_op, 1);
