@@ -372,7 +372,7 @@ int main() {
     no_navi_distrutte = (int)((24.0/(double)SO_MAELSTROM)*SO_DAYS)+1;
     id_navi_tempesta = calloc(SO_DAYS, sizeof(*id_navi_tempesta));
     id_porti_mareggiata = calloc(SO_DAYS, sizeof(*id_porti_mareggiata));
-    id_maelstorm = calloc(no_navi_distrutte, sizeof(id_maelstorm)+1);
+    id_maelstorm = calloc(no_navi_distrutte, sizeof(id_maelstorm));
     bzero(id_navi_tempesta, sizeof(id_navi_tempesta));
     bzero(id_porti_mareggiata, sizeof(id_porti_mareggiata));
     bzero(id_maelstorm, sizeof(id_maelstorm));
@@ -431,8 +431,8 @@ int main() {
     /*INIZIALIZZAZIONE SEMAFORO FIRST*/
     TEST_ERROR;
 
+    
     inizializzazione_fill();
-
     *shmgiorno = giorno;
     shmgiorno[1] = durata_giorno;
 
@@ -568,14 +568,12 @@ int main() {
     my_op.sem_op = -(SO_PORTI + SO_NAVI);
     semop(sem_avvio, &my_op, 1);
 
-
     kill(getpid(), SIGALRM);        /*print del giorno 0*/
 
     my_op.sem_num = 1;
     my_op.sem_flg = 0;
     my_op.sem_op = (SO_NAVI + SO_PORTI);
     semop(sem_avvio, &my_op, 1);
-    
 
 
 
@@ -825,7 +823,7 @@ void resoconto(){
 
 void inizializzazione_fill() {
     shmfill[0] = (SO_FILL / SO_DAYS) / SO_PORTI;
-    shmfill[1] = shmfill[0] / (SO_PORTI - 1) - 1;
+    shmfill[1] = shmfill[0] / (SO_PORTI - 1);
     shmfill[2] = SO_FILL / SO_PORTI;
     shmfill[3] = shmfill[2] / (SO_PORTI - 1) - 1;
     shmfill[4] = SO_PORTI;

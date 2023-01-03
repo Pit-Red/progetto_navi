@@ -131,14 +131,12 @@ void nuova_offerta() {
     struct timespec now;
     int totale = 0;
     sem_accesso(sem_fill, 1);
-    totale = shmfill[4];
-    if (totale > 0) {
-        /*gen offerta*/
-        clock_gettime(CLOCK_REALTIME, &now);
-        offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
-        clock_gettime(CLOCK_REALTIME, &now);
-        shmporti[id].offerta = creazione_offerta(offerta);
-    }
+    /*gen offerta*/
+    clock_gettime(CLOCK_REALTIME, &now);
+    offerta = shmfill[0] + (now.tv_nsec % (shmfill[1] * 2)) - shmfill[1];
+    clock_gettime(CLOCK_REALTIME, &now);
+    shmporti[id].offerta = creazione_offerta(offerta);
+
     shmfill[4]--;
     sem_uscita(sem_fill, 1);
 }
