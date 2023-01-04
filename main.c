@@ -26,8 +26,10 @@ int SO_NAVI, SO_PORTI,  SO_BANCHINE, SO_CAPACITY, SO_SIZE, SO_FILL, SO_DAYS;    
 int idshmnavi, idshmporti, idshmmerci, idshmgiorno,  idshmfill; /*ID DELLE MEMORIE CONDIVISE*/
 int sem_shmporto, sem_shmnave, sem_avvio, sem_porto, sem_ricoff; /*id dei semafori*/
 snave* shmnavi; sporto* shmporti; smerce* shmmerci; int* shmgiorno; int* shmfill;
-int* id_navi_tempesta , *id_porti_mareggiata, *id_maelstorm;
-int no_navi_distrutte, giorno, durata_giorno;
+int* id_navi_tempesta , *id_porti_mareggiata;
+int no_navi_distrutte = 0, giorno, durata_giorno;
+int idshm_uragano;
+int* shm_uragano;
 
 void inizializzazione_fill();
 
@@ -72,6 +74,8 @@ int main() {
     sporto* arrayporti;
     snave* arraynavi;
     smerce* arraymerci;
+    double t1;
+    int t;
     int i, j, d, banchine_effettive;
     double SO_LATO;
     int SO_MERCI, SO_MIN_VITA, SO_MAX_VITA, SO_VELOCITA, SO_LOADSPEED, SO_SPEED;
@@ -335,6 +339,9 @@ int main() {
     printf("\nSO_NAVI = %d", SO_NAVI);
     printf("\nSO_PORTI = %d", SO_PORTI);
 
+    t1 = (durata_giorno * SO_MAELSTROM / 24.0);
+    t = ((durata_giorno * SO_MAELSTROM) / 24);
+
     /*CREO LE CODE DI MESSAGGI, I SEMAFORI E LE MEMORIE CONDIVISE*/
     
     idshmporti = shmget(IPC_PRIVATE, sizeof(*arrayporti) * SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
@@ -342,6 +349,7 @@ int main() {
     idshmmerci = shmget(IPC_PRIVATE, sizeof(arraymerci), IPC_CREAT | IPC_EXCL | 0600);
     idshmgiorno = shmget(IPC_PRIVATE, sizeof(giorno), IPC_CREAT | IPC_EXCL | 0600);
     idshmfill = shmget(IPC_PRIVATE, 6 * 4, IPC_CREAT | IPC_EXCL | 0600);
+    idshm_uragano = shmget(IPC_PRIVATE, sizeof(giorno)*((SO_DAYS/t1)+1), IPC_CREAT | IPC_EXCL | 0600);
     sem_avvio = semget(IPC_PRIVATE, 2, IPC_CREAT | IPC_EXCL | 0600);
     sem_porto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
@@ -353,6 +361,7 @@ int main() {
     shmmerci = shmat(idshmmerci, NULL, 0);
     shmgiorno = (int*)shmat(idshmgiorno, NULL, 0);
     shmfill = (int*)shmat(idshmfill, NULL, 0);
+    shm_uragano = (int*)shmat(idshm_uragano, NULL, 0);
     semctl(sem_ricoff, 0, SETVAL, 1);   /*richieste*/
     semctl(sem_ricoff, 1, SETVAL, 1);   /*offerte*/
     semctl(sem_avvio, 0 , SETVAL, 0);
@@ -364,13 +373,10 @@ int main() {
     SO_SPEED /= durata_giorno;
 
     /*ALLOCAZIONE DEGLI ARRAY PER SALVARE GLI ID DEI PORTI E DELLE NAVI CHE SONO STATI COLPITI DA MAREGGIATA O TEMPESTA*/
-    no_navi_distrutte = (int)((24.0/(double)SO_MAELSTROM)*SO_DAYS)+1;
     id_navi_tempesta = calloc(SO_DAYS, sizeof(*id_navi_tempesta));
     id_porti_mareggiata = calloc(SO_DAYS, sizeof(*id_porti_mareggiata));
-    id_maelstorm = calloc(no_navi_distrutte, sizeof(id_maelstorm));
     bzero(id_navi_tempesta, sizeof(id_navi_tempesta));
     bzero(id_porti_mareggiata, sizeof(id_porti_mareggiata));
-    bzero(id_maelstorm, sizeof(id_maelstorm));
     /*FINE MENU*/
     sprintf(stringsem_avvio, "%d", sem_avvio);
     sprintf(stringsem_porto, "%d", sem_porto);
@@ -558,31 +564,19 @@ int main() {
         }
     }
 
-    my_op.sem_num = 0;
-    my_op.sem_flg = 0;
-    my_op.sem_op = -(SO_PORTI + SO_NAVI);
-    semop(sem_avvio, &my_op, 1);
-
-    kill(getpid(), SIGALRM);        /*print del giorno 0*/
-
-    my_op.sem_num = 1;
-    my_op.sem_flg = 0;
-    my_op.sem_op = (SO_NAVI + SO_PORTI);
-    semop(sem_avvio, &my_op, 1);
-
-
-
+    /*CREAIAMO UN FUGLIO PER GENERARE IL MAELSTORM*/
     if((pid_maelstorm = fork()) == 0){
         struct timespec uragano;
         struct sigaction ma;
         int id, status, i=0;
-        double t1 = (durata_giorno * SO_MAELSTROM / 24.0);
-        int t = ((durata_giorno * SO_MAELSTROM) / 24);
         bzero(&sa,sizeof(ma));
         ma.sa_handler = chiudi_maelstorm;
         sigaction(SIGINT, &ma, NULL);
         uragano.tv_sec = (time_t)t;
         uragano.tv_nsec = (long)((double)(t1-t)*1000000000);
+        printf("shm_uragano: %d\n\n", idshm_uragano);
+        sem_uscita(sem_avvio,0);
+        sem_accesso(sem_avvio,1);
         while(1){
             if(conta_quante() != 0){
                 nanosleep(&uragano, NULL);
@@ -595,6 +589,8 @@ int main() {
                 kill(shmnavi[id].pid, SIGINT);
                 TEST_ERROR;
                 shmnavi[id].stato_nave = -1;
+                shm_uragano[i] = id;
+                i++;
             }
             else{
                 printf("Simulazione terminata perchè non ci sono più navi\n");
@@ -604,11 +600,21 @@ int main() {
                 free(arraynavi);
                 free(arrayporti);
                 close_all(1);
-                /*exit(0);
-                break;*/
             }
         }
     }
+    
+    my_op.sem_num = 0;
+    my_op.sem_flg = 0;
+    my_op.sem_op = -(SO_PORTI + SO_NAVI+1);
+    semop(sem_avvio, &my_op, 1);
+
+    kill(getpid(), SIGALRM);        /*print del giorno 0*/
+
+    my_op.sem_num = 1;
+    my_op.sem_flg = 0;
+    my_op.sem_op = (SO_NAVI + SO_PORTI+1);
+    semop(sem_avvio, &my_op, 1);
     
     /*IL PROCESSO AVVIA DEGLI ALARM OGNI GIORNO (5 sec) PER STAMPARE UN RESOCONTO DELLA SIMULAZIONE*/
     for (d = SO_DAYS; d && !isRequestEmpty(); d--) {
@@ -619,26 +625,27 @@ int main() {
     /*CHIUDIAMO TUTTO E FACCIAMO UN RESOCONTO*/
 
     chiudi_maelstorm1();
-    printf("In tutto, sono state colpite da tempesta le navi ");
+    for(i=0;i<SO_NAVI;i++){
+        if(shmnavi[i].stato_nave == -1)
+            no_navi_distrutte++;
+    }
+    printf("In tutto, sono state colpite da tempesta le navi\n");
     for(i = 0; i<SO_DAYS;i++){
         if(id_navi_tempesta[i] != 0)
-            printf("%d, ", id_navi_tempesta[i]);
+            printf("%d\t", id_navi_tempesta[i]);
     }
-    printf("\ne sono stati colpiti da mareggiata i porti ");
+    printf("\ne sono stati colpiti da mareggiata i porti\n");
     for(i=0; i<SO_DAYS;i++){
         if(id_porti_mareggiata[i] != 0)
-            printf("%d, ", id_porti_mareggiata[i]);
+            printf("%d\t", id_porti_mareggiata[i]);
     }
-    printf("\ne sono state distrutte le navi ");
+    printf("\ne sono state distrutte le navi %d\n", no_navi_distrutte);
     for(i=0; i<no_navi_distrutte; i++){
-        if(id_maelstorm[i] != 0){
-            printf("%d, ", id_maelstorm[i]);
-        }
+        printf("%d\t ", shm_uragano[i]);
     }
     printf("\n");
     free(id_navi_tempesta);
     free(id_porti_mareggiata);
-    free(id_maelstorm);
     free(arraymerci);
     free(arraynavi);
     free(arrayporti);
@@ -666,8 +673,6 @@ void handle_alarm(int signum) {
         switch(shmnavi[i].stato_nave){
             case -1:
                 num_navi_affondate++;
-                id_maelstorm[j] = i;
-                j++;
                 break;
             case 0:
                 num_navi_porto++;
@@ -746,17 +751,13 @@ void close_all(int signum) {
         kill(shmporti[i].pid, SIGINT);
         waitpid(shmporti[i].pid, &status, WEXITED);
     }
-/*
-    kill(pid_maelstorm, SIGINT);
-    waitpid(shmnavi[i].pid, &status, WEXITED);*/
-
-
 
     shmctl(idshmporti, IPC_RMID, NULL);
     shmctl(idshmnavi, IPC_RMID, NULL);
     shmctl(idshmgiorno, IPC_RMID, NULL);
     shmctl(idshmmerci, IPC_RMID, NULL);
     shmctl(idshmfill, IPC_RMID, NULL);
+    shmctl(idshm_uragano, IPC_RMID, NULL);
     semctl(sem_shmporto, 1, IPC_RMID);
     semctl(sem_shmnave, 1, IPC_RMID);
     semctl(sem_porto, 1, IPC_RMID);
@@ -765,7 +766,6 @@ void close_all(int signum) {
 
     printf("\n\nFine del programma\n");
     exit(0);
-
 }
 
 void chiudi_maelstorm(int signum){
@@ -773,7 +773,6 @@ void chiudi_maelstorm(int signum){
 }
 
 void chiudi_maelstorm1(){
-    /*printf("chiusura processo malestorm\n");*/
     int status;
     kill(pid_maelstorm, SIGKILL);
     waitpid(pid_maelstorm, &status, WEXITED);
@@ -781,40 +780,27 @@ void chiudi_maelstorm1(){
 
 void termina(int signum){
     int i;
-    resoconto();
-    printf("In tutto, sono state colpite da tempesta le navi ");
+    for(i=0;i<SO_NAVI;i++){
+        if(shmnavi[i].stato_nave == -1)
+            no_navi_distrutte++;
+    }
+    printf("In tutto, sono state colpite da tempesta le navi\n");
     for(i = 0; i<SO_DAYS;i++){
         if(id_navi_tempesta[i] != 0)
-            printf("%d, ", id_navi_tempesta[i]);
+            printf("%d\t", id_navi_tempesta[i]);
     }
-    printf("\ne sono stati colpiti da mareggiata i porti ");
+    printf("\ne sono stati colpiti da mareggiata i porti\n");
     for(i=0; i<SO_DAYS;i++){
         if(id_porti_mareggiata[i] != 0)
-            printf("%d, ", id_porti_mareggiata[i]);
+            printf("%d\t", id_porti_mareggiata[i]);
     }
-    printf("\ne sono state distrutte le navi ");
+    printf("\ne sono state distrutte le navi %d\n", no_navi_distrutte);
     for(i=0; i<no_navi_distrutte; i++){
-        if(id_maelstorm[i] != 0){
-            printf("%d, ", id_maelstorm[i]);
-        }
+        printf("%d\t ", shm_uragano[i]);
     }
     printf("\n");
-    /*free(id_navi_tempesta);
-    free(id_porti_mareggiata);
-    free(id_maelstorm);*/
     exit(0);
 }
-
-void resoconto(){
-    int i,j=0;
-    for(i=0; i<SO_NAVI;i++){
-        if(shmnavi[i].stato_nave == -1){
-            id_maelstorm[j] = i;
-            j++;
-        }
-    }
-}
-
 
 void inizializzazione_fill() {
     shmfill[0] = (SO_FILL / SO_DAYS) / SO_PORTI;
