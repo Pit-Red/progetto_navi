@@ -14,7 +14,6 @@
 #include <math.h>
 #include "utilities.h"
 
-
 int id;
 int sem_shmporto, sem_shmnave, sem_fill, sem_porto;
 sporto* shmporti; smerce* shmmerci; snave* shmnavi;
@@ -22,36 +21,24 @@ int* shmgiorno;
 int SO_MERCI, SO_NAVI, id_merce_richiesta;
 int* shmfill;
 
-
 void nuova_richiesta();
 void nuova_offerta();
 carico creazione_offerta(int qmerce);
 carico creazione_richiesta(int qmerce);
-void nuova_offerta_handler(int signum);
-
-void handler_mareggiata(int sigunum);
 
 /*HANDLER PER GESTIRE IL SEGNAÒLE DI TERMINAZIONE DEL PADRE*/
 void handle_signal(int signum) {
-    /*printf("\033[0;31m");
-    printf("ucciso porto[%d]\n", id);
-    printf("\033[0m");*/
     exit(EXIT_SUCCESS);
 }
+void nuova_offerta_handler(int signum);
+void handler_mareggiata(int sigunum);
 
 
 int main(int argc, char** argv) {
     /*DICHIARAZIONE DELLE VARIABILI*/
-    /*DEFINIZIONE VAR CODA MEX*/
-    int tmerce, qmerce; /*tmerce = tipo merce, qmerce = quantita merce*/
     int sem_avvio;
-    int status, num_bytes;
-    struct sembuf my_op;
     struct sigaction sa;
     struct timespec now;
-    /*bzero(&sa, sizeof(sa));
-    sa.sa_handler = handle_signal;
-    sigaction(SIGINT, &sa, NULL);*/
     bzero(&sa, sizeof(sa));
     sa.sa_handler = nuova_offerta_handler;
     sigaction(SIGUSR1, &sa, NULL);
@@ -75,14 +62,9 @@ int main(int argc, char** argv) {
     
     nuova_richiesta();
     /*SEMAFORO PER AVVISARE IL PADRE CHE IL PORTO E' PRONTO*/
-    my_op.sem_num = 0;
-    my_op.sem_op = 1;
-    semop(sem_avvio, &my_op, 1);
+    sem_uscita(sem_avvio, 0);
     /*SEMAFORO CON CUI IL PADRE DA' IL VIA ALLA SIMULAZIONE*/
-    my_op.sem_num = 1;
-    my_op.sem_op = -1;
-    semop(sem_avvio, &my_op, 1);
-
+    sem_accesso(sem_avvio, 1);
 
     /*ENTRA IN UN CICLO INFINITO PER ATTENDERE LA TERMINAZIONE DEL PADRE.
     VA POI MODIFICATO PER ESEGUIRE LE OPERAZIONI NECESSARIE.*/
@@ -123,8 +105,6 @@ carico creazione_richiesta(int ton) {
 void nuova_offerta_handler(int signum) {    /*SIGUSR1*/
     nuova_offerta();
 }
-
-
 
 void nuova_offerta() {
     int offerta;

@@ -11,7 +11,6 @@ int j;
 
 void sem_accesso(int semid, int num_risorsa) {
     struct sembuf my_op;
-    /*printf("\nil processo:%d tenta l'accesso al semaforo:%d\n",getpid(),semid);*/
     my_op.sem_num = num_risorsa;
     my_op.sem_flg = 0;
     my_op.sem_op = -1;
@@ -20,7 +19,6 @@ void sem_accesso(int semid, int num_risorsa) {
         errno = 0;
     }
     TEST_ERROR;
-    /*printf("\nil processo:%d ha avuto accesso al semaforo:%d\n",getpid(),semid);*/
 }
 
 void sem_uscita(int semid, int num_risorsa) {
@@ -37,7 +35,6 @@ void sem_uscita(int semid, int num_risorsa) {
         STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));
     }
     TEST_ERROR;
-    /*printf("\nil processo:%d è uscito dal semaforo:%d\n",getpid(),semid);*/
 }
 
 void stampa_merci(smerce* temp_merci) {
@@ -59,7 +56,7 @@ list list_insert_head(list p, carico m) {
     return new_elem;
 }
 
-list list_remove(list s, int p) {
+/*list list_remove(list s, int p) {
     list temp = NULL;
     i = 0;
     while (s != NULL) {
@@ -69,9 +66,9 @@ list list_remove(list s, int p) {
         i++;
     }
     return temp;
-}
+}*/
 
-void list_print(list p) {
+/*void list_print(list p) {
 
     if (p == NULL) {
         printf("Empty list\n");
@@ -82,7 +79,7 @@ void list_print(list p) {
         printf(" -> [pid:%d, idmerce:%d, qmerce:%d, tempo scadenza:%d]", p->elem.pid, p->elem.idmerce, p->elem.qmerce, p->elem.scadenza);
     }
     printf("\n");
-}
+}*/
 
 void list_free(list p) {
     if (p == NULL) {
@@ -145,7 +142,7 @@ list list_rimuovi_richiesta(list p, carico richiesta, sporto* shmporti, int id) 
     return temp;
 }
 
-list carico_nave(carico c, list p, int speed, smerce* m, snave n) {
+/*list carico_nave(carico c, list p, int speed, smerce* m, snave n) {
     struct timespec my_time;
     double tempo;
     TEST_ERROR;
@@ -168,7 +165,7 @@ int pid_to_id_porto(pid_t pid, sporto* p) {
         j++;
     }
     return -1;
-}
+}*/
 
 void rmLinesTerminal(int n) {
     for (i = 0; i < n - 1; i++) {

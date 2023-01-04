@@ -30,7 +30,7 @@ int* array_porti;
 
 
 /*FUNZIONI PER LA RIUSCITA DELLA SIMULAZIONE*/
-void cerca_rotta(carico c);
+void cerca_rotta();
 void navigazione(double x, double y);
 int cerca_richiesta();
 void carica_offerta(int id_porto);
@@ -97,17 +97,9 @@ int main(int argc, char** argv) {
     array_porti = calloc(numero_porti_ricerca, 4);
     TEST_ERROR;
     /*SEMAFORO PER AVVISARE IL PADRE MASTER CHE LA NAVE E' PRONTA*/
-    sops.sem_num = 0;
-    sops.sem_flg = 0;
-    sops.sem_op = 1;
-    semop(sem_avvio, &sops, 1);
+    sem_uscita(sem_avvio, 0);
     /*SEMAFORO CON CUI IL PADRE DA' IL VIA ALLA SIMULAZIONE*/
-    sops.sem_num = 1;
-    sops.sem_flg = 0;
-    sops.sem_op = -1;
-    semop(sem_avvio, &sops, 1);
-
-    /*id_algo = now.tv_nsec % SO_PORTI;*/
+    sem_accesso(sem_avvio, 1);
 
     sem_accesso(sem_shmnave, id);
     xnave = shmnavi[id].x;
@@ -115,15 +107,14 @@ int main(int argc, char** argv) {
     sem_uscita(sem_shmnave, id);
 
     while (1) {
-        cerca_rotta(temp_merce);
+        cerca_rotta();
         lista_carico = list_controllo_scadenza(lista_carico, shmmerci, *shmgiorno, &capacita);
     }
     exit(0);
 }
 
 /*LA SEGUENTE FUNZIONE SERVE PER FAR SPOSTARE LA NAVE IN UN ALTRO PORTO.
-    È STATA FATTA IN MODO CHE, DOPO UNA SOLA NANOSLEEP, LA NAVE ARRIVI A DESTINAZIONE.
-    BISOGNA POI AGGIUNGERE L'IDENTIFICATORE DI NAVE IN PORTO\NAVE IN MARE*/
+    È STATA FATTA IN MODO CHE, DOPO UNA SOLA NANOSLEEP, LA NAVE ARRIVI A DESTINAZIONE.*/
 void navigazione(double x, double y) {
     double dist;
     double tempo;
@@ -143,8 +134,8 @@ void navigazione(double x, double y) {
     shmnavi[id].y = y;
     sem_uscita(sem_shmnave, id);
 }
-
-void cerca_rotta(carico c) {
+/*LA SEGUENTE E' UNA FUNZIONE CHE PERMETTE DI GESTIRE LO SPOSTAMENTO E LO SCARICO DELLE NAVI*/
+void cerca_rotta() {
     int temp, i;
     struct timespec now;
     double tempo;
@@ -186,7 +177,7 @@ void cerca_rotta(carico c) {
     sem_uscita(sem_porto, id_dest);
     shmnavi[id].stato_nave = 1;
 }
-
+/*LA SEGUENTE FUNZIONE PERMETTE DI GESTIRE IL CARICO DELL'OFFERTA DA PARTE DELLE NAVI*/
 void carica_offerta(int id_porto) {
     carico c;
     struct timespec now;
@@ -221,8 +212,7 @@ void carica_offerta(int id_porto) {
     bzero(&rimanente, sizeof(rimanente));
     shmnavi[id].stato_nave = 0;
 }
-
-
+/*CON QUESTA FUNZIONE ANDIAMO A CERCARE LA DESTINAZIONE IN BASE AI PORTI PIU' VICINI ALLA NAVE E ALLE LORO RICHIESTE*/
 int cerca_richiesta() {
     int i, id_temp;
     struct timespec now; 
@@ -263,7 +253,34 @@ void tempesta(int signum) {
     nanosleep(&now, NULL);
     shmnavi[id].stato_nave = 1;
 }
+/*FUNZIONE CHE RITORNA GLI numero_porti_richiesta PIU' VICINI ALLA NAVE, ESCLUSO IL PORTO DI PARTENZA*/
+void portiOrdianti(){
+    int i, j, id_temp;
+    double min = -1, distanza;
+    for(i = 0; i<numero_porti_ricerca; i++){
+        array_porti[i] = -1;
+    }
+    for(i = 0; i<numero_porti_ricerca; i++){
+        for(j = 0; j<SO_PORTI; j++){
+            distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
+            if(!numInserito(j) && (distanza < min || min == -1) && j != id_dest){
+                min = distanza;
+                id_temp = j;
+            }
+        }
+        min = -1;
+        array_porti[i] = id_temp;
+    }
+}
 
+int numInserito(int n){
+    int i;
+    for(i = 0; i<SO_PORTI; i++){
+        if(array_porti[i] == n)
+            return 1;
+    }
+    return 0;
+}
 /*RITORNA ID PORTO MENO DISTANTE DA NAVE
 int closestPort() {
     double min = dist(xnave, ynave, shmporti[0].x, shmporti[0].y); /*distanza min
@@ -328,32 +345,3 @@ int algoritmoAleV1() {
     return id_algo;
 }
 */
-
-
-void portiOrdianti(){
-    int i, j, id_temp;
-    double min = -1, distanza;
-    for(i = 0; i<numero_porti_ricerca; i++){
-        array_porti[i] = -1;
-    }
-    for(i = 0; i<numero_porti_ricerca; i++){
-        for(j = 0; j<SO_PORTI; j++){
-            distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
-            if(!numInserito(j) && (distanza < min || min == -1) && j != id_dest){
-                min = distanza;
-                id_temp = j;
-            }
-        }
-        min = -1;
-        array_porti[i] = id_temp;
-    }
-}
-
-int numInserito(int n){
-    int i;
-    for(i = 0; i<SO_PORTI; i++){
-        if(array_porti[i] == n)
-            return 1;
-    }
-    return 0;
-}

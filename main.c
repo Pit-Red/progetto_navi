@@ -22,8 +22,6 @@
 int num_tempesta, num_mareggiata;
 /*DICHIARAZIONE DELLE VARIABILI GLOBALI DEL MASTER UTILI PER LA SIMULAZIONE*/
 pid_t pid_maelstorm;
-pid_t* na;  /*array con i Pid delle navi*/
-pid_t* po;  /*array con i Pid dei porti*/
 int SO_NAVI, SO_PORTI,  SO_BANCHINE, SO_CAPACITY, SO_SIZE, SO_FILL, SO_DAYS;    /*COSTANTI DELLA SIMULAZIONE*/
 int idshmnavi, idshmporti, idshmmerci, idshmgiorno,  idshmfill; /*ID DELLE MEMORIE CONDIVISE*/
 int sem_shmporto, sem_shmnave, sem_avvio, sem_porto, sem_ricoff; /*id dei semafori*/
@@ -53,7 +51,7 @@ void termina(int signum);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
-    int input_type, param_config;
+    int input_type, param_config, value;
     char stringsem_avvio[13];
     char stringsem_shmporto[13];
     char stringsem_shmnave[13];
@@ -74,11 +72,10 @@ int main() {
     sporto* arrayporti;
     snave* arraynavi;
     smerce* arraymerci;
-    int i, j, c, banchine_effettive, d;
+    int i, j, d, banchine_effettive;
     double SO_LATO;
     int SO_MERCI, SO_MIN_VITA, SO_MAX_VITA, SO_VELOCITA, SO_LOADSPEED, SO_SPEED;
     int SO_STORM_DURATION, SO_SWELL_DURATION, SO_MAELSTROM;
-    int status;
     struct sigaction ca;
     struct sigaction sa;
     bzero(&ca, sizeof(ca));
@@ -236,7 +233,7 @@ int main() {
             SO_BANCHINE = 10;
             SO_FILL = 1000;
             SO_LOADSPEED = 20;
-            SO_DAYS = 20;
+            SO_DAYS = 10;
             SO_STORM_DURATION = 12;
             SO_SWELL_DURATION = 30;
             SO_MAELSTROM = 36;
@@ -340,15 +337,15 @@ int main() {
 
     /*CREO LE CODE DI MESSAGGI, I SEMAFORI E LE MEMORIE CONDIVISE*/
     
-    sem_porto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     idshmporti = shmget(IPC_PRIVATE, sizeof(*arrayporti) * SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     idshmnavi = shmget(IPC_PRIVATE, sizeof(*arraynavi) * SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
     idshmmerci = shmget(IPC_PRIVATE, sizeof(arraymerci), IPC_CREAT | IPC_EXCL | 0600);
     idshmgiorno = shmget(IPC_PRIVATE, sizeof(giorno), IPC_CREAT | IPC_EXCL | 0600);
     idshmfill = shmget(IPC_PRIVATE, 6 * 4, IPC_CREAT | IPC_EXCL | 0600);
+    sem_avvio = semget(IPC_PRIVATE, 2, IPC_CREAT | IPC_EXCL | 0600);
+    sem_porto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
-    sem_avvio = semget(IPC_PRIVATE, 2, IPC_CREAT | IPC_EXCL | 0600);
     sem_ricoff = semget(IPC_PRIVATE, 2, IPC_CREAT | IPC_EXCL | 0600);
     TEST_ERROR;
     shmporti = shmat(idshmporti, NULL, 0);
@@ -360,9 +357,7 @@ int main() {
     semctl(sem_ricoff, 1, SETVAL, 1);   /*offerte*/
     semctl(sem_avvio, 0 , SETVAL, 0);
     semctl(sem_avvio, 1 , SETVAL, 0);
-    /*ALLOCAZIONE DELLA MEMORIA PER GLI ARRAY DEI PID DEI FIGLI*/
-    na = calloc(SO_NAVI, sizeof(*na));
-    po = calloc(SO_PORTI, sizeof(*po));
+
     printf("\nidshmporti: %d\n\n", idshmporti);
     printf("\033[0m");
     SO_LOADSPEED /= durata_giorno;
@@ -456,12 +451,12 @@ int main() {
     /*CREAZIONE DEI PORTI*/
 
     for (i = 0; i < SO_PORTI; i++) {
-        po[i] = fork();
-        if (po[i] == -1) {
+        value = fork();
+        if (value == -1) {
             TEST_ERROR;
             exit(1);
         }
-        if (po[i] == 0) {
+        if (value == 0) {
             /* CHILD */
             semctl(sem_shmporto, i , SETVAL, 1);
             arrayporti[i].pid = getpid();
@@ -525,12 +520,12 @@ int main() {
     bzero(shmnavi, sizeof(*arraynavi) * SO_NAVI);
 
     for (i = 0; i < SO_NAVI; i++) {
-        na[i] = fork();
-        if (na[i] == -1) {
+        value = fork();
+        if (value == -1) {
             TEST_ERROR;
             exit(1);
         }
-        if (na[i] == 0) {
+        if (value == 0) {
             /* CHILD */
             semctl(sem_shmnave, i , SETVAL, 1);
             arraynavi[i].pid = getpid();
@@ -823,7 +818,7 @@ void resoconto(){
 
 void inizializzazione_fill() {
     shmfill[0] = (SO_FILL / SO_DAYS) / SO_PORTI;
-    shmfill[1] = shmfill[0] / (SO_PORTI - 1);
+    shmfill[1] = shmfill[0] / (SO_PORTI - 1)-1;
     shmfill[2] = SO_FILL / SO_PORTI;
     shmfill[3] = shmfill[2] / (SO_PORTI - 1) - 1;
     shmfill[4] = SO_PORTI;
