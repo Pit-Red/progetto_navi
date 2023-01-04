@@ -574,7 +574,6 @@ int main() {
         sigaction(SIGINT, &ma, NULL);
         uragano.tv_sec = (time_t)t;
         uragano.tv_nsec = (long)((double)(t1-t)*1000000000);
-        printf("shm_uragano: %d\n\n", idshm_uragano);
         sem_uscita(sem_avvio,0);
         sem_accesso(sem_avvio,1);
         while(1){
