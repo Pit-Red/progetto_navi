@@ -30,6 +30,7 @@ int* id_navi_tempesta , *id_porti_mareggiata;
 int no_navi_distrutte = 0, giorno, durata_giorno;
 int idshm_uragano;
 int* shm_uragano;
+int tot_richieste = 0;
 
 void inizializzazione_fill();
 
@@ -50,6 +51,8 @@ void handle_alarm(int signal);
 void close_all(int signum);
 void chiudi_maelstorm(int signum);
 void termina(int signum);
+
+void barraCompletamento(int carico_da_scaricare);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
@@ -253,11 +256,11 @@ int main() {
         do {
             printf("inserisci il numero di navi: ");
             scanf("%d", &SO_NAVI);
-        } while (SO_NAVI < 1 && SO_NAVI <= 0);
+        } while (SO_NAVI < 1);
         do {
             printf("inserisci il numero di porti: ");
             scanf("%d", &SO_PORTI);
-        } while (SO_PORTI < 4 && SO_PORTI <= 0);
+        } while (SO_PORTI < 4);
         do {
             printf("inserisci il numero di merci utilzzabi: ");
             scanf("%d", &SO_MERCI);
@@ -273,7 +276,8 @@ int main() {
         do {
             printf("inserisci il massimo di giorni di vita delle merci: ");
             scanf("%d", &SO_MAX_VITA);
-        } while (SO_MAX_VITA <= 0 && SO_MAX_VITA < SO_MIN_VITA);
+            /*printf("max vita:%d, min vita:%d\n", SO_MAX_VITA, SO_MIN_VITA);*/
+        } while (SO_MAX_VITA < SO_MIN_VITA);
         do {
             printf("inserisci la velocita' delle navi: ");
             scanf("%d", &SO_SPEED);
@@ -663,7 +667,9 @@ void handle_alarm(int signum) {
     }
     /*accessoPortiNavi();*/
     for(i=0; i<SO_PORTI; i++){
-        carico_da_scaricare += shmporti[i].richiesta.qmerce * shmmerci[shmporti[i].richiesta.idmerce].dimensione; 
+        carico_da_scaricare += shmporti[i].richiesta.qmerce * shmmerci[shmporti[i].richiesta.idmerce].dimensione;
+        if(giorno == 0)
+            tot_richieste = carico_da_scaricare;   
         if(shmporti[i].richiesta_soddisfatta == 1)
             richieste_soddisfatte++;
     }
@@ -732,6 +738,7 @@ void handle_alarm(int signum) {
         printf("RICHIESTE SODDISFATTE:%d/%d\n",richieste_soddisfatte, SO_PORTI);
         printf("NAVI IN MARE:%d\nNAVI IN PORTO:%d\nNAVI SCARICO:%d\nNAVI CARICO:%d\nCARICO TOT NAVI:%d\tCARICO DA SODDISFARE:%d\nNAVI FERME CAUSA TEMPESTA:%d\nNAVI FERME CAUSA MAREGGIATA:%d\nNAVI AFFONDATE:%d\n", num_navi_mare, num_navi_porto, num_navi_scarico, num_navi_carico, carico_tot_navi, carico_da_scaricare, num_navi_tempesta, num_navi_mareggiata, num_navi_affondate);
     #endif
+    barraCompletamento(carico_da_scaricare);
     giorno++;
     printf("\n\n");
     /*uscitaPortiNavi();*/
@@ -869,4 +876,18 @@ void uscitaPortiNavi(){
     for(i=0;i<SO_NAVI; i++){
         sem_uscita(sem_shmnave, i);
     }
+}
+
+void barraCompletamento(int carico_da_scaricare){
+    int i;
+    double percentuale_completamento = (1 - (double)carico_da_scaricare / (double)tot_richieste) *10;
+    printf("PERCENTUALE DI MERCI SCARICATE:%.2f", percentuale_completamento*10);
+    printf("[");
+    for(i=0; i<10;i++){
+        if(percentuale_completamento>i)
+            printf("===");
+        else
+            printf("   ");
+    }
+    printf("]\n");
 }

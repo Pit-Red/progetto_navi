@@ -223,9 +223,13 @@ int cerca_richiesta() {
         for (i = 0; i < numero_porti_ricerca; i++) {
             id_temp = array_porti[i];
             if (shmporti[id_temp].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[id_temp].richiesta.idmerce) > 0) {
-                if(semctl(sem_porto, i, GETVAL))
+                if(semctl(sem_porto, id_temp, GETVAL))
                     return id_temp;
             }
+            /*if (shmporti[i].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) > 0) {
+                if(semctl(sem_porto, i, GETVAL))
+                    return i;
+            }*/
         }
         clock_gettime(CLOCK_REALTIME, &now);
         id_temp = now.tv_nsec % numero_porti_ricerca;
