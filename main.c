@@ -17,6 +17,8 @@
 #define NO_INPUt
 
 #define STAMPA_MINIMA
+/*macro che crea un secondo terminale in cui visualizzare stato navi*/
+#define SHIP_STATUs
 
 
 int num_tempesta, num_mareggiata;
@@ -707,6 +709,9 @@ void handle_alarm(int signum) {
         }
     }
     printf("giorno:%d\n", giorno);
+        #ifdef SHIP_STATUS
+        terminal2(1);
+        #endif
     for (i = 0;i< SO_PORTI; i++){
         if (giorno > 1) {
             kill(shmporti[i].offerta.pid, SIGUSR1);
@@ -898,33 +903,33 @@ void terminal2(int tty) {
     int i;
     FILE *fp = fopen("/dev/pts/1", "w");
     /*fprintf(fp, "\x1B[2J");*/
-    fprintf(fp, "\nSTATO NAVI\n");
+    fprintf(fp, "\x1b[H\x1b[2J");
+    fprintf(fp, "\nSTATO NAVI (giorno %d)\n", giorno);
     for (i = 0; i < SO_NAVI; i++) {
         switch (shmnavi[i].stato_nave) {
         case -1:    /*RED = affondata*/
-            fprintf(fp, "\033[033;31m");
+            fprintf(fp, "\033[033;31m◉ ");
 
             break;
         case 0:     /*WHITE = in porto*/
-            fprintf(fp, "\033[033;37m");
+            fprintf(fp, "\033[033;37m◉ ");
             break;
         case 1:     /*BLUE = in mare*/
-            fprintf(fp, "\033[033;34m");
+            fprintf(fp, "\033[033;34m◉ ");
             break;
         case 2:     /*GREEN = scarico in porto*/
-            fprintf(fp, "\033[033;32m");
+            fprintf(fp, "\033[033;32m◉ ");
             break;
         case 3:     /*YELLOW = carico in nave*/
-            fprintf(fp, "\033[033;33m");
+            fprintf(fp, "\033[033;33m◉ ");
             break;
         case 4:     /*LIGHT BLUE = tempesta*/
-            fprintf(fp, "\033[033;36m");
+            fprintf(fp, "\033[033;36m◉ ");
             break;
         case 5:     /*MAGENTA = mareggiata in porto*/
-            fprintf(fp, "\033[033;35m");
+            fprintf(fp, "\033[033;35m◉ ");
             break;
         }
-        fprintf(fp, "◉ ");
     }
     fprintf(fp, "\033[0m");
     fclose(fp);
