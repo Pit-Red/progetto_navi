@@ -20,7 +20,7 @@ int n_algo = 0;
 int capacita, velocita;
 double xnave, ynave;
 int id, id_dest = -1, id_merce, indirizzo_merce = -1, numero_porti_ricerca;
-int sem_shmnave, sem_shmporto, sem_porto;
+int sem_shmnave, sem_shmporto, sem_porto, sem_merci;
 snave* shmnavi; sporto*shmporti; smerce* shmmerci; int* shmgiorno;
 int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION, SO_SWELL_DURATION;
 list lista_carico = NULL;
@@ -36,9 +36,6 @@ int cerca_richiesta();
 void carica_offerta(int id_porto);
 void portiOrdianti();
 int numInserito(int n);
-/*int closestPort();
-int closestAvailablePort();
-int algoritmoAleV1();*/
 
 /*FUNZIONI PER LA GESTIONE DEI DISASTRI*/
 void mareggiata(int signum);
@@ -78,6 +75,7 @@ int main(int argc, char** argv) {
     sem_shmnave = atoi(argv[13]);
     sem_porto = atoi(argv[7]);
     sem_shmporto = atoi(argv[1]);
+    sem_merci = atoi(argv[17]);
     id = atoi(argv[6]);
     SO_PORTI = atoi(argv[9]);
     shmgiorno = shmat(atoi(argv[10]), NULL, 0);
@@ -157,7 +155,9 @@ void cerca_rotta() {
             sem_accesso(sem_shmporto, id_dest);
             sem_accesso(sem_shmnave, id);
             temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
-            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti[id_dest].richiesta, shmporti, id_dest);
+            sem_accesso(sem_merci, shmporti[id_dest].richiesta.idmerce);
+            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti, id_dest, shmmerci);
+            sem_uscita(sem_merci, shmporti[id_dest].richiesta.idmerce);
             capacita = SO_CAPACITY - list_sum(lista_carico, shmmerci);
             shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
             if (temp < 0) {
@@ -205,7 +205,10 @@ void carica_offerta(int id_porto) {
         capacita -= c.qmerce * shmmerci[c.idmerce].dimensione;
         shmporti[id_dest].offerta.qmerce = 0;
     }
-
+    sem_accesso(sem_merci, shmporti[id_dest].richiesta.idmerce);
+    shmmerci[c.idmerce].pres_porto.qmerce -= c.qmerce;
+    shmmerci[c.idmerce].pres_na.qmerce += c.qmerce;
+    sem_uscita(sem_merci, shmporti[id_dest].richiesta.idmerce);
     sem_uscita(sem_shmporto, id_dest);
     shmnavi[id].carico_tot = SO_CAPACITY - capacita;
     nanosleep(&now, &rimanente);
@@ -226,10 +229,6 @@ int cerca_richiesta() {
                 if(semctl(sem_porto, id_temp, GETVAL))
                     return id_temp;
             }
-            /*if (shmporti[i].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) > 0) {
-                if(semctl(sem_porto, i, GETVAL))
-                    return i;
-            }*/
         }
         clock_gettime(CLOCK_REALTIME, &now);
         id_temp = now.tv_nsec % numero_porti_ricerca;
@@ -285,67 +284,3 @@ int numInserito(int n){
     }
     return 0;
 }
-/*RITORNA ID PORTO MENO DISTANTE DA NAVE
-int closestPort() {
-    double min = dist(xnave, ynave, shmporti[0].x, shmporti[0].y); /*distanza min
-    double d;
-    int i = 1;
-    int return_id = 0;
-    for (; i < SO_PORTI; i++) {
-        d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
-        if (id == 2)
-            printf("pid:%d, id:%d, min:%f, d:%f\n", getpid(), return_id, min, d);
-        if (d < min) {
-            min = d;
-            return_id = i;
-        }
-    }
-    return return_id;
-}
-
-/*RITORNA ID PORTO MENO DISTANTE DA NAVE CON BANCHINE LIBERE
-int closestAvailablePort() {
-    double min;
-    double d;
-    int i = 0;
-    int id = 0;
-
-    for (; semctl(sem_porto, i, GETVAL) == 0 && i < SO_PORTI && dist(xnave, shmporti[i].x, ynave, shmporti[i].y) != 0; i++);
-    id = i;
-
-    for (min = dist(xnave, shmporti[i].x, ynave, shmporti[i].y); i < SO_PORTI; i++) {
-        d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
-        if (d < min && semctl(sem_porto, i, GETVAL) > 0 && d != 0) {
-            min = d;
-            id = i;
-        }
-    }
-    return id;
-}
-
-int algoritmoAleV001() {
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
-    n_algo++;
-    if (n_algo % 2) {
-        id_algo = now.tv_nsec % SO_PORTI;
-    } else {
-        id_algo = (id_algo + 1) % SO_PORTI;
-    }
-    return id_algo;
-}
-
-/*ALGORITMO SUPREMO
-int algoritmoAleV1() {
-    struct timespec now;
-    int id_temp;
-    clock_gettime(CLOCK_REALTIME, &now);
-    n_algo++;
-    if (n_algo % 2) {
-        id_algo = now.tv_nsec % SO_PORTI;
-    } else {
-        id_algo = closestAvailablePort();
-    }
-    return id_algo;
-}
-*/

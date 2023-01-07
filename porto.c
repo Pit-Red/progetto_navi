@@ -15,7 +15,7 @@
 #include "utilities.h"
 
 int id;
-int sem_shmporto, sem_shmnave, sem_fill, sem_porto;
+int sem_shmporto, sem_shmnave, sem_fill, sem_porto, sem_merci;
 sporto* shmporti; smerce* shmmerci; snave* shmnavi;
 int* shmgiorno;
 int SO_MERCI, SO_NAVI, id_merce_richiesta;
@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
+    sem_merci = atoi(argv[14]);
     
     nuova_richiesta();
     /*SEMAFORO PER AVVISARE IL PADRE CHE IL PORTO E' PRONTO*/
@@ -87,6 +88,9 @@ carico creazione_offerta(int ton) {
     c.pid = getpid();
     c.qmerce = ton/shmmerci[c.idmerce].dimensione;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
+    sem_accesso(sem_merci, c.idmerce);
+    shmmerci[c.idmerce].pres_porto.qmerce += c.qmerce;
+    sem_uscita(sem_merci, c.idmerce);
     return c;
 }
 
