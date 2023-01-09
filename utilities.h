@@ -13,19 +13,25 @@
 #include <sys/sem.h>
 #include <math.h>
 
-
-typedef struct {
-    int id;
-    int dimensione;
-    int scadenza;
-}smerce;
-
 typedef struct {
     int pid;
     int idmerce;            
     int qmerce;
     int scadenza;
 }carico;
+
+typedef struct {
+    int id;
+    int dimensione;
+    int scadenza;
+    int pres_porto;
+    int pres_na;
+    int consegnata;
+    int scaduta_nave;
+    int totale;
+    int q_ferma;
+}smerce;
+
 
 typedef struct node {
 	carico elem;
@@ -34,6 +40,15 @@ typedef struct node {
 
 typedef node* list;
 
+/*STATO NAVE:
+-1: DISTRUTTA DA MAELSTORM
+0:IN PORTO
+1:IN MARE
+2:IN PORTO CHE EFFETTUA UNO SCARICO
+3:IN PORTO CHE EFFETTUA UN CARICO
+4:IN MARE FERMA A CAUSA DI UNA TEMPESTA
+5:IN PORTO FERMA A CAUSA DI UNA MAREGGIATA
+*/
 typedef struct {
     pid_t pid;
     double x;
@@ -47,14 +62,14 @@ typedef struct {
     double x;
     double y;
     carico offerta;
+    carico richiesta;
+    int richiesta_soddisfatta;
+    int banchine;
+    int ricevuta;
+    int spedita;
+    int tot_richiesta;
+    int tot_offerta;
 }sporto;
-
-
-typedef struct{
-	long mtype;            
-	carico mtext;    
-}msg;
-
 
 
 #define TEST_ERROR    if (errno) {fprintf(stderr,           \
@@ -70,8 +85,6 @@ typedef struct{
 
 list list_insert_head(list p, carico m);
 
-void list_print(list p);
-
 void list_free(list p);
 
 int list_sum(list p, smerce* m);
@@ -80,9 +93,7 @@ int list_sum_merce(list p, smerce* m, int tipo);
 
 list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita);
 
-list list_rimuovi_richiesta(list p, carico richiesta);
-
-
+list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci, int *pres_nave, int *consegnata);
 
 void sem_accesso(int semid, int num_risorsa);
 
@@ -90,14 +101,6 @@ void sem_uscita(int semid, int num_risorsa);
 
 void stampa_merci(smerce* temp_merci);
 
-void msg_invio(int id, carico r);
+void rmLinesTerminal(int n);
 
-int msg_lettura(int id, carico* r);
-
-int msg_error();
-
-void msg_print_stats(int fd, int q_id);
-
-list carico_nave(carico c, list p, int speed, smerce* m, snave n);
-
-int pid_to_id_porto(pid_t pid, sporto* p);
+double dist(double x1, double y1, double x2, double y2);
