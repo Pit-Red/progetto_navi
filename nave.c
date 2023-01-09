@@ -144,6 +144,7 @@ void cerca_rotta() {
     double tempo;
     int quantita = 0;
     id_dest = cerca_richiesta();
+    /*printf("id dest:%d, id merce:%d\n", id_dest, id_merce);*/
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
     shmnavi[id].stato_nave = 0;
@@ -249,8 +250,10 @@ int cerca_richiesta() {
     return id_temp;*/
 
     id_temp = closestPort();
-    if(id_temp >= 0)
+    if(id_temp >= 0){
+        id_merce = 1;
         return id_temp;
+    }
     clock_gettime(CLOCK_REALTIME, &now);
     return now.tv_nsec % SO_PORTI;
 }
@@ -341,7 +344,7 @@ int closestPort() {
     int return_id = -1;
     for (; i < SO_PORTI; i++) {
         d = dist(xnave, shmporti[i].x, ynave, shmporti[i].y);
-        if (d < min && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) > 0){
+        if (d < min && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce)){
             min = d;
             return_id = i;
         }
