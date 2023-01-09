@@ -36,6 +36,8 @@ void carica_offerta(int id_porto);
 void portiOrdinati();
 int numInserito(int n);
 
+int closestPort();
+
 /*FUNZIONI PER LA GESTIONE DEI DISASTRI*/
 void mareggiata(int signum);
 void tempesta(int signum);
@@ -142,6 +144,7 @@ void cerca_rotta() {
     double tempo;
     int quantita = 0;
     id_dest = cerca_richiesta();
+    /*printf("id dest:%d, id merce:%d\n", id_dest, id_merce);*/
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
     shmnavi[id].stato_nave = 0;
@@ -227,27 +230,31 @@ int cerca_richiesta() {
         for(i=0;i<numero_porti_ricerca;i++)
             printf("%d  ", array_porti[i]);
         printf("\n");
-    }*/
+    }
     portiOrdinati();
-   /* if(id==0){
+    if(id==0){
         printf("dopo: ");
         for(i=0;i<numero_porti_ricerca;i++)
             printf("%d  ", array_porti[i]);
         printf("\n");
-    }*/
-    while (1) {
-        for (i = 0; i < numero_porti_ricerca; i++) {
-            id_temp = array_porti[i];
-            id_merce = 1;
-            if (shmporti[id_temp].richiesta_soddisfatta == 0 && list_sum_merce(lista_carico, shmmerci, shmporti[id_temp].richiesta.idmerce) > 0) {
-                if(semctl(sem_porto, id_temp, GETVAL))
-                    return id_temp;
-            }
-        }
-        clock_gettime(CLOCK_REALTIME, &now);
-        id_temp = now.tv_nsec % numero_porti_ricerca;   
-        return array_porti[id_temp];
     }
+    for (i = 0; i < numero_porti_ricerca; i++) {
+        id_temp = array_porti[i];
+        id_merce = 1;
+        if (id_temp >0) {
+            return id_temp;
+        }
+    }
+    clock_gettime(CLOCK_REALTIME, &now);
+    id_temp = now.tv_nsec % SO_PORTI;   
+    return id_temp;*/
+    id_temp = closestPort();
+    if(id_temp >= 0){
+        id_merce = 1;
+        return id_temp;
+    }
+    clock_gettime(CLOCK_REALTIME, &now);
+    return now.tv_nsec % SO_PORTI;
 }
 /*SIGUSR1*/
 void mareggiata(int signum) {
@@ -271,7 +278,7 @@ void tempesta(int signum) {
     shmnavi[id].stato_nave = 1;
 }
 /*FUNZIONE CHE RITORNA GLI numero_porti_richiesta PIU' VICINI ALLA NAVE, ESCLUSO IL PORTO DI PARTENZA*/
-void portiOrdinati(){
+/*void portiOrdinati(){
     int i, j, id_temp;
     double min = -1, distanza;
     for(i = 0; i<numero_porti_ricerca; i++){
@@ -280,7 +287,7 @@ void portiOrdinati(){
     for(i = 0; i<numero_porti_ricerca; i++){
         for(j = 0; j<SO_PORTI; j++){
             distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
-            if(!numInserito(j) && (distanza < min || min == -1) && j != id_dest){
+            if(!numInserito(j) && (distanza < min || min == -1) && j != id_dest && list_sum_merce(lista_carico, shmmerci, shmporti[j].richiesta.idmerce)>0){
                 min = distanza;
                 id_temp = j;
             }
@@ -318,7 +325,7 @@ void portiOrdinati(){
             }
         }
     }
-}*/
+}
 
 int numInserito(int n){
     int i;
@@ -327,4 +334,21 @@ int numInserito(int n){
             return 1;
     }
     return 0;
+}*/
+
+int closestPort() {
+    double min = -1; /*distanza min*/
+    int return_id = -1;
+    double d;
+    int i;
+    i = 0;
+    for (; i < SO_PORTI; i++) {
+        d = dist(shmnavi[id].x, shmnavi[id].y , shmporti[i].x, shmporti[i].y);
+        if ((d < min || min == -1) && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) && d != 0){
+            min = d;
+            return_id = i;
+        }
+    }
+    /*printf("return=%d\n",return_id);*/
+    return return_id;
 }
