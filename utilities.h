@@ -24,10 +24,12 @@ typedef struct {
     int id;
     int dimensione;
     int scadenza;
-    carico pres_porto;
-    carico pres_na;
-    carico consegnata;
-    carico scaduta_nave;
+    int pres_porto;
+    int pres_na;
+    int consegnata;
+    int scaduta_nave;
+    int totale;
+    int q_ferma;
 }smerce;
 
 
@@ -63,6 +65,10 @@ typedef struct {
     carico richiesta;
     int richiesta_soddisfatta;
     int banchine;
+    int ricevuta;
+    int spedita;
+    int tot_richiesta;
+    int tot_offerta;
 }sporto;
 
 
@@ -87,7 +93,7 @@ int list_sum_merce(list p, smerce* m, int tipo);
 
 list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita);
 
-list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci);
+list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci, int *pres_nave, int *consegnata);
 
 void sem_accesso(int semid, int num_risorsa);
 

@@ -26,7 +26,7 @@ int num_tempesta, num_mareggiata;
 pid_t pid_maelstorm;
 int SO_NAVI, SO_PORTI,  SO_BANCHINE, SO_CAPACITY, SO_SIZE, SO_FILL, SO_MERCI, SO_DAYS;    /*COSTANTI DELLA SIMULAZIONE*/
 int idshmnavi, idshmporti, idshmmerci, idshmgiorno,  idshmfill; /*ID DELLE MEMORIE CONDIVISE*/
-int sem_shmporto, sem_shmnave, sem_avvio, sem_porto, sem_ricoff, sem_shmmerci; /*id dei semafori*/
+int sem_shmporto, sem_shmnave, sem_avvio, sem_porto, sem_ricoff; /*id dei semafori*/
 snave* shmnavi; sporto* shmporti; smerce* shmmerci; int* shmgiorno; int* shmfill;
 int* id_navi_tempesta , *id_porti_mareggiata;
 int no_navi_distrutte = 0, giorno, durata_giorno;
@@ -60,7 +60,7 @@ void terminal2(int tty);
 
 int main() {
     /* DICHIARAZIONE DELLE VARIABILI */
-    int input_type, param_config, value;
+    int input_type, param_config, value, max1 = 0, max2 = 0;
     char stringsem_avvio[13];
     char stringsem_shmporto[13];
     char stringsem_shmnave[13];
@@ -363,7 +363,6 @@ int main() {
     sem_shmporto = semget(IPC_PRIVATE, SO_PORTI, IPC_CREAT | IPC_EXCL | 0600);
     sem_shmnave = semget(IPC_PRIVATE, SO_NAVI, IPC_CREAT | IPC_EXCL | 0600);
     sem_ricoff = semget(IPC_PRIVATE, 2, IPC_CREAT | IPC_EXCL | 0600);
-    sem_shmmerci = semget(IPC_PRIVATE, SO_MERCI, IPC_CREAT | IPC_EXCL | 0600);
     TEST_ERROR;
     shmporti = shmat(idshmporti, NULL, 0);
     shmnavi = shmat(idshmnavi, NULL, 0);
@@ -376,7 +375,7 @@ int main() {
     semctl(sem_avvio, 0 , SETVAL, 0);
     semctl(sem_avvio, 1 , SETVAL, 0);
 
-    printf("\nidshmporti: %d e semaforo %d\n\n", idshmporti, sem_shmmerci);
+    printf("\nidshmporti: %d\n\n", idshmporti);
     printf("\033[0m");
     SO_LOADSPEED /= durata_giorno;
     SO_SPEED /= durata_giorno;
@@ -390,7 +389,6 @@ int main() {
     sprintf(stringsem_avvio, "%d", sem_avvio);
     sprintf(stringsem_porto, "%d", sem_porto);
     sprintf(stringsem_shmporto, "%d", sem_shmporto);
-    sprintf(string_semmerci, "%d", sem_shmmerci);
     sprintf(stringsem_shmnave, "%d", sem_shmnave);
     sprintf(stringporti, "%d", idshmporti);
     sprintf(stringnavi, "%d", idshmnavi);
@@ -420,8 +418,7 @@ int main() {
     porto[11] = stringsem_avvio;
     porto[12] = stringfill;
     porto[13] = stringsem_ricoff;
-    porto[14] = string_semmerci;
-    porto[15] = NULL;
+    porto[14] = NULL;
     /*NAVE*/
     nave[1] = stringsem_shmporto;
     nave[2] = stringporti;
@@ -438,8 +435,7 @@ int main() {
     nave[14] = stringsem_avvio;
     nave[15] = stringoretempesta;
     nave[16] = stringoremareggiata;
-    nave[17] = string_semmerci;
-    nave[18] = NULL;
+    nave[17] = NULL;
 
     /*INIZIALIZZAZIONE SEMAFORO FIRST*/
     TEST_ERROR;
@@ -460,7 +456,6 @@ int main() {
         clock_gettime(CLOCK_REALTIME, &now);
         printf("merce[%d]:\tSCADENZA:%d\tDIMENSIONE:%d\n", i, arraymerci[i].scadenza, arraymerci[i].dimensione);
         shmmerci[i] = arraymerci[i];
-        semctl(sem_shmmerci, i, SETVAL, 1);
     }
     printf("\n\n\nsem_shmporti:%d\tsem_shmnavi:%d\tsem_avvio:%d\tsem_banchine:%d\n\n\n", sem_shmporto, sem_shmnave, sem_avvio, sem_porto);
     arrayporti = calloc(SO_PORTI, sizeof(*arrayporti));
@@ -636,6 +631,9 @@ int main() {
     /*CHIUDIAMO TUTTO E FACCIAMO UN RESOCONTO*/
 
     chiudi_maelstorm1();
+    for(i=0; i<SO_NAVI; i++){
+        kill(shmnavi[i].pid, SIGSTOP);
+    }
     for(i=0;i<SO_NAVI;i++){
         if(shmnavi[i].stato_nave == -1)
             no_navi_distrutte++;
@@ -654,6 +652,25 @@ int main() {
     for(i=0; i<no_navi_distrutte; i++){
         printf("%d\t ", shm_uragano[i]);
     }
+    printf("\n");
+    t = 0;
+    d = 0;
+    for(i=0;i<SO_PORTI;i++){
+        printf("Il porto %d possiede ora %d lotti di merce, ne ha spediti in tutto %d e ne ha ricevuti in tutto %d\n", i, shmporti[i].offerta.qmerce, shmporti[i].spedita, shmporti[i].ricevuta);
+        if(shmporti[i].tot_offerta > max1){
+            max1 = shmporti[i].tot_offerta;
+            t = i;
+        }
+        if(shmporti[i].tot_richiesta>max2){
+            max2 = shmporti[i].tot_richiesta;
+            d = i;
+        }
+    }
+    printf("Inoltre, riguardo alle merci:\n");
+    for(i=0;i<SO_MERCI;i++){
+        printf("Della merce %d, la quantità di merce generata dall'inizio della simulazione è %d lotti, %d lotti sono scaduti su una nave e %d lotti sono stati consegnati da qualche nave e %d lotti sono rimasti fermi nei porti.\n",i,(shmmerci[i].totale*shmmerci[i].dimensione), (shmmerci[i].scaduta_nave*shmmerci[i].dimensione), (shmmerci[i].consegnata*shmmerci[i].dimensione), shmmerci[i].q_ferma);
+    }
+    printf("Il porto che ha generato più merce è il porto %d e quello che ne ha richiesta di più è il porto %d", t, d);
     printf("\n");
     free(id_navi_tempesta);
     free(id_porti_mareggiata);
@@ -675,13 +692,7 @@ void handle_alarm(int signum) {
     }
     /*accessoPortiNavi();*/
     for(i=0; i<SO_MERCI;i++){
-        sem_accesso(sem_shmmerci, i);        
-    }
-    for(i=0; i<SO_MERCI;i++){
-        printf("Della merce %d, presso i porti è presente una quantità pari a %d ton, presso le navi di %d ton, ne sono state consegnate ai porti %d tonnellate e %d lotti sono scaduti in mare\n\n\n", shmmerci[i].id, (shmmerci[i].pres_porto.qmerce*shmmerci[i].dimensione), (shmmerci[i].pres_na.qmerce*shmmerci[i].dimensione), (shmmerci[i].consegnata.qmerce*shmmerci[i].dimensione),shmmerci[i].scaduta_nave.qmerce);
-    }
-    for(i=0; i<SO_MERCI;i++){
-        sem_uscita(sem_shmmerci, i);        
+        printf("Della merce %d, presso i porti è presente una quantità pari a %d ton, presso le navi di %d ton, ne sono state consegnate ai porti %d tonnellate e %d lotti sono scaduti in mare\n\n\n", shmmerci[i].id, (shmmerci[i].pres_porto*shmmerci[i].dimensione), (shmmerci[i].pres_na*shmmerci[i].dimensione), (shmmerci[i].consegnata*shmmerci[i].dimensione),shmmerci[i].scaduta_nave);
     }
     for(i=0; i<SO_PORTI; i++){
         carico_da_scaricare += shmporti[i].richiesta.qmerce * shmmerci[shmporti[i].richiesta.idmerce].dimensione;
@@ -733,13 +744,6 @@ void handle_alarm(int signum) {
             kill(shmporti[i].offerta.pid, SIGUSR1);
         }
     }
-    for (i = 0; i < SO_PORTI; i++) {
-        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\\%d\n", shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL), shmporti[i].banchine);
-        printf("porto[%d]\tRICHIESTA->merce[%d]:qmerce:%d", shmporti[i].pid, shmporti[i].richiesta.idmerce, shmporti[i].richiesta.qmerce);
-        if (shmporti[i].richiesta_soddisfatta == 1)
-            printf("\tRICHIESTA SODDISFATTA");
-        printf("\n\n");
-    }
     #ifndef STAMPA_MINIMA
 
     for (i = 0; i < SO_NAVI; i++) {
@@ -758,9 +762,16 @@ void handle_alarm(int signum) {
         else if (shmnavi[i].stato_nave == 5)
             printf("nave[%d]\tSTATO: ferma causa mareggiata\t\t\tCORDINATE:(%.2f,%.2f)\n", shmnavi[i].pid, shmnavi[i].x, shmnavi[i].y);
     }
+    for (i = 0; i < SO_PORTI; i++) {
+        printf("porto[%d]\tOFFERTA->merce[%d]:qmerce:%d, data di scadenza:%d\t\tBANCHINE LIBERE:%d\\%d\n", shmporti[i].pid, shmporti[i].offerta.idmerce, shmporti[i].offerta.qmerce, shmporti[i].offerta.scadenza, semctl(sem_porto, i, GETVAL), shmporti[i].banchine);
+        printf("porto[%d]\tRICHIESTA->merce[%d]:qmerce:%d", shmporti[i].pid, shmporti[i].richiesta.idmerce, shmporti[i].richiesta.qmerce);
+        if (shmporti[i].richiesta_soddisfatta == 1)
+            printf("\tRICHIESTA SODDISFATTA");
+        printf("\n\n");
+    }
     #else
         printf("RICHIESTE SODDISFATTE:%d/%d\n",richieste_soddisfatte, SO_PORTI);
-        printf("NAVI IN MARE SENZA CARICO:%d\nNAVI IN MARE CON CARICO:%d\nNAVI IN PORTO:%d\nNAVI SCARICO:%d\nNAVI CARICO:%d\nCARICO TOT NAVI SENZA CARICO:%d\tCARICO DA SODDISFARE:%d\nNAVI FERME CAUSA TEMPESTA:%d\nNAVI FERME CAUSA MAREGGIATA:%d\nNAVI AFFONDATE:%d\n", num_navi_mare_senza,num_navi_mare_carico , num_navi_porto, num_navi_scarico, num_navi_carico, carico_tot_navi, carico_da_scaricare, num_navi_tempesta, num_navi_mareggiata, num_navi_affondate);
+        printf("NAVI IN MARE SENZA CARICO:%d\nNAVI IN MARE CON CARICO:%d\nNAVI IN PORTO:%d\nNAVI SCARICO:%d\nNAVI CARICO:%d\nCARICO TOT NAVI:%d\tCARICO DA SODDISFARE:%d\nNAVI FERME CAUSA TEMPESTA:%d\nNAVI FERME CAUSA MAREGGIATA:%d\nNAVI AFFONDATE:%d\n", num_navi_mare_senza,num_navi_mare_carico , num_navi_porto, num_navi_scarico, num_navi_carico, carico_tot_navi, carico_da_scaricare, num_navi_tempesta, num_navi_mareggiata, num_navi_affondate);
     #endif
     barraCompletamento(carico_da_scaricare);
     giorno++;
@@ -791,7 +802,6 @@ void close_all(int signum) {
     semctl(sem_shmporto, 1, IPC_RMID);
     semctl(sem_shmnave, 1, IPC_RMID);
     semctl(sem_porto, 1, IPC_RMID);
-    semctl(sem_shmmerci, 1, IPC_RMID);
     semctl(sem_avvio, 1, IPC_RMID);
     semctl(sem_ricoff, 1, IPC_RMID);
 

@@ -89,31 +89,33 @@ list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita) {
             *capacita += (p->elem.qmerce * m[p->elem.idmerce].dimensione);
         }
         else{
-            m[p->elem.idmerce].scaduta_nave.qmerce += p->elem.qmerce;
-            m[p->elem.idmerce].pres_na.qmerce -= p->elem.qmerce;
+            m[p->elem.idmerce].scaduta_nave += p->elem.qmerce;
+            m[p->elem.idmerce].pres_na -= p->elem.qmerce;
         }
     }
     return temp;
 }
 
-list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci) {
+list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci, int *pres_nave, int *consegnata) {
     list temp = NULL;
     for (; p != NULL; p = p->next) {
         if (shmporti[id].richiesta_soddisfatta != 1 && shmporti[id].richiesta.idmerce == p->elem.idmerce) {
             if (p->elem.qmerce > shmporti[id].richiesta.qmerce) {
                 p->elem.qmerce -= shmporti[id].richiesta.qmerce;
-                shmmerci[p->elem.idmerce].consegnata.qmerce += shmporti[id].richiesta.qmerce;
-                shmmerci[p->elem.idmerce].pres_na.qmerce -= shmporti[id].richiesta.qmerce;
+                *consegnata += shmporti[id].richiesta.qmerce;
+                *pres_nave -= shmporti[id].richiesta.qmerce;
+                shmporti[id].ricevuta += shmporti[id].richiesta.qmerce;
                 temp = list_insert_head(temp, p->elem);
             }
             else if (p->elem.qmerce < shmporti[id].richiesta.qmerce) {
                 shmporti[id].richiesta.qmerce -= p->elem.qmerce;
-                shmmerci[p->elem.idmerce].consegnata.qmerce += p->elem.qmerce;
-                shmmerci[p->elem.idmerce].pres_na.qmerce -= p->elem.qmerce;
+                *consegnata += p->elem.qmerce;
+                *pres_nave -= p->elem.qmerce;
+                shmporti[id].ricevuta += p->elem.qmerce;
             }
             else {
-                shmmerci[p->elem.idmerce].consegnata.qmerce += shmporti[id].richiesta.qmerce;
-                shmmerci[p->elem.idmerce].pres_na.qmerce -= shmporti[id].richiesta.qmerce;
+                *consegnata += shmporti[id].richiesta.qmerce;
+                *pres_nave -= shmporti[id].richiesta.qmerce;
             }
         }
         else {

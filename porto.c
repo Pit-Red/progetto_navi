@@ -15,7 +15,7 @@
 #include "utilities.h"
 
 int id;
-int sem_shmporto, sem_shmnave, sem_fill, sem_porto, sem_merci;
+int sem_shmporto, sem_shmnave, sem_fill, sem_porto;
 sporto* shmporti; smerce* shmmerci; snave* shmnavi;
 int* shmgiorno;
 int SO_MERCI, SO_NAVI, id_merce_richiesta;
@@ -59,7 +59,6 @@ int main(int argc, char** argv) {
     sem_avvio = atoi(argv[11]);
     shmfill = shmat(atoi(argv[12]), NULL, 0);
     sem_fill = atoi(argv[13]);
-    sem_merci = atoi(argv[14]);
     
     nuova_richiesta();
     /*SEMAFORO PER AVVISARE IL PADRE CHE IL PORTO E' PRONTO*/
@@ -88,9 +87,8 @@ carico creazione_offerta(int ton) {
     c.pid = getpid();
     c.qmerce = ton/shmmerci[c.idmerce].dimensione;
     c.scadenza = shmmerci[c.idmerce].scadenza + *shmgiorno;
-    sem_accesso(sem_merci, c.idmerce);
-    shmmerci[c.idmerce].pres_porto.qmerce += c.qmerce;
-    sem_uscita(sem_merci, c.idmerce);
+    shmmerci[c.idmerce].pres_porto += c.qmerce;
+    shmmerci[c.idmerce].totale += c.qmerce;
     return c;
 }
 
@@ -114,6 +112,7 @@ void nuova_offerta() {
     int offerta;
     struct timespec now;
     int totale = 0;
+    shmmerci[shmporti[id].richiesta.idmerce].q_ferma += shmporti[id].offerta.qmerce;
     sem_accesso(sem_fill, 1);
     /*gen offerta*/
     clock_gettime(CLOCK_REALTIME, &now);
@@ -123,6 +122,7 @@ void nuova_offerta() {
 
     shmfill[4]--;
     sem_uscita(sem_fill, 1);
+    shmporti[id].tot_offerta += shmporti[id].offerta.qmerce;
 }
 
 void nuova_richiesta() {
@@ -138,6 +138,7 @@ void nuova_richiesta() {
             shmfill[3] = 5;
         richiesta = shmfill[2] + (now.tv_nsec % (shmfill[3] * 2)) - shmfill[3];
         shmporti[id].richiesta = creazione_richiesta(richiesta);
+        shmporti[id].tot_richiesta += shmporti[id].richiesta.qmerce;
         TEST_ERROR;
     }
     shmfill[5]--;
