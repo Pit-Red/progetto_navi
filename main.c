@@ -638,17 +638,17 @@ int main() {
         if(shmnavi[i].stato_nave == -1)
             no_navi_distrutte++;
     }
-    printf("In tutto, sono state colpite da tempesta le navi\n");
+    printf("NAVI COLPITE DALLA TEMPESTA:\n");
     for(i = 0; i<SO_DAYS;i++){
         if(id_navi_tempesta[i] != 0)
             printf("%d\t", id_navi_tempesta[i]);
     }
-    printf("\ne sono stati colpiti da mareggiata i porti\n");
+    printf("\nPORTI COLPITI DALLA MAREGGIATA:\n");
     for(i=0; i<SO_DAYS;i++){
         if(id_porti_mareggiata[i] != 0)
             printf("%d\t", id_porti_mareggiata[i]);
     }
-    printf("\ne sono state distrutte le navi %d\n", no_navi_distrutte);
+    printf("\nNAVI AFFONDATE: %d\n", no_navi_distrutte);
     for(i=0; i<no_navi_distrutte; i++){
         printf("%d\t ", shm_uragano[i]);
     }
@@ -656,7 +656,7 @@ int main() {
     t = 0;
     d = 0;
     for(i=0;i<SO_PORTI;i++){
-        printf("Il porto %d possiede ora %d lotti di merce, ne ha spediti in tutto %d e ne ha ricevuti in tutto %d\n", i, shmporti[i].offerta.qmerce, shmporti[i].spedita, shmporti[i].ricevuta);
+        printf("PORTO:%d\tLOTTI POSSEDUTI:%d\tMERCI SPEDITE:%d\tMERCI RICEVUTE:%d\n", i, shmporti[i].offerta.qmerce, shmporti[i].spedita, shmporti[i].ricevuta);
         if(shmporti[i].tot_offerta > max1){
             max1 = shmporti[i].tot_offerta;
             t = i;
@@ -666,11 +666,10 @@ int main() {
             d = i;
         }
     }
-    printf("Inoltre, riguardo alle merci:\n");
     for(i=0;i<SO_MERCI;i++){
-        printf("Della merce %d, la quantità di merce generata dall'inizio della simulazione è %d lotti, %d lotti sono scaduti su una nave e %d lotti sono stati consegnati da qualche nave e %d lotti sono rimasti fermi nei porti.\n",i,(shmmerci[i].totale*shmmerci[i].dimensione), (shmmerci[i].scaduta_nave*shmmerci[i].dimensione), (shmmerci[i].consegnata*shmmerci[i].dimensione), shmmerci[i].q_ferma);
+        printf("MERCE:%d\tQUANTITA' GENERATA:%d\tQUANTITA' DI MERCE SCADUTA:%d\tQUANTITA' DI MERCE CONSEGNATA:%d\tQUANTITA' DI MERCE FERMA NEI PORTI:%d\n",i,(shmmerci[i].totale*shmmerci[i].dimensione), (shmmerci[i].scaduta_nave*shmmerci[i].dimensione), (shmmerci[i].consegnata*shmmerci[i].dimensione), shmmerci[i].q_ferma);
     }
-    printf("Il porto che ha generato più merce è il porto %d e quello che ne ha richiesta di più è il porto %d", t, d);
+    printf("PORTO CHE HA GENERA PIU' MERCE:%d\tPORTO CHE HA RICEVUTO PIU' MERCI%d", t, d);
     printf("\n");
     free(id_navi_tempesta);
     free(id_porti_mareggiata);
