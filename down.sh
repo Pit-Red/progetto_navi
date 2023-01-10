@@ -41,11 +41,14 @@ case $1 in
 	mv ./utilities.c ./.old/utilities-old.c
 	mv ./utilities.h ./.old/utilities-old.h
 
+
 	mv ./makefile ./.old/makefile-old
 
 	mv ./down.sh ./.old/down-old.sh
 	mv ./loading.sh ./.old/loading-old.sh
 	mv ./press-enter.sh ./.old/press-enter-old.sh
+
+	mv ./barchetta.c ./.barchetta-old.c
 
 	rm -rf .git
 	git init
