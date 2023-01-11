@@ -31,19 +31,11 @@ void sem_uscita(int semid, int num_risorsa) {
         errno = 0;
     }
     TEST_ERROR;
-    if (errno == 27) {
-        STAMPA_ROSSO(fprintf(stderr, "semid = %d\n", semid));
-    }
+    if (errno = 4)
+        errno = 0;
+    TEST_ERROR;
     TEST_ERROR;
 }
-
-void stampa_merci(smerce* temp_merci) {
-    int size = 3;
-    for (i = 0; i < size; i++) {
-        printf("\nsmerce[%d]:id=%d\tdimensione=%d\ttempo di scadenza=%d\n", i, temp_merci[i].id, temp_merci[i].dimensione, temp_merci[i].scadenza);
-    }
-}
-
 
 list list_insert_head(list p, carico m) {
     list new_elem;
@@ -56,14 +48,6 @@ list list_insert_head(list p, carico m) {
     return new_elem;
 }
 
-void list_free(list p) {
-    if (p == NULL) {
-        return;
-    }
-    list_free(p->next);
-    free(p);
-}
-
 int list_sum(list p, smerce* m) { /*restituisce tonnellate*/
     int sum = 0;
     for (; p != NULL; p = p->next) {
@@ -72,7 +56,7 @@ int list_sum(list p, smerce* m) { /*restituisce tonnellate*/
     return sum;
 }
 
-int list_sum_merce(list p, smerce* m, int tipo) {       /*restituisce la quantitaa di merce i*/
+int list_sum_merce(list p, int tipo) {       /*restituisce la quantitaa di merce i*/
     int sum = 0;
     for (; p != NULL; p = p->next) {
         if (p->elem.idmerce == tipo)
@@ -96,7 +80,7 @@ list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita) {
     return temp;
 }
 
-list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci, int *pres_nave, int *consegnata) {
+list list_rimuovi_richiesta(list p, sporto* shmporti, int id, int *pres_nave, int *consegnata) {
     list temp = NULL;
     for (; p != NULL; p = p->next) {
         if (shmporti[id].richiesta_soddisfatta != 1 && shmporti[id].richiesta.idmerce == p->elem.idmerce) {

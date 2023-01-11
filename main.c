@@ -18,7 +18,7 @@
 
 #define STAMPA_MINIMA
 /*macro che crea un secondo terminale in cui visualizzare stato navi*/
-#define SHIP_STATUs
+#define SHIP_STATU
 
 
 int num_tempesta, num_mareggiata;
@@ -669,7 +669,7 @@ int main() {
     for(i=0;i<SO_MERCI;i++){
         printf("MERCE:%d\tQUANTITA' GENERATA:%d\tQUANTITA' DI MERCE SCADUTA:%d\tQUANTITA' DI MERCE CONSEGNATA:%d\tQUANTITA' DI MERCE FERMA NEI PORTI:%d\n",i,(shmmerci[i].totale*shmmerci[i].dimensione), (shmmerci[i].scaduta_nave*shmmerci[i].dimensione), (shmmerci[i].consegnata*shmmerci[i].dimensione), shmmerci[i].q_ferma);
     }
-    printf("PORTO CHE HA GENERA PIU' MERCE:%d\tPORTO CHE HA RICEVUTO PIU' MERCI%d", t, d);
+    printf("PORTO CHE HA GENERA PIU' MERCE:%d\tPORTO CHE HA RICHIESTO PIU' MERCI: %d", t, d);
     printf("\n");
     free(id_navi_tempesta);
     free(id_porti_mareggiata);
@@ -959,5 +959,6 @@ void terminal2(int tty) {
         }
     }
     fprintf(fp, "\033[0m");
+    fprintf(fp, "\nROSSO = AFFONDATA\nBIANCO = IN PORTO\nBLU = IN MARE\nVERDE = SCARICO IN PORTO\nGIALLO = CARICO IN PORTO\nAZZURRO = TEMPESTA\nMAGENTA = MAREGGIATA IN PORTO");
     fclose(fp);
 }

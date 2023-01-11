@@ -85,21 +85,17 @@ typedef struct {
 
 list list_insert_head(list p, carico m);
 
-void list_free(list p);
-
 int list_sum(list p, smerce* m);
 
-int list_sum_merce(list p, smerce* m, int tipo);
+int list_sum_merce(list p, int tipo);
 
 list list_controllo_scadenza(list p, smerce* m, int giorno, int* capacita);
 
-list list_rimuovi_richiesta(list p, sporto* shmporti, int id, smerce* shmmerci, int *pres_nave, int *consegnata);
+list list_rimuovi_richiesta(list p, sporto* shmporti, int id, int *pres_nave, int *consegnata);
 
 void sem_accesso(int semid, int num_risorsa);
 
 void sem_uscita(int semid, int num_risorsa);
-
-void stampa_merci(smerce* temp_merci);
 
 void rmLinesTerminal(int n);
 

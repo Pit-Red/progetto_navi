@@ -24,8 +24,6 @@ int SO_LOADSPEED, SO_PORTI, SO_CAPACITY, SO_STORM_DURATION, SO_SWELL_DURATION;
 list lista_carico = NULL;
 struct timespec rimanente;  /*SI USA NEL CASO IN CUI UNA NANOSLEEP VENGA BLOCCATA DA UN SEGNALE*/
 struct timespec now;
-int* array_porti;
-double* dista;
 
 
 /*FUNZIONI PER LA RIUSCITA DELLA SIMULAZIONE*/
@@ -35,7 +33,6 @@ int cerca_richiesta();
 void carica_offerta(int id_porto);
 void portiOrdinati();
 int numInserito(int n);
-
 int closestPort();
 
 /*FUNZIONI PER LA GESTIONE DEI DISASTRI*/
@@ -91,11 +88,7 @@ int main(int argc, char** argv) {
     else if(SO_PORTI <= 1000)
         numero_porti_ricerca = 50;
     else
-        numero_porti_ricerca = 100;     
-    array_porti = calloc(numero_porti_ricerca, 4);
-    dista = calloc(numero_porti_ricerca, 8);
-    TEST_ERROR;
-    bzero(array_porti, sizeof(array_porti));
+        numero_porti_ricerca = 100;
     /*SEMAFORO PER AVVISARE IL PADRE MASTER CHE LA NAVE E' PRONTA*/
     sem_uscita(sem_avvio, 0);
     /*SEMAFORO CON CUI IL PADRE DA' IL VIA ALLA SIMULAZIONE*/
@@ -144,12 +137,11 @@ void cerca_rotta() {
     double tempo;
     int quantita = 0;
     id_dest = cerca_richiesta();
-    /*printf("id dest:%d, id merce:%d\n", id_dest, id_merce);*/
     navigazione(shmporti[id_dest].x, shmporti[id_dest].y);
     sem_accesso(sem_porto, id_dest);    /*siamo entrati in una banchina*/
     shmnavi[id].stato_nave = 0;
     if(shmnavi[id].carico_tot>0){
-        quantita = list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
+        quantita = list_sum_merce(lista_carico, shmporti[id_dest].richiesta.idmerce);
         if(quantita < shmporti[id_dest].richiesta.qmerce)
             tempo = (quantita * shmmerci[shmporti[id_dest].richiesta.idmerce].dimensione) / SO_LOADSPEED;
         else
@@ -160,8 +152,8 @@ void cerca_rotta() {
             shmnavi[id].stato_nave = 2;
             sem_accesso(sem_shmporto, id_dest);
             sem_accesso(sem_shmnave, id);
-            temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].richiesta.idmerce);
-            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti, id_dest, shmmerci, &pres_nave, &consegnata);
+            temp = shmporti[id_dest].richiesta.qmerce - list_sum_merce(lista_carico, shmporti[id_dest].richiesta.idmerce);
+            lista_carico = list_rimuovi_richiesta(lista_carico, shmporti, id_dest, &pres_nave, &consegnata);
             shmmerci[shmporti[id_dest].richiesta.idmerce].consegnata += consegnata;
             shmmerci[shmporti[id_dest].richiesta.idmerce].pres_na += pres_nave;
             pres_nave = 0;
@@ -192,7 +184,7 @@ void carica_offerta(int id_porto) {
     double tempo;
     shmnavi[id].stato_nave = 3;
     sem_accesso(sem_shmporto, id_dest);
-    tempo = (list_sum_merce(lista_carico, shmmerci, shmporti[id_dest].offerta.idmerce) * shmmerci[shmporti[id_dest].offerta.idmerce].dimensione) / SO_LOADSPEED;
+    tempo = (list_sum_merce(lista_carico, shmporti[id_dest].offerta.idmerce) * shmmerci[shmporti[id_dest].offerta.idmerce].dimensione) / SO_LOADSPEED;
     now.tv_sec = (time_t)tempo;
     now.tv_nsec = (long)(tempo - (int)tempo) * 10000;
     c.idmerce = shmporti[id_dest].offerta.idmerce;
@@ -224,36 +216,12 @@ void carica_offerta(int id_porto) {
 /*CON QUESTA FUNZIONE ANDIAMO A CERCARE LA DESTINAZIONE IN BASE AI PORTI PIU' VICINI ALLA NAVE E ALLE LORO RICHIESTE*/
 int cerca_richiesta() {
     int i, id_temp;
-    struct timespec now; 
-    /*if(id==0){
-        printf("prima: ");
-        for(i=0;i<numero_porti_ricerca;i++)
-            printf("%d  ", array_porti[i]);
-        printf("\n");
-    }
-    portiOrdinati();
-    if(id==0){
-        printf("dopo: ");
-        for(i=0;i<numero_porti_ricerca;i++)
-            printf("%d  ", array_porti[i]);
-        printf("\n");
-    }
-    for (i = 0; i < numero_porti_ricerca; i++) {
-        id_temp = array_porti[i];
-        id_merce = 1;
-        if (id_temp >0) {
-            return id_temp;
-        }
-    }
-    clock_gettime(CLOCK_REALTIME, &now);
-    id_temp = now.tv_nsec % SO_PORTI;   
-    return id_temp;*/
+    struct timespec now;
     id_temp = closestPort();
     if(id_temp >= 0){
         id_merce = 1;
         return id_temp;
     }
-    id_merce = 0;
     clock_gettime(CLOCK_REALTIME, &now);
     return now.tv_nsec % SO_PORTI;
 }
@@ -278,64 +246,6 @@ void tempesta(int signum) {
     nanosleep(&now, NULL);
     shmnavi[id].stato_nave = 1;
 }
-/*FUNZIONE CHE RITORNA GLI numero_porti_richiesta PIU' VICINI ALLA NAVE, ESCLUSO IL PORTO DI PARTENZA*/
-/*void portiOrdinati(){
-    int i, j, id_temp;
-    double min = -1, distanza;
-    for(i = 0; i<numero_porti_ricerca; i++){
-        array_porti[i] = -1;
-    }
-    for(i = 0; i<numero_porti_ricerca; i++){
-        for(j = 0; j<SO_PORTI; j++){
-            distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
-            if(!numInserito(j) && (distanza < min || min == -1) && j != id_dest && list_sum_merce(lista_carico, shmmerci, shmporti[j].richiesta.idmerce)>0){
-                min = distanza;
-                id_temp = j;
-            }
-        }
-        min = -1;
-        array_porti[i] = id_temp;
-    }
-}
-/*void portiOrdinati(){
-    int i,j,t,id_temp, fatto;
-    double distanza;
-    for(i=0;i<numero_porti_ricerca;i++){
-        array_porti[i] = -1;
-        dista[i] = -1;
-    }
-    for(i=0;i<SO_PORTI; i++){
-        fatto = 0;
-        distanza = dist(shmnavi[id].x, shmnavi[id].y, shmporti[j].x, shmporti[j].y);
-        if(i!=id_dest){
-            for(j=0;j<numero_porti_ricerca && fatto!=1;j++){
-                if(array_porti[j] == -1){
-                    array_porti[j] = i;
-                    dista[j] = distanza;
-                    break;;
-                }
-                else if(distanza < dista[j]){
-                    for(t=(numero_porti_ricerca-2);t>=j;t--){
-                        array_porti[t+1] = array_porti[t];
-                        dista[t+1] = dista[t];
-                    }
-                    array_porti[j] = i;
-                    dista[j] = distanza;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-int numInserito(int n){
-    int i;
-    for(i = 0; i<SO_PORTI; i++){
-        if(array_porti[i] == n)
-            return 1;
-    }
-    return 0;
-}*/
 
 int closestPort() {
     double min = -1; /*distanza min*/
@@ -345,7 +255,7 @@ int closestPort() {
     i = 0;
     for (; i < SO_PORTI; i++) {
         d = dist(shmnavi[id].x, shmnavi[id].y , shmporti[i].x, shmporti[i].y);
-        if ((d < min || min == -1) && list_sum_merce(lista_carico, shmmerci, shmporti[i].richiesta.idmerce) && d != 0){
+        if ((d < min || min == -1) && list_sum_merce(lista_carico, shmporti[i].richiesta.idmerce) && d != 0){
             min = d;
             return_id = i;
         }
