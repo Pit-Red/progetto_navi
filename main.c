@@ -234,7 +234,7 @@ int main() {
             printf("\033[033;33m\n SCENARIO:\033[033;32m TEST\033[033;0m\n");
             SO_NAVI = 15;
             SO_PORTI = 5;
-            SO_MERCI = 1;
+            SO_MERCI = 10;
             SO_SIZE = 1;
             SO_MIN_VITA = 3;
             SO_MAX_VITA = 10;

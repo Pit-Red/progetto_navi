@@ -216,7 +216,7 @@ void carica_offerta(int id_porto) {
     shmmerci[shmporti[id_dest].offerta.idmerce].pres_porto -= c.qmerce;
     shmmerci[shmporti[id_dest].offerta.idmerce].pres_na += c.qmerce;
     sem_uscita(sem_shmporto, id_dest);
-    shmnavi[id].carico_tot = SO_CAPACITY - capacita;
+    shmnavi[id].carico_tot = list_sum(lista_carico, shmmerci);
     nanosleep(&now, &rimanente);
     bzero(&rimanente, sizeof(rimanente));
     shmnavi[id].stato_nave = 0;
@@ -253,6 +253,7 @@ int cerca_richiesta() {
         id_merce = 1;
         return id_temp;
     }
+    id_merce = 0;
     clock_gettime(CLOCK_REALTIME, &now);
     return now.tv_nsec % SO_PORTI;
 }
