@@ -988,114 +988,66 @@ int menu() {
         system("clear");
 
 
-        switch (option) {
 
-        case 0:
-            printf("\033[033;43m\033[033;39m\n\n\n");
-            printf("\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
+
+
+        printf("\n\n\033[033;36m\ttasti:\t A = ↑\t W = ↓\t I = info scenario\033[0m");
+        printf("\033[033;43m\033[033;39m\n\n");
+
+        printf("\t╔═══════════════════════════════════════╗\n");
+        printf("\t║                \033[033;39mSCENARI                ║\n");
+        printf("\t╠═══════════════════════════════════════╣\n");
+
+        if (option == 0) {
             printf("\t║\033[033;30m  [0] Dense, Small Ships \033[5m←\033[0;43m             ║\n");
-            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
-            printf("\t║ [2] Born To Run                       ║\n");
-            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
-            printf("\t║ [4] Unlucky Cargos                    ║\n");
-            printf("\t║ [5] Custom                            ║\n");
-            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[034;0m\n");
-            break;
-
-        case 1:
-            printf("\033[033;43m\033[033;39m\n\n\n\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
+        } else {
             printf("\t║ [0] Dense, Small Ships                ║\n");
-            printf("\t║\033[033;30m  [1] Dense, Small Ships + Trashing \033[5m←\033[0;43m  ║\n");
-            printf("\t║ [2] Born To Run                       ║\n");
-            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
-            printf("\t║ [4] Unlucky Cargos                    ║\n");
-            printf("\t║ [5] Custom                            ║\n");
-            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[033;0m\n");
-            break;
-
-        case 2:
-            printf("\033[033;43m\033[033;39m\n\n\n\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
-            printf("\t║ [0] Dense, Small Ships                ║\n");
-            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
-            printf("\t║\033[033;30m  [2] Born To Run \033[5m←\033[0;43m                    ║\n");
-            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
-            printf("\t║ [4] Unlucky Cargos                    ║\n");
-            printf("\t║ [5] Custom                            ║\n");
-            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[033;0m\n");
-            break;
-
-        case 3:
-            printf("\033[033;43m\033[033;39m\n\n\n\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
-            printf("\t║ [0] Dense, Small Ships                ║\n");
-            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
-            printf("\t║ [2] Born To Run                       ║\n");
-            printf("\t║\033[033;30m  [3] Cargos, Big Stuff \033[5m←\033[0;43m              ║\n");
-            printf("\t║ [4] Unlucky Cargos                    ║\n");
-            printf("\t║ [5] Custom                            ║\n");
-            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[033;0m\n");
-            break;
-
-        case 4:
-            printf("\033[033;43m\033[033;39m\n\n\n\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
-            printf("\t║ [0] Dense, Small Ships                ║\n");
-            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
-            printf("\t║ [2] Born To Run                       ║\n");
-            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
-            printf("\t║\033[033;30m  [4] Unlucky Cargos \033[5m←\033[0;43m                 ║\n");
-            printf("\t║ [5] Custom                            ║\n");
-            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[033;0m\n");
-            break;
-
-        case 5:
-            printf("\033[033;43m\033[033;39m\n\n\n\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
-            printf("\t║ [0] Dense, Small Ships                ║\n");
-            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
-            printf("\t║ [2] Born To Run                       ║\n");
-            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
-            printf("\t║ [4] Unlucky Cargos                    ║\n");
-            printf("\t║\033[033;30m  [5] Custom \033[5m←\033[0;43m                         ║\n");
-            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[033;0m\n");
-            break;
-
-        case 6:
-            printf("\033[033;43m\033[033;39m\n\n\n\t╔═══════════════════════════════════════╗\n");
-            printf("\t║                \033[033;39mSCENARI                ║\n");
-            printf("\t╠═══════════════════════════════════════╣\n");
-            printf("\t║ [0] Dense, Small Ships                ║\n");
-            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
-            printf("\t║ [2] Born To Run                       ║\n");
-            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
-            printf("\t║ [4] Unlucky Cargos                    ║\n");
-            printf("\t║ [5] Custom                            ║\n");
-            printf("\t║\033[033;31m  [6] Exit \033[5m←\033[0;43m                           ║\n");
-            printf("\t╚═══════════════════════════════════════╝\033[033;0m\n");
-            break;
-
         }
+        if (option == 1) {
+            printf("\t║\033[033;30m  [1] Dense, Small Ships + Trashing \033[5m←\033[0;43m  ║\n");
+        } else {
+            printf("\t║ [1] Dense, Small Ships + Trashing     ║\n");
+        }
+        if (option == 2) {
+            printf("\t║\033[033;30m  [2] Born To Run \033[5m←\033[0;43m                    ║\n");
+        } else {
+            printf("\t║ [2] Born To Run                       ║\n");
+        }
+        if (option == 3) {
+            printf("\t║\033[033;30m  [3] Cargos, Big Stuff \033[5m←\033[0;43m              ║\n");
+        } else {
+            printf("\t║ [3] Cargos, Big Stuff                 ║\n");
+        }
+        if (option == 4) {
+            printf("\t║\033[033;30m  [4] Unlucky Cargos \033[5m←\033[0;43m                 ║\n");
+        } else {
+            printf("\t║ [4] Unlucky Cargos                    ║\n");
+        }
+        if (option == 5) {
+            printf("\t║\033[033;30m  [5] Custom \033[5m←\033[0;43m                         ║\n");
+        } else {
+            printf("\t║ [5] Custom                            ║\n");
+        }
+        if (option == 6) {
+            printf("\t║\033[033;31m  [6] Exit \033[5m←\033[0;43m                           ║\n");
 
-        printf("\n\n\033[033;36m\t\ttasti:\t A = ↑\t W = ↓\033[0m");
+        } else {
+            printf("\t║\033[033;31m [6] Exit\033[033;39m                              ║\n");
+        }
+        printf("\t╚═══════════════════════════════════════╝\033[034;0m\n");
+
+        
+        /*if(key == 'i'){
+            switch(option){
+            case 0:
+                printf("\n\033[033;37m\033[033;30m");
+                printf("\n\tSO_NAVI = 1000\n\tSO_PORTI = 100\n\tSO_MERCI = 1\n\tSO_SIZE = 1\n\tSO_MIN_VITA = 50\n\tSO_MAX_VITA = 50\n\tSO_LATO = 1000\n\tSO_SPEED = 500\n\tSO_CAPACITY = 10\n\tSO_BANCHINE = 2\n\tSO_FILL = 500000\n\tSO_LOADSPEED = 200\n\tSO_DAYS = 10\n\tSO_STORM_DURATION = 6\n\tSO_SWELL_DURATION = 24\n\tSO_MAELSTROM = 1");
+                break;
+            }
+        }*/
 
 
         key = getchar();
-
         if (key == 's' && option < max_options) {
             option++;
         } else if (key == 'w' && option > 0) {
